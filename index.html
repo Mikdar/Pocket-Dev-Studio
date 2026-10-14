@@ -168,12 +168,17 @@
   .opt { text-align: left; width: 100%; line-height: 1.45; font-weight: normal; }
   .opt b { color: var(--accent); }
   .mini { font-size: 0.7rem; }
+  .chip { display: inline-block; font-size: 0.62rem; padding: 1px 6px; border-radius: 8px; border: 1px solid var(--border); color: var(--accent); margin: 0 3px 3px 0; }
+  .chip-bad { border-color: var(--danger); color: var(--danger); }
+  .chip-gold { border-color: var(--gold); color: var(--gold); }
+  .ms-done { color: var(--good); }
+
 </style>
 </head>
 <body>
 
 <div id="header">
-  <div><span id="cal-text">Y1 M1 W1</span> · Rank <span id="rank-text">1</span> <span class="muted" id="rank-exp"></span></div>
+  <div><span id="cal-text">Y1 M1 W1</span> · <span id="tier-text"></span> R<span id="rank-text">1</span> <span class="muted" id="rank-exp"></span></div>
   <button id="btn-speed" onclick="cycleSpeed()">▶ 1x</button>
   <div class="r2"><span class="gold">$<span id="gold-text">0</span></span> · <span id="fans-text">0</span> fans · <span class="hl"><span id="rp-text">0</span> RP</span></div>
 </div>
@@ -205,6 +210,10 @@
       </div>
       <label>Business model</label>
       <select id="sel-monet" onchange="updatePreview()"></select>
+      <div class="grid2">
+        <div style="display:flex;flex-direction:column;gap:7px;"><label>Audience</label><select id="sel-aud" onchange="updatePreview()"></select></div>
+        <div style="display:flex;flex-direction:column;gap:7px;"><label>Sequel to</label><select id="sel-seq" onchange="onSequelPick()"></select></div>
+      </div>
       <div id="dev-preview" class="note"></div>
       <div class="grid2">
         <button class="btn-accent" onclick="startDevelopment()">Begin Production</button>
@@ -215,6 +224,7 @@
       <div class="note" id="dev-info"></div>
       <div class="statrow"><span>Phase</span><div class="bar"><div id="bar-phase" style="background:var(--gold);width:0%"></div></div><span id="val-phase"></span></div>
       <div id="dev-stats"></div>
+      <div id="dev-controls" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
   </div>
 
@@ -381,9 +391,141 @@ const CARDS = [
   { n: 'Online Co-op',          d: 'Retention +15%, Craze +10%, many more bugs', cost: 3000, f: d => { d.mods.statMul[2] *= 1.15; d.mods.statMul[3] *= 1.1; d.mods.bugMul *= 1.5; } },
   { n: 'Hand-crafted Levels',   d: 'Play and Impact +10%, phases 20% longer',    cost: 0,    f: d => { d.mods.statMul[0] *= 1.1; d.mods.statMul[1] *= 1.1; d.mods.hpMul *= 1.2; } },
   { n: 'Photo Mode',            d: 'Impact +10%, +5 hype',                       cost: 1000, f: d => { d.mods.statMul[1] *= 1.1; d.hype += 5; } },
-  { n: 'Daily Challenges',      d: 'Retention +12%, Craze +5%',                  cost: 1500, f: d => { d.mods.statMul[2] *= 1.12; d.mods.statMul[3] *= 1.05; } }
+  { n: 'Daily Challenges',      d: 'Retention +12%, Craze +5%',                  cost: 1500, f: d => { d.mods.statMul[2] *= 1.12; d.mods.statMul[3] *= 1.05; } },
+  { n: 'Boss Rush Mode',        d: 'Play +12%, Craze +8%',                       cost: 2000, f: d => { d.mods.statMul[0] *= 1.12; d.mods.statMul[3] *= 1.08; } },
+  { n: 'Voice Acting',          d: 'Impact +15%, +5 hype',                       cost: 4000, f: d => { d.mods.statMul[1] *= 1.15; d.hype += 5; } },
+  { n: 'Mod Support',           d: 'Retention +18%, more bugs',                  cost: 2500, f: d => { d.mods.statMul[2] *= 1.18; d.mods.bugMul *= 1.2; } },
+  { n: 'Licensed Soundtrack',   d: 'Craze +20%',                                 cost: 5000, f: d => { d.mods.statMul[3] *= 1.2; } },
+  { n: 'Tutorial Overhaul',     d: '+0.3 on every review, Retention +5%',        cost: 1500, f: d => { d.reviewBonus += 0.3; d.mods.statMul[2] *= 1.05; } },
+  { n: 'Experimental Mechanic', d: 'Gamble: one random stat +35%, another -10%',  cost: 0,    f: d => { const a = ri(0, 3); let b = ri(0, 3); if (b === a) b = (a + 1) % 4; d.mods.statMul[a] *= 1.35; d.mods.statMul[b] *= 0.9; news(`The experiment boosted ${STATS[a]} but hurt ${STATS[b]}.`, '#66fcf1'); } }
 ];
 const EVENT_MONTHS = { 4: 'Indie Showcase', 8: 'GameCon', 12: 'Holiday Sale' };
+
+const TRAITS = {
+  'Workaholic':    { d: 'Uses 25% less stamina' },
+  'Night Owl':     { d: 'Works 30% faster when crunching' },
+  'Perfectionist': { d: '40% fewer bugs, works 10% slower' },
+  'Visionary':     { d: 'Twice as many inspired ideas' },
+  'Fast Learner':  { d: 'Gains 50% more EXP' },
+  'Team Player':   { d: 'Whole team ideas +3%' },
+  'Rockstar':      { d: '+5 hype on every release' },
+  'Loyal':         { d: 'Never quits or gets poached' },
+  'Penny Pincher': { d: 'Accepts a 15% lower salary' },
+  'Bug Magnet':    { d: '50% more bugs', bad: true },
+  'Slacker':       { d: 'Works 15% slower', bad: true },
+  'Hothead':       { d: 'Morale swings twice as hard', bad: true }
+};
+const TRAIT_NAMES = Object.keys(TRAITS);
+const PERK_LEVELS = [5, 10, 15, 20];
+const PERKS = [
+  [{ id: 'spec', n: 'Specialist', d: 'Main-stat ideas +15%' }, { id: 'allr', n: 'All-rounder', d: 'Every idea +8%' }],
+  [{ id: 'ment', n: 'Mentor', d: 'Rest of the team gains 15% more EXP' }, { id: 'iron', n: 'Iron Will', d: 'Uses 30% less stamina' }],
+  [{ id: 'clutch', n: 'Clutch Player', d: '+6% inspired chance, inspired ideas x2.5' }, { id: 'hunter', n: 'Bug Hunter', d: 'Team makes 20% fewer bugs; double damage in Debug' }],
+  [{ id: 'legend', n: 'Living Legend', d: '+10 hype per release, team ideas +5%' }, { id: 'muse', n: 'Muse', d: 'Team morale never falls below 50' }]
+];
+const PERK_INFO = Object.fromEntries(PERKS.flat().map(x => [x.id, x]));
+const SENIOR_TITLES = { 'Planner': 'Game Director', 'Programmer': 'Tech Lead', 'Designer': 'Art Director', 'Networker': 'Community Lead', 'Sound Eng.': 'Composer' };
+const SKINS = ['#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#ffdbac', '#f5d0b0'];
+const PACE = [
+  { n: 'Relaxed', spd: 0.8,  drain: 0.6, bug: 0.75, morale: 1.5, d: 'Slower, fewer bugs, morale recovers.' },
+  { n: 'Normal',  spd: 1,    drain: 1,   bug: 1,    morale: 0,   d: 'Steady pace.' },
+  { n: 'Crunch',  spd: 1.35, drain: 1.8, bug: 1.4,  morale: -3,  d: 'Fast, but exhausting and buggy. Morale drops every week.' }
+];
+const MARKETING = [
+  { n: 'Teaser', cost: 1500, hype: 10 },
+  { n: 'Influencers', cost: 5000, hype: 22 },
+  { n: 'Billboards', cost: 15000, hype: 40 }
+];
+const AUDIENCES = [
+  { n: 'Kids',     dl: 1.1,  w: [1, 1.15, 0.9, 1.15],   rev: 0,    fans: 1.0, good: ['Minigames', 'Quiz', 'Rhythm', 'Puzzle', 'Fitness'], bad: ['MMO', 'Strategy', 'Visual Novel'], desc: 'colourful fun; loot boxes are a disaster here' },
+  { n: 'Casual',   dl: 1.25, w: [1.1, 1, 1, 1.1],       rev: -0.2, fans: 0.9, good: ['Puzzle', 'Card Game', 'Minigames', 'Management Sim'], bad: ['MMO', 'Strategy'], desc: 'biggest market, critics less impressed' },
+  { n: 'Core',     dl: 1.0,  w: [1, 1, 1, 1],           rev: 0,    fans: 1.0, good: [], bad: [], desc: 'balanced' },
+  { n: 'Hardcore', dl: 0.75, w: [1.15, 1.05, 1.1, 0.9], rev: 0.3,  fans: 1.5, good: ['Strategy', 'RPG', 'MMO', 'Action', 'Racing'], bad: ['Minigames', 'Quiz', 'Fitness'], desc: 'small but loyal; critics respect depth' }
+];
+const HOOKS = [
+  { n: 'Roguelike Runs',     m: [1.1, 1, 1.1, 1],     good: ['Action', 'RPG', 'Strategy', 'Puzzle', 'Card Game'] },
+  { n: 'Open World',         m: [1.05, 1.1, 1.05, 1], good: ['RPG', 'Adventure', 'Racing', 'MMO', 'Action'] },
+  { n: 'Branching Story',    m: [1, 1.1, 1.05, 1],    good: ['Visual Novel', 'Adventure', 'RPG', 'Escape Game'] },
+  { n: 'Physics Sandbox',    m: [1.15, 1, 1, 1.05],   good: ['Puzzle', 'Action', 'Racing', 'Minigames'] },
+  { n: 'Cozy Vibes',         m: [1, 1.05, 1.1, 1],    good: ['Management Sim', 'Puzzle', 'Visual Novel', 'Board Game'] },
+  { n: 'Competitive Ranked', m: [1.1, 1, 1.1, 1.05],  good: ['Card Game', 'Sports', 'Strategy', 'MMO', 'Racing'] },
+  { n: 'Time Loops',         m: [1.05, 1, 1, 1.1],    good: ['Adventure', 'Escape Game', 'Puzzle', 'Visual Novel'] },
+  { n: 'Cute Mascot',        m: [1, 1.05, 1, 1.15],   good: ['Minigames', 'Quiz', 'Rhythm', 'Puzzle'] },
+  { n: 'Procedural Worlds',  m: [1.1, 1, 1.1, 1],     good: ['Strategy', 'RPG', 'Management Sim', 'MMO'] },
+  { n: 'Hand-drawn Art',     m: [1, 1.2, 1, 1],       good: ['Adventure', 'Visual Novel', 'Rhythm', 'Escape Game'] },
+  { n: 'Party Multiplayer',  m: [1.05, 1, 1, 1.15],   good: ['Minigames', 'Board Game', 'Quiz', 'Sports', 'Fitness'] },
+  { n: 'Speedrun Friendly',  m: [1.15, 1, 1, 1.05],   good: ['Action', 'Racing', 'Puzzle'] },
+  { n: 'Motion Controls',    m: [1.1, 1, 1, 1.1],     good: ['Fitness', 'Rhythm', 'Sports'] },
+  { n: 'Idle Progression',   m: [1, 0.95, 1.2, 1],    good: ['Management Sim', 'Card Game', 'Minigames'] }
+];
+const HOOK = Object.fromEntries(HOOKS.map(h => [h.n, h]));
+const HOOK_LABEL = ['Clashes', 'Neutral', 'Good fit', 'Perfect fit!'];
+const HOOK_COLOR = ['#ef476f', '#9aa5b1', '#06d6a0', '#ffd166'];
+const HOOK_REVIEW = [-0.6, 0, 0.5, 1.0];
+function hookCompat(hn, g) {
+  const h = HOOK[hn]; if (!h) return 1;
+  const v = hashStr(hn + '#' + g) % 100;
+  return h.good.includes(g) ? (v < 45 ? 3 : 2) : (v < 35 ? 0 : 1);
+}
+const DECOR = {
+  plant:      { n: 'Potted Plants',    cost: 800,   morale: 3, d: '+3 team morale' },
+  poster:     { n: 'Retro Posters',    cost: 1200,  morale: 2, stat: [3, 0.02], d: '+2 morale, Craze ideas +2%' },
+  whiteboard: { n: 'Whiteboard',       cost: 2500,  stat: [0, 0.04], d: 'Play ideas +4%' },
+  beanbags:   { n: 'Beanbag Corner',   cost: 2000,  morale: 4, regen: 0.15, d: '+4 morale, resting staff recover 15% faster' },
+  bookshelf:  { n: 'Dev Library',      cost: 4000,  exp: 0.12, d: 'Staff gain 12% more EXP' },
+  sofa:       { n: 'Lounge Sofa',      cost: 5000,  morale: 4, regen: 0.3, d: '+4 morale, resting staff recover 30% faster' },
+  artwall:    { n: 'Concept Art Wall', cost: 6000,  stat: [1, 0.04], d: 'Impact ideas +4%' },
+  board:      { n: 'Community Board',  cost: 6000,  stat: [2, 0.04], d: 'Retention ideas +4%' },
+  trophy:     { n: 'Trophy Cabinet',   cost: 8000,  fans: 0.15, d: 'Releases win 15% more fans' },
+  arcade:     { n: 'Arcade Cabinet',   cost: 9000,  morale: 6, stat: [3, 0.03], d: '+6 morale, Craze ideas +3%' },
+  aquarium:   { n: 'Aquarium',         cost: 14000, morale: 9, d: '+9 morale' },
+  neon:       { n: 'Neon Sign',        cost: 18000, morale: 3, hype: 8, d: '+8 hype on every project, +3 morale' }
+};
+const DECOR_SLOTS = [4, 8, 12];
+const TECH = [
+  { id: 'engine1', n: 'Game Engine v1',    rp: 8,  rank: 1,  d: 'Every idea +5%' },
+  { id: 'qa1',     n: 'QA Process',        rp: 10, rank: 1,  d: '25% fewer bugs' },
+  { id: 'mkt1',    n: 'Marketing Team',    rp: 12, rank: 2,  d: '+10 hype at the start of every project' },
+  { id: 'hr',      n: 'HR Department',     rp: 14, rank: 2,  d: 'Team morale +8, signing fees halved' },
+  { id: 'ana',     n: 'Player Analytics',  rp: 15, rank: 3,  d: 'Live games keep 1% more players each week' },
+  { id: 'scout',   n: 'Talent Scouts',     rp: 18, rank: 4,  d: 'Every job ad includes a higher-tier applicant' },
+  { id: 'engine2', n: 'Game Engine v2',    rp: 25, rank: 5,  req: 'engine1', d: 'Every idea +5% more' },
+  { id: 'qa2',     n: 'Automated Testing', rp: 28, rank: 6,  req: 'qa1', d: 'Debug phase 35% shorter' },
+  { id: 'liveops', n: 'Live Ops Toolkit',  rp: 30, rank: 6,  req: 'ana', d: 'Events and updates 30% cheaper' },
+  { id: 'mkt2',    n: 'PR Agency',         rp: 32, rank: 7,  req: 'mkt1', d: 'Marketing pushes half price and +5 hype each' },
+  { id: 'academy', n: 'Studio Academy',    rp: 40, rank: 8,  req: 'hr', d: 'Training gives +2 extra and double EXP' },
+  { id: 'engine3', n: 'Game Engine v3',    rp: 60, rank: 10, req: 'engine2', d: 'Every idea +7% more' }
+];
+const TIERS = [[1, 'Garage Studio'], [3, 'Indie Studio'], [6, 'Rising Studio'], [9, 'Established Studio'], [12, 'Major Studio'], [16, 'Legendary Studio']];
+const RIVAL_DEFS = [
+  { n: 'Moonbyte',          fans: 1500,   growth: 0.06,  skill: 21 },
+  { n: 'Pixelforge',        fans: 6000,   growth: 0.05,  skill: 24 },
+  { n: 'Kumo Games',        fans: 25000,  growth: 0.04,  skill: 27 },
+  { n: 'Hyperloop Studios', fans: 120000, growth: 0.035, skill: 30 }
+];
+const MILESTONES = [
+  { id: 'first',   n: 'First Release',     d: 'Release your first game',          test: s => s.releasedCount >= 1, r: { rp: 5 } },
+  { id: 'five',    n: 'Getting Going',     d: 'Release 5 games',                  test: s => s.releasedCount >= 5, r: { gold: 10000 } },
+  { id: 'twenty',  n: 'Prolific',          d: 'Release 20 games',                 test: s => s.releasedCount >= 20, r: { gold: 50000 } },
+  { id: 'great',   n: 'Critical Darling',  d: 'Score 30+ on a game',              test: s => s.bestScore >= 30, r: { fans: 800 } },
+  { id: 'hof',     n: 'Hall of Famer',     d: 'Score 32+ on a game',              test: s => s.bestScore >= 32, r: { rp: 15 } },
+  { id: 'perfect', n: 'Perfection',        d: 'Score a perfect 40',               test: s => s.bestScore >= 40, r: { gold: 150000 } },
+  { id: 'amazing', n: 'Eureka Combo',      d: 'Discover an Amazing! combo',       test: s => Object.values(s.combos).includes(4), r: { fans: 500 } },
+  { id: 'scholar', n: 'Combo Scholar',     d: 'Discover 25 combos',               test: s => Object.keys(s.combos).length >= 25, r: { rp: 20 } },
+  { id: 'dl100k',  n: '100K Downloads',    d: 'Reach 100,000 lifetime downloads', test: s => s.totalDownloads >= 1e5, r: { rp: 10 } },
+  { id: 'dl1m',    n: 'Million Seller',    d: 'Reach 1,000,000 downloads',        test: s => s.totalDownloads >= 1e6, r: { gold: 40000 } },
+  { id: 'dl100m',  n: 'Household Name',    d: 'Reach 100,000,000 downloads',      test: s => s.totalDownloads >= 1e8, r: { gold: 500000 } },
+  { id: 'dl1b',    n: 'One Billion!',      d: 'Reach 1,000,000,000 downloads',    test: s => s.totalDownloads >= 1e9, r: { gold: 5000000 } },
+  { id: 'team7',   n: 'Growing Team',      d: 'Have 7 staff',                     test: s => s.team.length >= 7, r: { rp: 10 } },
+  { id: 'senior',  n: 'Leadership',        d: 'Promote someone to a senior role', test: s => s.team.some(m => m.senior), r: { fans: 300 } },
+  { id: 'legend',  n: 'Living Legend',     d: 'Train a staff member to Lv20',     test: s => s.team.some(m => m.lv >= 20), r: { gold: 100000 } },
+  { id: 'floor3',  n: 'Penthouse',         d: 'Move to the top floor',            test: s => s.floor >= 3, r: { fans: 2000 } },
+  { id: 'goty',    n: 'Game of the Year',  d: 'Win Game of the Year',             test: s => (s.awards.goty || 0) >= 1, r: { rp: 25 } },
+  { id: 'hopper',  n: 'Platform Hopper',   d: 'Release on 5 different platforms', test: s => s.platformsUsed.length >= 5, r: { gold: 30000 } },
+  { id: 'decor',   n: 'Interior Designer', d: 'Own 8 decor items',                test: s => s.decor.length >= 8, r: { fans: 500 } },
+  { id: 'rich',    n: 'Millionaire',       d: 'Hold $1,000,000',                  test: s => s.gold >= 1e6, r: { rp: 30 } },
+  { id: 'top',     n: 'Industry Leader',   d: 'Overtake every rival in fans',     test: s => s.rivals.every(r => s.fans > r.fans), r: { gold: 250000 } }
+];
 
 const AMAZING = new Set([
   'Adventure|Detective', 'Minigames|Animal', 'Card Game|Animal', 'Escape Game|Apartment',
@@ -425,17 +567,38 @@ const SKY = ['#bde0fe', '#bde0fe', '#cdeac0', '#a8dadc', '#90e0ef', '#48cae4', '
 const TPS = 30;           // simulation ticks per second
 const TPW = 135;          // ticks per in-game week (4.5s at 1x)
 const SAVE_KEY = 'pocketDevStudio_v1';
+const perkQueued = new Set();
+let MODS = null;
 
 /* =========================================================
    STATE
    ========================================================= */
-function makeStaff(name, role, s, spd, hair) {
-  const salary = Math.round((300 + s.reduce((a, b) => a + b, 0) * 2.5 + spd * 4) / 50) * 50;
-  return { id: 0, name, role, lv: 1, exp: 0, s, spd, stam: 100, maxStam: 100, salary,
-    hair: hair || pick(HAIR), cd: Math.random() * 30, rest: 0, anim: 0, flash: 0 };
+function makeStaff(name, role, s, spd, hair, traits) {
+  const tr = traits || rollTraits();
+  let salary = Math.round((300 + s.reduce((a, b) => a + b, 0) * 2.5 + spd * 4) / 50) * 50;
+  if (tr.includes('Penny Pincher')) salary = Math.round(salary * 0.85 / 50) * 50;
+  return normStaff({ id: 0, name, role, lv: 1, exp: 0, s, spd, stam: 100, maxStam: 100, salary,
+    hair: hair || pick(HAIR), cd: Math.random() * 30, rest: 0, anim: 0, flash: 0, traits: tr,
+    skin: pick(SKINS), hs: ri(0, 3) });
+}
+function rollTraits() {
+  const good = TRAIT_NAMES.filter(t => !TRAITS[t].bad), bad = TRAIT_NAMES.filter(t => TRAITS[t].bad);
+  const out = [Math.random() < 0.25 ? pick(bad) : pick(good)];
+  if (Math.random() < 0.3) { const t = pick(good); if (!out.includes(t)) out.push(t); }
+  return out;
+}
+function normStaff(m) {
+  const NAMED = { Kai: ['Visionary'], Devin: ['Workaholic'], Clara: ['Perfectionist'], Sam: ['Team Player'], Leo: ['Night Owl'] };
+  if (!Array.isArray(m.traits)) m.traits = NAMED[m.name] ? NAMED[m.name].slice() : rollTraits();
+  if (!Array.isArray(m.perks)) m.perks = [];
+  const defs = { morale: 70, senior: false, shipped: 0, hits: 0, mvps: 0, vac: 0, raiseCd: 0 };
+  for (const k in defs) if (m[k] === undefined) m[k] = defs[k];
+  if (!m.skin) m.skin = SKINS[(m.id || ri(0, 5)) % SKINS.length];
+  if (m.hs === undefined) m.hs = (m.id || ri(0, 3)) % 4;
+  return m;
 }
 function randomStaff(tier) {
-  const role = pick(ROLE_NAMES), R = ROLES[role], base = [22, 34, 48][tier];
+  const role = pick(ROLE_NAMES), R = ROLES[role], base = [22, 34, 48, 60][tier];
   const s = [0, 0, 0, 0].map(() => Math.round(base * 0.55 + rnd(0, 10)));
   s[R.main] += Math.round(base * 0.6 + rnd(0, 10));
   s[R.sub] += Math.round(base * 0.25 + rnd(0, 6));
@@ -443,15 +606,15 @@ function randomStaff(tier) {
 }
 function newGame() {
   const team = [
-    makeStaff('Kai', 'Planner', [44, 30, 32, 50], 40, '#4a2810'),
-    makeStaff('Devin', 'Programmer', [62, 30, 40, 32], 55, '#1b1b1b'),
-    makeStaff('Clara', 'Designer', [32, 58, 30, 42], 45, '#e9c46a'),
-    makeStaff('Sam', 'Networker', [40, 30, 56, 34], 45, '#8d0801'),
-    makeStaff('Leo', 'Sound Eng.', [30, 40, 30, 54], 38, '#c68642')
+    makeStaff('Kai', 'Planner', [44, 30, 32, 50], 40, '#4a2810', ['Visionary']),
+    makeStaff('Devin', 'Programmer', [62, 30, 40, 32], 55, '#1b1b1b', ['Workaholic']),
+    makeStaff('Clara', 'Designer', [32, 58, 30, 42], 45, '#e9c46a', ['Perfectionist']),
+    makeStaff('Sam', 'Networker', [40, 30, 56, 34], 45, '#8d0801', ['Team Player']),
+    makeStaff('Leo', 'Sound Eng.', [30, 40, 30, 54], 38, '#c68642', ['Night Owl'])
   ];
-  team.forEach((m, i) => m.id = i + 1);
+  team.forEach((m, i) => { m.id = i + 1; m.skin = SKINS[i]; m.hs = i % 4; });
   return {
-    v: 2, gold: 20000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
+    v: 3, gold: 20000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
     cal: { y: 1, m: 1, w: 1 }, tick: 0, speed: 1,
     settings: { sound: true },
     team, nextId: 6,
@@ -463,7 +626,10 @@ function newGame() {
     ledger: { inc: 0, exp: 0, lastInc: 0, lastExp: 0 },
     totalDownloads: 0, totalRevenue: 0, candidates: [], contractOffers: [], over: false,
     licences: ['Feature Phone', 'Web Browser', 'Smartphone'],
-    pubRep: Object.fromEntries(PUBLISHERS.map(p => [p.n, 50])), hypeBank: 0, pubBonus: null
+    pubRep: Object.fromEntries(PUBLISHERS.map(p => [p.n, 50])), hypeBank: 0, pubBonus: null,
+    decor: [], tech: {}, milestones: {}, hookNotes: {}, releasedCount: 0, bestScore: 0,
+    awards: { goty: 0, excellence: 0 }, platformsUsed: [], investor: null, platDeal: null,
+    rivals: RIVAL_DEFS.map(r => ({ n: r.n, fans: r.fans, growth: r.growth, skill: r.skill, best: 0, yearBest: 0 }))
   };
 }
 function save() { try { if (STATE && !STATE.over) localStorage.setItem(SAVE_KEY, JSON.stringify(STATE)); } catch (e) {} }
@@ -475,14 +641,27 @@ function migrate(s) {
   s.pubRep = Object.assign(Object.fromEntries(PUBLISHERS.map(p => [p.n, 50])), s.pubRep || {});
   s.live.forEach(g => { if (g.cut === undefined) g.cut = 0; if (!g.liveMul) g.liveMul = 1; });
   if (s.hypeBank === undefined) s.hypeBank = 0;
+  if (s.v < 3) {
+    s.releasedCount = s.history.length;
+    s.bestScore = s.history.reduce((a, h) => Math.max(a, h.total), 0);
+    s.platformsUsed = [...new Set(s.history.map(h => h.platform))];
+  }
+  if (!Array.isArray(s.decor)) s.decor = [];
+  if (!s.tech) s.tech = {};
+  if (!s.milestones) s.milestones = {};
+  if (!s.hookNotes) s.hookNotes = {};
+  if (!s.awards) s.awards = { goty: 0, excellence: 0 };
+  if (!Array.isArray(s.platformsUsed)) s.platformsUsed = [];
+  if (!Array.isArray(s.rivals) || !s.rivals.length) s.rivals = RIVAL_DEFS.map(r => ({ n: r.n, fans: Math.round(r.fans * (1 + 0.3 * (s.cal.y - 1))), growth: r.growth, skill: r.skill + 0.4 * (s.cal.y - 1), best: 0, yearBest: 0 }));
+  s.team.forEach(normStaff);
   if (s.activeDev) normDev(s.activeDev);
-  s.v = 2;
+  s.v = 3;
   return s;
 }
 function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) { const s = JSON.parse(raw); if (s && (s.v === 1 || s.v === 2)) return migrate(Object.assign(newGame(), s)); }
+    if (raw) { const s = JSON.parse(raw); if (s && (s.v === 1 || s.v === 2 || s.v === 3)) return migrate(Object.assign(newGame(), s)); }
   } catch (e) {}
   return null;
 }
@@ -530,13 +709,19 @@ function rankNeed() { return 40 + STATE.rank * 30; }
 function addRankExp(n) {
   STATE.rankExp += n;
   while (STATE.rankExp >= rankNeed()) {
+    const before = studioTier();
     STATE.rankExp -= rankNeed(); STATE.rank++;
     playSound('level'); news(`Studio reached Rank ${STATE.rank}!`, '#ffd166');
     PLATFORMS.forEach(p => { if (p.rank === STATE.rank && platLive(p)) news(`Licence now available: ${p.n}`, '#66fcf1'); });
     PUBLISHERS.forEach(pb => { if (pb.adv && pb.rank === STATE.rank) news(`${pb.n} will now take your calls`, '#66fcf1'); });
+    const after = studioTier();
+    if (after !== before) {
+      playSound('fanfare');
+      showModal(`<h3>🎉 ${after}!</h3><div class="note" style="text-align:center;">The industry now sees you as a <b>${after}</b>. New research, platforms and publishers are opening up.</div>`, [{ label: 'Onwards!', cls: 'btn-accent' }]);
+    }
   }
 }
-function targetSkill(rank) { return 50 + 4 * (rank - 1); }
+function targetSkill(rank) { return 50 + 5 * (rank - 1); }
 function lvlOf(kind, n) { return Math.min(10, STATE.levels[kind][n] || 0); }
 function yearFrac() { return STATE.cal.y + (STATE.cal.m - 1) / 12; }
 function platLive(p) { const t = yearFrac(); return t >= p.year && !(p.end && t >= p.end); }
@@ -567,10 +752,99 @@ function normDev(d) {
   if (!d.mods) d.mods = {};
   if (!d.mods.statMul) d.mods.statMul = [1, 1, 1, 1];
   ['bugMul', 'speedMul', 'drainMul', 'hpMul'].forEach(k => { if (d.mods[k] === undefined) d.mods[k] = 1; });
-  const defs = { budget: 1, focus: -1, monet: 1, pub: 'Self-publish', adv: 0, hype: 0, reviewBonus: 0, lead: 0, polished: false, eventsFired: 0, awaiting: false };
+  const defs = { budget: 1, focus: -1, monet: 1, pub: 'Self-publish', adv: 0, hype: 0, reviewBonus: 0, lead: 0, polished: false,
+    eventsFired: 0, awaiting: false, pace: 1, hook: '', audience: 2, sequelOf: '', discount: false };
   for (const k in defs) if (d[k] === undefined) d[k] = defs[k];
   if (!d.decisions) d.decisions = [];
+  if (!d.contrib) d.contrib = {};
+  if (!Array.isArray(d.mkt)) d.mkt = [false, false, false];
   return d;
+}
+function hasTech(id) { return !!(STATE.tech && STATE.tech[id]); }
+function computeMods() {
+  const m = { stat: [1, 1, 1, 1], morale: 0, regen: 1, exp: 1, fans: 1, hype: 0, team: 1 };
+  for (const id of STATE.decor) {
+    const dc = DECOR[id]; if (!dc) continue;
+    if (dc.stat) m.stat[dc.stat[0]] += dc.stat[1];
+    m.morale += dc.morale || 0; m.regen += dc.regen || 0; m.exp += dc.exp || 0; m.fans += dc.fans || 0; m.hype += dc.hype || 0;
+  }
+  const eng = (hasTech('engine1') ? 0.05 : 0) + (hasTech('engine2') ? 0.05 : 0) + (hasTech('engine3') ? 0.07 : 0);
+  m.stat = m.stat.map(v => v + eng);
+  if (hasTech('hr')) m.morale += 8;
+  if (hasTech('mkt1')) m.hype += 10;
+  STATE.team.forEach(x => { if (x.traits.includes('Team Player')) m.team += 0.03; if (x.senior) m.team += 0.03; if (x.perks.includes('legend')) m.team += 0.05; });
+  m.mentor = STATE.team.some(x => x.perks.includes('ment'));
+  m.hunter = STATE.team.some(x => x.perks.includes('hunter'));
+  m.muse = STATE.team.some(x => x.perks.includes('muse'));
+  MODS = m;
+  return m;
+}
+function studioTier() { let n = TIERS[0][1]; TIERS.forEach(([r, t]) => { if (STATE.rank >= r) n = t; }); return n; }
+function addHype(n) { const d = STATE.activeDev; if (d && d.kind === 'game') d.hype += n; else STATE.hypeBank += n; }
+function investorCut(n) {
+  const iv = STATE.investor; if (!iv || iv.weeks <= 0 || n <= 0) return 0;
+  const c = Math.round(n * iv.cut); iv.paid = (iv.paid || 0) + c; return c;
+}
+function expNeed(lv) { return Math.round(12 + lv * 10 + lv * lv * 0.5); }
+function gainExp(m, n) {
+  const M = MODS || computeMods();
+  const mult = M.exp * (m.traits.includes('Fast Learner') ? 1.5 : 1) * (M.mentor && !m.perks.includes('ment') ? 1.15 : 1);
+  m.exp += n * mult;
+  let guard = 0;
+  while (m.exp >= expNeed(m.lv) && guard++ < 5) { m.exp -= expNeed(m.lv); levelUp(m); }
+}
+function perkPending(m) { const i = m.perks.length; return i < PERK_LEVELS.length && m.lv >= PERK_LEVELS[i] ? i : -1; }
+function perkModal(m) {
+  const i = perkPending(m);
+  if (i < 0 || perkQueued.has(m.id)) return;
+  perkQueued.add(m.id);
+  const opts = PERKS[i].map(x => `<button class="opt" onclick="pickPerk(${m.id},'${x.id}')"><b>${x.n}</b><br><span class="muted">${x.d}</span></button>`).join('');
+  playSound('fanfare');
+  showModal(`<h3>⭐ ${esc(m.name)}: Lv${PERK_LEVELS[i]} Perk</h3><div class="note">${esc(m.name)} has grown as a ${m.role}. Choose a permanent perk.</div>${opts}`,
+    [{ label: 'Decide later', action: () => perkQueued.delete(m.id) }]);
+}
+function pickPerk(id, pid) {
+  const m = findStaff(id); if (!m) return;
+  const i = perkPending(m);
+  if (i < 0 || !PERKS[i].some(x => x.id === pid)) return;
+  m.perks.push(pid); perkQueued.delete(m.id);
+  computeMods();
+  news(`${m.name} learned ${PERK_INFO[pid].n}!`, '#ffd166');
+  closeModal(); renderStaff(); save();
+}
+function staffTitle(m) {
+  if (m.senior) return SENIOR_TITLES[m.role];
+  return (m.lv >= 20 ? 'Legendary ' : m.lv >= 15 ? 'Veteran ' : m.lv >= 10 ? 'Senior ' : m.lv < 5 ? 'Junior ' : '') + m.role;
+}
+function removeStaff(m, msg) {
+  STATE.team = STATE.team.filter(x => x.id !== m.id);
+  const d = STATE.activeDev; if (d && d.lead === m.id) d.lead = 0;
+  news(msg, '#ef476f'); computeMods(); renderStaff();
+}
+function checkMilestones() {
+  MILESTONES.forEach(ms => {
+    if (STATE.milestones[ms.id]) return;
+    let ok = false; try { ok = ms.test(STATE); } catch (e) {}
+    if (!ok) return;
+    STATE.milestones[ms.id] = true;
+    const r = ms.r, parts = [];
+    if (r.gold) { earn(r.gold); parts.push(money(r.gold)); }
+    if (r.rp) { STATE.rp += r.rp; parts.push(r.rp + ' RP'); }
+    if (r.fans) { STATE.fans += r.fans; parts.push(fmt(r.fans) + ' fans'); }
+    playSound('fanfare');
+    showModal(`<h3>🏅 Milestone: ${ms.n}</h3><div class="note" style="text-align:center;">${ms.d}<br><br>Reward: <b class="gold">${parts.join(' + ')}</b></div>`);
+  });
+}
+function rivalsTick() {
+  STATE.rivals.forEach(r => {
+    r.fans = Math.round(r.fans * (1 + r.growth * rnd(0.4, 1.6)));
+    if (Math.random() < 0.3) {
+      const score = clamp(Math.round(r.skill + rnd(-6, 6)), 6, 40);
+      r.yearBest = Math.max(r.yearBest || 0, score); r.best = Math.max(r.best || 0, score);
+      r.last = `${pick(THEMES).n} ${pick(GENRES).n}`;
+      if (Math.random() < 0.5) news(`${r.n} released ${r.last} (${score}/40)`, '#9aa5b1');
+    }
+  });
 }
 function deskCount() { return FLOORS[STATE.floor - 1].desks; }
 function liveSlots() { return FLOORS[STATE.floor - 1].live; }
@@ -587,7 +861,7 @@ function news(msg, color) { ticker.push({ msg, color: color || '#fff', life: 170
 function staminaDrain(d) {
   if (d.kind === 'contract') return 1.5;
   if (d.genre === 'Card Game' && d.platform === 'PC') return 0;
-  return 2 * P[d.platform].drain * (G[d.genre].drain || 1) * ((d.mods && d.mods.drainMul) || 1);
+  return 2 * P[d.platform].drain * (G[d.genre].drain || 1) * ((d.mods && d.mods.drainMul) || 1) * PACE[d.pace === undefined ? 1 : d.pace].drain;
 }
 function phaseHp(d, phase) {
   const base = [160, 220, 320][phase - 1];
@@ -600,19 +874,24 @@ function setupPhase(d) {
   const colors = ['#4cc9f0', '#9d4edd', '#ef476f', '#06d6a0', '#ffd166'];
   d.phaseName = names[d.phase - 1];
   b.color = colors[d.phase - 1];
-  b.maxHp = d.phase === 4 ? 30 + d.bugs * 14 : d.phase === 5 ? Math.round(phaseHp(d, 3) * 0.4) : phaseHp(d, d.phase);
+  b.maxHp = d.phase === 4 ? Math.round((30 + d.bugs * 14) * (hasTech('qa2') ? 0.65 : 1)) : d.phase === 5 ? Math.round(phaseHp(d, 3) * 0.4) : phaseHp(d, d.phase);
   b.hp = b.maxHp;
   $('btn-boost').disabled = !(d.phase === 3 && !d.boostUsed);
 }
 
 function startDevelopment() {
   if (STATE.activeDev) return;
-  const genre = $('sel-genre').value, theme = $('sel-theme').value, platform = $('sel-platform').value;
+  let genre = $('sel-genre').value, theme = $('sel-theme').value;
+  const platform = $('sel-platform').value;
+  const seq = $('sel-seq').value ? STATE.history.find(h => h.title === $('sel-seq').value) : null;
+  if (seq) { genre = seq.genre; theme = seq.theme; }
   if (!genre || !theme || !P[platform]) { news('Pick a platform you hold a licence for (Market tab).', '#ef476f'); return; }
+  if (!STATE.unlocked.g.includes(genre) || !STATE.unlocked.t.includes(theme)) { news('That genre or theme is not unlocked.', '#ef476f'); return; }
   const plat = P[platform];
   if (!platformOpen(plat)) { playSound('error'); news('Get a licence for that platform in Market first.', '#ef476f'); return; }
-  if (!STATE.team.length) { news('Hire some staff first!', '#ef476f'); return; }
+  if (!STATE.team.some(m => m.vac <= 0)) { news('Everyone is away! Wait for someone to come back.', '#ef476f'); return; }
   const budget = +$('sel-budget').value || 0, focus = +$('sel-focus').value, monet = +$('sel-monet').value || 0;
+  const audience = isNaN(+$('sel-aud').value) ? 2 : +$('sel-aud').value;
   const pb = PUB[$('sel-pub').value] || PUBLISHERS[0];
   if (!pubAvailable(pb)) { playSound('error'); return; }
   const cost = plat.fee + devCost(genre, budget);
@@ -622,42 +901,87 @@ function startDevelopment() {
     earn(adv); news(`${pb.n} paid a ${money(adv)} advance`, '#ffd166');
     if (STATE.pubBonus === pb.n) STATE.pubBonus = null;
   }
-  const base = ($('inp-title').value || '').trim() || `${theme} ${genre}`;
+  let base = ($('inp-title').value || '').trim();
+  if (!base && seq) { const mm = seq.title.match(/^(.*?)(?:\s(\d+))?$/); base = `${mm[1]} ${mm[2] ? +mm[2] + 1 : 2}`; }
+  if (!base) base = `${theme} ${genre}`;
   const n = STATE.history.filter(h => h.title === base || h.title.startsWith(base + ' ')).length;
-  const title = n ? `${base} ${n + 1}` : base;
+  const title = n && !seq ? `${base} ${n + 1}` : base;
+  const M = computeMods();
   const mult = (1 + 0.03 * lvlOf('g', genre)) * (1 + 0.03 * lvlOf('t', theme)) * BUDGETS[budget].q;
   const d = normDev({
     kind: 'game', id: STATE.nextDevId++, title, genre, theme, platform, rank: STATE.rank,
     phase: 1, phaseName: '', mult, bugs: 0, hits: 0, gainSum: 0, boostUsed: false,
-    stats: [0, 0, 0, 0], budget, focus: isNaN(focus) ? -1 : focus, monet, pub: pb.n, adv, hype: STATE.hypeBank,
+    stats: [0, 0, 0, 0], budget, focus: isNaN(focus) ? -1 : focus, monet, pub: pb.n, adv, audience,
+    hype: STATE.hypeBank + M.hype, sequelOf: seq ? seq.title : '',
     balloon: { x: 160, y: 146, r: 20, hp: 1, maxHp: 1, color: '#4cc9f0' }
   });
   STATE.hypeBank = 0;
-  d.decisions.push(`${BUDGETS[budget].n} budget`, d.focus < 0 ? 'Balanced focus' : `${STATS[d.focus]} focus`, MONET[monet].n);
+  d.decisions.push(`${BUDGETS[budget].n} budget`, d.focus < 0 ? 'Balanced focus' : `${STATS[d.focus]} focus`, MONET[monet].n, `${AUDIENCES[audience].n} audience`);
+  if (seq) d.decisions.push(`Sequel to ${seq.title}`);
   if (pb.adv) d.decisions.push(`Signed with ${pb.n}`);
   STATE.activeDev = d;
   setupPhase(d);
-  $('inp-title').value = '';
+  $('inp-title').value = ''; $('sel-seq').value = '';
   playSound('click');
   news(`Production started: ${title}`, '#66fcf1');
   renderDevMode();
   leadModal(d);
 }
-
 /* ---------- Player decisions during development ---------- */
 function leadModal(d) {
   const w = G[d.genre].w;
   const best = STATS.filter((s, i) => w[i] >= 1.15).join(', ') || 'a balanced team';
-  const rows = STATE.team.map(m => {
+  const rows = STATE.team.filter(m => m.vac <= 0).map(m => {
     const mi = ROLES[m.role].main;
-    return `<button class="opt" onclick="pickLead(${m.id})"><b>${esc(m.name)}</b> · ${m.role} Lv${m.lv}<br><span class="muted">${STATS[mi]} ${m.s[mi]} · Stamina ${Math.round(m.stam)}/${m.maxStam}</span></button>`;
+    return `<button class="opt" onclick="pickLead(${m.id})"><b>${esc(m.name)}</b> · ${staffTitle(m)} Lv${m.lv}<br><span class="muted">${STATS[mi]} ${m.s[mi]} · Morale ${Math.round(m.morale)} · ${m.traits.join(', ')}</span></button>`;
   }).join('');
-  showModal(`<h3>Pick a Project Lead</h3><div class="note">The lead works 15% faster and their main stat counts 30% more, but they tire faster. ${esc(d.genre)} rewards <b>${best}</b>.</div>${rows}`, [{ label: 'No lead' }]);
+  showModal(`<h3>Pick a Project Lead</h3><div class="note">The lead works 15% faster and their main stat counts 30% more, but they tire faster. ${esc(d.genre)} rewards <b>${best}</b>.</div>${rows}`,
+    [{ label: 'No lead', action: () => hookModal(d) }]);
 }
 function pickLead(id) {
   const d = STATE.activeDev, m = findStaff(id);
-  if (d && d.kind === 'game' && m) { d.lead = id; d.decisions.push(`Lead: ${m.name}`); news(`${m.name} is leading ${d.title}`, '#ffd166'); }
+  if (d && d.kind === 'game' && m) { d.lead = id; d.decisions.push(`Lead: ${m.name}`); news(`${m.name} is leading ${d.title}`, '#ffd166'); hookModal(d); }
   closeModal();
+}
+function hookModal(d) {
+  if (!d || d.hook) return;
+  const opts = HOOKS.map(h => h.n).sort(() => Math.random() - 0.5).slice(0, 3);
+  d.hookChoices = opts;
+  const rows = opts.map(hn => {
+    const key = hn + '|' + d.genre, known = key in STATE.hookNotes;
+    const h = HOOK[hn], boosts = STATS.filter((s, i) => h.m[i] > 1).map((s, i) => s).join(', ');
+    return `<button class="opt" onclick="pickHook('${hn}')"><b>${hn}</b>${known ? ` · <span style="color:${HOOK_COLOR[STATE.hookNotes[key]]}">${HOOK_LABEL[STATE.hookNotes[key]]}</span>` : ' · <span class="muted">untested with ' + esc(d.genre) + '</span>'}<br><span class="muted">Boosts ${boosts || 'nothing in particular'}</span></button>`;
+  }).join('');
+  showModal(`<h3>Pitch Meeting</h3><div class="note">Every hit needs a hook. Which one defines ${esc(d.title)}? Some hooks suit ${esc(d.genre)} far better than others, and critics notice.</div>${rows}`,
+    [{ label: 'No special hook' }]);
+}
+function pickHook(hn) {
+  const d = STATE.activeDev;
+  if (!d || !HOOK[hn] || !(d.hookChoices || []).includes(hn)) return;
+  d.hook = hn; d.hookChoices = []; d.decisions.push(`Hook: ${hn}`);
+  news(`Hook chosen: ${hn}`, '#66fcf1');
+  closeModal();
+}
+function setPace(i) {
+  const d = STATE.activeDev; if (!d || d.kind !== 'game' || !PACE[i]) return;
+  if (d.pace !== i) { d.pace = i; if (i === 2 && !d.decisions.includes('Crunched')) d.decisions.push('Crunched'); news(`Work pace: ${PACE[i].n}`, i === 2 ? '#ef476f' : '#66fcf1'); }
+  playSound('click'); renderDevControls();
+}
+function mktCost(mk) { return Math.round(mk.cost * rankK() * (hasTech('mkt2') ? 0.5 : 1) / 100) * 100; }
+function buyMarketing(i) {
+  const d = STATE.activeDev, mk = MARKETING[i];
+  if (!d || d.kind !== 'game' || !mk || d.mkt[i]) return;
+  if (!spend(mktCost(mk))) return;
+  d.mkt[i] = true;
+  const h = mk.hype + (hasTech('mkt2') ? 5 : 0);
+  d.hype += h; d.decisions.push(mk.n);
+  playSound('coin'); news(`${mk.n} campaign launched: +${h} hype`, '#ffd166');
+  renderDevControls();
+}
+function onSequelPick() {
+  const h = STATE.history.find(x => x.title === $('sel-seq').value);
+  if (h) { $('sel-genre').value = h.genre; $('sel-theme').value = h.theme; }
+  updatePreview();
 }
 function cardCost(c) { return Math.round(c.cost * rankK() / 100) * 100; }
 function designModal(d) {
@@ -713,9 +1037,10 @@ function releaseModal(d) {
   const q = d.hits ? (d.gainSum / d.hits) / (targetSkill(d.rank) / 12) : 0.5;
   const est = clamp(Math.round((q * 3 - 0.5) * 2) / 2, 1, 5);
   const cost = Math.round(2000 * rankK() / 100) * 100;
-  showModal(`<h3>Ready to Ship?</h3><div class="note">${esc(d.title)} is through debugging. The team's gut feel on build quality: <b class="gold">${'★'.repeat(Math.floor(est))}${est % 1 ? '½' : ''}</b> (before combo, platform and critics).<br><br>A polish sprint adds a short extra phase where every idea counts 25% more, and critics notice the care.</div>`,
+  showModal(`<h3>Ready to Ship?</h3><div class="note">${esc(d.title)} is through debugging. The team's gut feel on build quality: <b class="gold">${'★'.repeat(Math.floor(est))}${est % 1 ? '½' : ''}</b> (before combo, hook, platform and critics). Hype: <b>${Math.round(d.hype)}</b>.<br><br>A polish sprint adds a short extra phase where every idea counts 25% more, and critics notice the care. A launch discount trades launch revenue for more downloads and fans.</div>`,
     [{ label: 'Release now 🚀', cls: 'btn-accent', action: () => { d.awaiting = false; completeProject(); } },
-     { label: `Polish sprint (${money(cost)})`, disabled: STATE.gold < cost, action: () => {
+     { label: 'Launch at a discount (+25% downloads, -40% launch revenue)', action: () => { d.awaiting = false; d.discount = true; d.decisions.push('Launch discount'); completeProject(); } },
+     { label: `Polish sprint (${money(cost)})`, disabled: STATE.gold < cost || d.polished, action: () => {
         if (!spend(cost)) { releaseModal(d); return; }
         d.awaiting = false; d.polished = true; d.reviewBonus += 0.3; d.decisions.push('Polish sprint');
         d.phase = 5; setupPhase(d); news(d.phaseName, '#ffd166');
@@ -742,20 +1067,39 @@ const DEV_EVENTS = [
     b: ['Politely decline', () => 'Maybe next time.'] },
   { t: 'Star Composer', txt: () => 'A well-known freelance composer has a gap in their schedule.',
     a: [d => `Hire them (${money(Math.round(3000 * rankK()))})`, d => { if (!spend(Math.round(3000 * rankK()))) return 'Not enough money to book them.'; d.mods.statMul[3] *= 1.15; d.mods.statMul[1] *= 1.05; return 'The soundtrack is going to be special.'; }],
-    b: ['Pass', () => 'Your sound team carries on.'] }
+    b: ['Pass', () => 'Your sound team carries on.'] },
+  { t: 'Office Argument', txt: (d, m, m2) => `${m.name} and ${m2.name} are loudly arguing about the direction of ${d.title}.`,
+    a: [(d, m) => `Side with ${m.name}`, (d, m, m2) => { m.morale = Math.min(100, m.morale + 10); m2.morale = Math.max(0, m2.morale - 15); d.mods.statMul[ROLES[m.role].main] *= 1.08; return `${m.name}'s vision wins out. ${m2.name} sulks.`; }],
+    b: [(d, m, m2) => `Side with ${m2.name}`, (d, m, m2) => { m2.morale = Math.min(100, m2.morale + 10); m.morale = Math.max(0, m.morale - 15); d.mods.statMul[ROLES[m2.role].main] *= 1.08; return `${m2.name}'s vision wins out. ${m.name} sulks.`; }],
+    c: ['Mediate a team meeting', (d, m, m2) => { m.morale = Math.min(100, m.morale + 4); m2.morale = Math.min(100, m2.morale + 4); d.balloon.hp = Math.min(d.balloon.maxHp, Math.round(d.balloon.hp + d.balloon.maxHp * 0.1)); return 'A long meeting, but everyone is on the same page.'; }] },
+  { t: 'Inspiration Strikes', txt: (d, m) => `${m.name} had a brilliant idea in the shower and wants to work it into ${d.title}.`,
+    a: ['Run with it', (d, m) => { d.mods.statMul[ROLES[m.role].main] *= 1.15; d.balloon.hp = Math.round(d.balloon.hp + d.balloon.maxHp * 0.15); d.balloon.maxHp = Math.max(d.balloon.maxHp, d.balloon.hp); return `${STATS[ROLES[m.role].main]} gets a big boost.`; }],
+    b: ['Save it for later', () => { STATE.rp += 3; return 'Filed in the ideas notebook: +3 RP.'; }] },
+  { t: 'Engine Update', txt: () => 'Your engine vendor released a major update mid-project.',
+    a: ['Upgrade now', d => { d.mods.statMul = d.mods.statMul.map(v => v * 1.05); d.balloon.hp = Math.round(d.balloon.hp + d.balloon.maxHp * 0.2); d.balloon.maxHp = Math.max(d.balloon.maxHp, d.balloon.hp); d.bugs += 2; return 'Shinier tech, a few new bugs, and extra work.'; }],
+    b: ['Stay on the old version', () => 'Stability wins.'] },
+  { t: 'Critic Preview', txt: d => `Pixel Press wants hands-on time with ${d.title} before launch.`,
+    a: ['Grant access', d => { const q = d.hits ? (d.gainSum / d.hits) / (targetSkill(d.rank) / 12) : 0.5; if (q >= 1) { d.reviewBonus += 0.3; d.hype += 10; return 'The preview was glowing! Critics are warming up.'; } d.reviewBonus -= 0.3; return 'The preview was lukewarm. That may stick.'; }],
+    b: ['Not yet', () => 'They will wait for the review copy.'] },
+  { t: 'Office Pet', txt: (d, m) => `${m.name} wants to bring their dog into the office.`,
+    a: ['Of course!', d => { STATE.team.forEach(x => { x.morale = Math.min(100, x.morale + 6); }); if (Math.random() < 0.2) { d.bugs += 2; return 'Everyone is happier. The dog also chewed a cable.'; } return 'Everyone is happier.'; }],
+    b: ['No pets, sorry', (d, m) => { m.morale = Math.max(0, m.morale - 8); return `${m.name} is disappointed.`; }] },
+  { t: 'Fan Petition', txt: d => `Fans are petitioning for a ${pick(['photo mode', 'dark mode', 'co-op mode', 'cat companion', 'level editor'])} in ${d.title}.`,
+    a: ['Add it', d => { d.balloon.hp = Math.round(d.balloon.hp + d.balloon.maxHp * 0.15); d.balloon.maxHp = Math.max(d.balloon.maxHp, d.balloon.hp); d.hype += 12; return 'Fans cheer! It means a little extra work.'; }],
+    b: ['Politely decline', d => { d.hype = Math.max(0, d.hype - 3); return 'A few fans grumble.'; }] }
 ];
 function devEvent(d) {
   d.eventsFired++;
-  const ev = pick(DEV_EVENTS), m = pick(STATE.team) || { name: 'Someone' };
-  const lab = x => typeof x === 'function' ? x(d) : x;
-  const run = (fn, label) => () => { const res = fn(d); news(res, '#66fcf1'); d.decisions.push(`${ev.t}: ${label}`); };
-  const la = lab(ev.a[0]), lb = lab(ev.b[0]);
+  const crew = STATE.team.filter(x => x.vac <= 0);
+  if (crew.length < 2) return;
+  const m = pick(crew); let m2 = pick(crew); if (m2 === m) m2 = crew.find(x => x !== m);
+  let ev = pick(DEV_EVENTS);
+  const lab = x => typeof x === 'function' ? x(d, m, m2) : x;
+  const run = (fn, label) => () => { const res = fn(d, m, m2); news(res, '#66fcf1'); d.decisions.push(`${ev.t}: ${label}`); };
+  const btns = [ev.a, ev.b, ev.c].filter(Boolean).map((o, i) => { const l = lab(o[0]); return { label: l, cls: i === 0 ? 'btn-accent' : '', action: run(o[1], l.replace(/ \(.*\)$/, '')) }; });
   playSound('click');
-  showModal(`<h3>${ev.t}</h3><div class="note">${esc(ev.txt(d, m))}</div>`, [
-    { label: la, cls: 'btn-accent', action: run(ev.a[1], la.replace(/ \(.*\)$/, '')) },
-    { label: lb, action: run(ev.b[1], lb) }]);
+  showModal(`<h3>${ev.t}</h3><div class="note">${esc(ev.txt(d, m, m2))}</div>`, btns);
 }
-
 function genContracts() {
   const k = 1 + 0.3 * (STATE.rank - 1), out = [], names = CONTRACTS.slice().sort(() => Math.random() - 0.5);
   for (let i = 0; i < 3; i++) {
@@ -802,41 +1146,65 @@ function useBoost() {
 function doHit(m) {
   const d = STATE.activeDev;
   if (!d) return;
-  const b = d.balloon, R = ROLES[m.role];
+  const M = MODS || computeMods();
+  const b = d.balloon, R = ROLES[m.role], tr = m.traits, pk = m.perks;
   const isLead = d.lead === m.id;
   const r = Math.random();
   const idx = r < 0.55 ? R.main : r < 0.8 ? R.sub : Math.floor(Math.random() * 4);
   const skill = m.s[idx];
-  const crit = Math.random() < 0.06 + m.lv * 0.004;
-  let dmg = (5 + m.lv * 0.6 + skill / 25) * (crit ? 1.5 : 1);
+  let critCh = 0.06 + m.lv * 0.004;
+  if (tr.includes('Visionary')) critCh *= 2;
+  if (pk.includes('clutch')) critCh += 0.06;
+  const crit = Math.random() < critCh;
+  const critMul = pk.includes('clutch') ? 2.5 : 2;
+  const dmg = (5 + m.lv * 0.6 + skill / 25) * (crit ? 1.5 : 1) * (d.phase === 4 && pk.includes('hunter') ? 2 : 1);
   let label;
   if (d.kind === 'game') {
+    const aud = AUDIENCES[d.audience] || AUDIENCES[2], hook = HOOK[d.hook];
     const focusMul = d.focus < 0 ? 1 : (idx === d.focus ? 1.25 : 0.92);
-    const leadMul = isLead && idx === R.main ? 1.3 : 1;
+    let personal = 1;
+    if (isLead && idx === R.main) personal *= 1.3;
+    if (pk.includes('spec') && idx === R.main) personal *= 1.15;
+    if (pk.includes('allr')) personal *= 1.08;
+    if (m.senior && idx === R.main) personal *= 1.2;
     const polishMul = d.phase === 5 ? 1.25 : 1;
-    const gain = skill / 12 * G[d.genre].w[idx] * d.mult * d.mods.statMul[idx] * focusMul * leadMul * polishMul * rnd(0.85, 1.15) * (crit ? 2 : 1);
+    const gain = skill / 12 * G[d.genre].w[idx] * aud.w[idx] * (hook ? hook.m[idx] : 1) * d.mult * d.mods.statMul[idx] *
+      M.stat[idx] * M.team * focusMul * personal * polishMul * rnd(0.85, 1.15) * (crit ? critMul : 1);
     d.stats[idx] += gain; d.gainSum += gain; d.hits++;
-    if ((d.phase === 2 || d.phase === 3) && Math.random() < (0.08 - Math.min(0.05, m.s[0] / 1500)) * d.mods.bugMul) d.bugs++;
+    d.contrib[m.id] = (d.contrib[m.id] || 0) + gain;
+    if (d.phase === 2 || d.phase === 3) {
+      let bc = (0.08 - Math.min(0.05, m.s[0] / 1500)) * d.mods.bugMul * PACE[d.pace].bug;
+      if (tr.includes('Perfectionist')) bc *= 0.6;
+      if (tr.includes('Bug Magnet')) bc *= 1.5;
+      if (M.hunter) bc *= 0.8;
+      if (hasTech('qa1')) bc *= 0.75;
+      if (Math.random() < bc) d.bugs++;
+    }
     label = '+' + Math.max(1, Math.round(gain));
   } else {
     label = '+' + Math.round(dmg);
   }
   projectiles.push({ x: m.x, y: m.y - 14, tx: b.x + rnd(-8, 8), ty: b.y + rnd(-8, 8), color: STAT_COLORS[idx],
     dmg: Math.round(dmg), label: crit ? label + '!' : label, crit, devId: d.id, t: 0 });
+  if (crit) for (let i = 0; i < 4; i++) particles.push({ spark: true, x: m.x + rnd(-7, 7), y: m.y - 22 + rnd(-4, 4), color: '#ffd166', life: 18, vy: -0.5 });
   m.anim = 8;
-  m.stam -= staminaDrain(d) * (isLead ? 1.25 : 1);
+  let drain = staminaDrain(d) * (isLead ? 1.25 : 1);
+  if (tr.includes('Workaholic')) drain *= 0.75;
+  if (pk.includes('iron')) drain *= 0.7;
+  m.stam -= drain;
   if (m.stam <= 0) { m.stam = 0; m.rest = 90; }
-  m.exp += 1;
-  if (m.exp >= 20 + m.lv * 15) levelUp(m);
+  gainExp(m, 1);
 }
-
 function levelUp(m) {
-  m.exp = 0; m.lv++;
-  m.s = m.s.map(v => v + ri(1, 2));
-  m.s[ROLES[m.role].main] += 3;
+  m.lv++;
+  m.s = m.s.map(v => v + ri(0, 1));
+  m.s[ROLES[m.role].main] += 2;
   m.spd += 1; m.maxStam += 4; m.salary += 50; m.flash = 50;
+  m.morale = Math.min(100, m.morale + 5);
   playSound('level');
   news(`${m.name} reached Lv${m.lv}!`, '#ffd166');
+  if (perkPending(m) >= 0) perkModal(m);
+  if (m.lv === 10 && !m.senior) news(`${m.name} can now be promoted to ${SENIOR_TITLES[m.role]}!`, '#ffd166');
 }
 function onImpact(p) {
   particles.push({ x: p.tx, y: p.ty - 4, text: p.label, color: p.crit ? '#fff' : p.color, life: 28, vy: -0.7 });
@@ -872,7 +1240,9 @@ function finishContract() {
 function completeProject() {
   const d = normDev(STATE.activeDev);
   STATE.activeDev = null; projectiles = [];
+  const M = computeMods();
   const plat = P[d.platform], pb = PUB[d.pub] || PUBLISHERS[0], mo = MONET[d.monet] || MONET[1], w = G[d.genre].w;
+  const aud = AUDIENCES[d.audience] || AUDIENCES[2], hook = HOOK[d.hook];
   const q = d.hits ? (d.gainSum / d.hits) / (targetSkill(d.rank) / 12) : 0.5;
   const combo = compat(d.genre, d.theme);
   const key = d.genre + '|' + d.theme;
@@ -882,20 +1252,33 @@ function completeProject() {
   const fit = plat.fav.includes(d.genre);
   const top = w.indexOf(Math.max(...w)), low = w.indexOf(Math.min(...w));
   const focusAdj = d.focus < 0 ? 0 : d.focus === top ? 0.4 : d.focus === low ? -0.3 : 0;
-  const repeats = STATE.history.slice(0, 3).filter(h => h.genre === d.genre && h.theme === d.theme).length;
-  const base = 4.5 * q - 1.1 + COMBO_REVIEW[combo] + (trend ? 0.5 : 0) + (fit ? 0.4 : 0) + mo.rev + d.reviewBonus + focusAdj - repeats * 0.8;
+  const repeats = d.sequelOf ? 0 : STATE.history.slice(0, 3).filter(h => h.genre === d.genre && h.theme === d.theme).length;
+  const audAdj = aud.good.includes(d.genre) ? 0.3 : aud.bad.includes(d.genre) ? -0.4 : 0;
+  const lootKids = d.audience === 0 && d.monet === 3 ? -1.0 : 0;
+  let hookAdj = 0, hc = -1;
+  if (hook) { hc = hookCompat(d.hook, d.genre); hookAdj = HOOK_REVIEW[hc]; STATE.hookNotes[d.hook + '|' + d.genre] = hc; }
+  const orig = d.sequelOf ? STATE.history.find(h => h.title === d.sequelOf) : null;
+  const base = 8.5 * (1 - Math.exp(-0.9 * q)) - 1.2 + COMBO_REVIEW[combo] + (trend ? 0.5 : 0) + (fit ? 0.4 : 0) + mo.rev + aud.rev + audAdj + lootKids +
+    hookAdj + (orig ? 0.3 : 0) + d.reviewBonus + focusAdj - repeats * 0.8;
   const scores = REVIEWERS.map(() => clamp(Math.round(base + rnd(-1.1, 1.1)), 1, 10));
   const total = scores.reduce((a, b) => a + b, 0);
   const hof = total >= 32;
 
-  const hypeMul = 1 + Math.min(d.hype, 100) / 100;
+  let hype = d.hype;
+  STATE.team.forEach(m => { if (!d.contrib[m.id]) return; if (m.traits.includes('Rockstar')) hype += 5; if (m.perks.includes('legend')) hype += 10; });
+  if (orig) hype += 15 + orig.total / 2;
+  const hypeMul = 1 + Math.min(hype, 100) / 125;
+  const deal = STATE.platDeal === d.platform;
+  if (deal) STATE.platDeal = null;
   const mkt = Math.max(0.2, marketNow(plat));
-  const dl = Math.round((300 + 8 * Math.pow(STATE.fans, 0.75)) * Math.pow(total / 20, 2) * mkt * COMBO_DL[combo] *
-    (trend ? 1.3 : 1) * (fit ? 1.2 : 1) * pb.boost * mo.dl * hypeMul * rnd(0.85, 1.15));
-  const gross = Math.round(dl * plat.arpu * 1.5 * mo.launch);
+  const dl = Math.round((400 + 25 * Math.pow(STATE.fans, 0.6)) * Math.pow(total / 20, 2) * mkt * COMBO_DL[combo] *
+    (trend ? 1.3 : 1) * (fit ? 1.2 : 1) * pb.boost * mo.dl * aud.dl * hypeMul * (orig ? 1.15 : 1) * (deal ? 1.4 : 1) *
+    (d.discount ? 1.25 : 1) * rnd(0.85, 1.15));
+  const gross = Math.round(dl * plat.arpu * 1.5 * mo.launch * (d.discount ? 0.6 : 1));
   const pubTake = Math.round(gross * pb.cut);
-  const rev = gross - pubTake;
-  const fansGain = Math.round(dl * (hof ? 0.1 : 0.05) * mo.fans);
+  const invTake = investorCut(gross - pubTake);
+  const rev = gross - pubTake - invTake;
+  const fansGain = Math.round(dl * (hof ? 0.08 : 0.04) * mo.fans * aud.fans * M.fans * (d.discount ? 1.2 : 1));
   const rpGain = 2 + Math.round(total / 6);
   earn(rev);
   STATE.fans += fansGain; STATE.rp += rpGain; STATE.totalDownloads += dl;
@@ -903,7 +1286,11 @@ function completeProject() {
   STATE.levels.g[d.genre] = (STATE.levels.g[d.genre] || 0) + 1;
   STATE.levels.t[d.theme] = (STATE.levels.t[d.theme] || 0) + 1;
   if (hof) earn(10000);
+  STATE.releasedCount++;
+  STATE.bestScore = Math.max(STATE.bestScore, total);
+  if (!STATE.platformsUsed.includes(d.platform)) STATE.platformsUsed.push(d.platform);
 
+  // publisher relationship
   let pubLine = '';
   if (pb.adv) {
     if (total >= pb.target) {
@@ -920,16 +1307,27 @@ function completeProject() {
     }
   }
 
-  const entry = { title: d.title, genre: d.genre, theme: d.theme, platform: d.platform, total, dl, y: STATE.cal.y, t: STATE.cal.y * 12 + STATE.cal.m, pub: pb.n };
+  // staff results
+  const mvpId = Object.keys(d.contrib).sort((a, b) => d.contrib[b] - d.contrib[a])[0];
+  const mvp = mvpId ? findStaff(+mvpId) : null;
+  const mood = total >= 32 ? 10 : total >= 24 ? 4 : total < 16 ? -8 : 0;
+  STATE.team.forEach(m => {
+    if (d.contrib[m.id]) { m.shipped++; if (hof) m.hits++; }
+    m.morale = clamp(m.morale + mood * (m.traits.includes('Hothead') ? 2 : 1), 0, 100);
+  });
+  if (mvp) { mvp.mvps++; mvp.morale = Math.min(100, mvp.morale + 5); gainExp(mvp, 15); }
+
+  const entry = { title: d.title, genre: d.genre, theme: d.theme, platform: d.platform, total, dl, y: STATE.cal.y,
+    t: STATE.cal.y * 12 + STATE.cal.m, pub: pb.n, hook: d.hook, audience: aud.n, sequelOf: d.sequelOf };
   STATE.history.unshift(entry);
   if (STATE.history.length > 40) STATE.history.length = 40;
   if (!STATE.yearBest || total > STATE.yearBest.total) STATE.yearBest = entry;
 
-  // Live service
+  // live service
   const statSum = d.stats.reduce((a, b) => a + b, 0) || 1;
   const retShare = d.stats[2] / (statSum / 4);
   const ret = clamp(0.84 + 0.05 * (retShare - 1) + 0.1 * (total / 40) + mo.ret, 0.78, 0.975);
-  const game = { id: d.id, title: d.title, platform: d.platform, users: dl, peak: dl, arpu: plat.arpu, ret, score: total, weeks: 0, event: 0,
+  const game = { id: d.id, title: d.title, genre: d.genre, platform: d.platform, users: dl, peak: dl, arpu: plat.arpu, ret, score: total, weeks: 0, event: 0,
     revTotal: rev, updates: 0, cut: pb.cut, liveMul: mo.live, monet: d.monet, saleWeeks: 0, saleMul: 1 };
   let liveNote = '';
   if (STATE.live.length < liveSlots()) { STATE.live.push(game); liveNote = 'Live service launched.'; }
@@ -939,37 +1337,47 @@ function completeProject() {
     else liveNote = 'Live slots full: this title was not added to Live Ops.';
   }
 
+  for (let i = 0; i < (hof ? 90 : 45); i++) particles.push({ conf: true, x: rnd(0, 320), y: rnd(-60, 0), vx: rnd(-0.4, 0.4), vy: rnd(0.3, 1.2), color: pick(['#ffd166', '#ef476f', '#06d6a0', '#4cc9f0', '#9d4edd']), life: 200 });
+
   const starN = Math.max(1, Math.round(total / 8));
   const stars = '★'.repeat(starN) + '☆'.repeat(5 - starN);
   const revRows = scores.map((s, i) => `<div class="rev"><span>${REVIEWERS[i]}: “${QUOTES[s]}”</span><b>${s}</b></div>`).join('');
+  const notes = [];
+  if (hook) notes.push(`Hook ${esc(d.hook)}: <b style="color:${HOOK_COLOR[hc]}">${HOOK_LABEL[hc]}</b>`);
+  if (audAdj) notes.push(`${aud.n} audience ${audAdj > 0 ? '<span class="good">loves</span>' : '<span class="bad">is wrong for</span>'} ${esc(d.genre)}`);
+  if (lootKids) notes.push('<span class="bad">Parents were furious about loot boxes in a kids’ game.</span>');
+  if (mo.rev < 0 && !lootKids) notes.push(`<span class="bad">Critics marked it down for its ${esc(mo.n.toLowerCase())} model.</span>`);
+  if (orig) notes.push(total >= orig.total ? `Critics say it surpasses ${esc(orig.title)}.` : `Critics found it a step down from ${esc(orig.title)}.`);
+  if (deal) notes.push(`<span class="good">${esc(d.platform)} featured it on their storefront.</span>`);
   const html = `
     <h3>${esc(d.title)}</h3>
     <div class="muted" style="text-align:center;">${esc(d.genre)} × ${esc(d.theme)} · ${esc(d.platform)}</div>
     <div style="text-align:center;">Combo: <b style="color:${COMBO_COLOR[combo]}">${COMBO_LABEL[combo]}</b>${newCombo ? ' <span class="gold">(new!)</span>' : ''}${trend ? ' · <span class="good">Trending!</span>' : ''}${fit ? ' · <span class="good">Platform favourite</span>' : ''}</div>
     ${repeats ? `<div class="note bad">Critics feel it's a rerun of your recent work (-${(repeats * 0.8).toFixed(1)} per review). Mix up your combos!</div>` : ''}
-    ${mo.rev < 0 ? `<div class="note bad mini">Critics marked it down for its ${esc(mo.n.toLowerCase())} model.</div>` : ''}
+    ${notes.length ? `<div class="note mini">${notes.join('<br>')}</div>` : ''}
     ${revRows}
     <div class="big">${total} / 40</div>
     <div style="text-align:center; color:var(--gold);">${stars}</div>
     ${hof ? '<div style="text-align:center;" class="gold">🏆 HALL OF FAME! +$10,000</div>' : ''}
-    <div class="note">Downloads: <b>${fmt(dl)}</b>${d.hype ? ` (hype ${Math.round(d.hype)})` : ''}<br>Launch revenue: <b class="gold">${money(rev)}</b>${pubTake ? ` after ${esc(pb.n)}'s ${Math.round(pb.cut * 100)}% cut` : ''}<br>New fans: +${fmt(fansGain)} · Research: +${rpGain} RP<br>${liveNote}${pubLine ? '<br>' + pubLine : ''}</div>
+    <div class="note">Downloads: <b>${fmt(dl)}</b>${hype ? ` (hype ${Math.round(hype)})` : ''}<br>Launch revenue: <b class="gold">${money(rev)}</b>${pubTake ? ` after ${esc(pb.n)}'s ${Math.round(pb.cut * 100)}% cut` : ''}${invTake ? ` and ${money(invTake)} to your investor` : ''}<br>New fans: +${fmt(fansGain)} · Research: +${rpGain} RP<br>${liveNote}${pubLine ? '<br>' + pubLine : ''}</div>
+    ${mvp ? `<div class="note mini">⭐ MVP: <b>${esc(mvp.name)}</b> (${staffTitle(mvp)}) · team morale ${mood >= 0 ? '+' : ''}${mood}</div>` : ''}
     <div class="note mini muted">Decisions: ${d.decisions.map(esc).join(' · ')}</div>`;
   playSound(hof ? 'fanfare' : 'coin');
   showModal(html, [{ label: 'Release! 🚀', cls: 'btn-accent' }]);
+  checkMilestones();
   renderDevMode(); renderAll(); save();
 }
-
 /* =========================================================
    TIME
    ========================================================= */
 function advanceWeek() {
-  const c = STATE.cal;
-  // live service revenue
+  const c = STATE.cal, M = computeMods(), d = STATE.activeDev;
   for (const g of STATE.live) {
-    const weekly = weeklyRev(g);
+    let weekly = weeklyRev(g);
+    weekly -= investorCut(weekly);
     earn(weekly); g.revTotal += weekly;
     const p = P[g.platform];
-    const ret = g.ret + (STATE.facilities.servers ? 0.012 : 0) - (p && !platLive(p) ? 0.08 : 0);
+    const ret = g.ret + (STATE.facilities.servers ? 0.012 : 0) + (hasTech('ana') ? 0.01 : 0) - (p && !platLive(p) ? 0.08 : 0);
     const growth = 0.07 * (g.score / 40) * Math.max(0, 1 - g.weeks / 16) + (g.event > 0 ? 0.03 : 0);
     g.users = Math.round(g.users * Math.min(1.03, ret + growth));
     if (g.monet === 3 && Math.random() < 0.03) { g.users = Math.round(g.users * 0.85); news(`Players revolt over loot boxes in ${g.title}!`, '#ef476f'); }
@@ -981,8 +1389,24 @@ function advanceWeek() {
   ended.forEach(g => news(`${g.title} ended its service.`, '#9aa5b1'));
   STATE.live = STATE.live.filter(g => g.users >= 50);
 
-  // random happenings
-  if (Math.random() < 0.08) randomEvent();
+  // staff wellbeing
+  const eq = Math.min(95, 55 + M.morale);
+  STATE.team.forEach(m => {
+    if (m.vac > 0) { m.vac--; if (m.vac === 0) { m.stam = m.maxStam; news(`${m.name} is back from vacation, refreshed!`, '#06d6a0'); } }
+    m.morale += (eq - m.morale) * 0.08;
+    if (d && d.kind === 'game' && m.vac <= 0) m.morale += PACE[d.pace].morale * (m.traits.includes('Hothead') ? 2 : 1);
+    if (M.muse) m.morale = Math.max(50, m.morale);
+    m.morale = clamp(m.morale, 0, 100);
+    if (m.raiseCd > 0) m.raiseCd--;
+  });
+  const sad = STATE.team.find(m => m.morale < 20 && !m.traits.includes('Loyal'));
+  if (sad && STATE.team.length > 1 && Math.random() < 0.08) evBurnout(sad);
+  if (STATE.investor && STATE.investor.weeks > 0) {
+    STATE.investor.weeks--;
+    if (!STATE.investor.weeks) news(`The investor deal has ended. They took ${money(STATE.investor.paid || 0)} in total.`, '#9aa5b1');
+  }
+
+  if (Math.random() < 0.12) randomEvent();
 
   c.w++;
   if (c.w > 4) {
@@ -996,23 +1420,143 @@ function advanceWeek() {
   updateHeader();
   renderActiveTab();
 }
-
 function randomEvent() {
-  const r = Math.random();
-  if (r < 0.35 && STATE.live.length) {
-    const g = pick(STATE.live); g.users = Math.round(g.users * 1.25);
-    news(`A big streamer played ${g.title}! Players up 25%`, '#06d6a0');
-  } else if (r < 0.6) {
-    const m = pick(STATE.team); if (!m) return; STATE.rp += 2;
-    news(`${m.name} had a eureka moment! +2 RP`, '#66fcf1');
-  } else if (r < 0.8 && STATE.live.length && !STATE.facilities.servers) {
-    const g = pick(STATE.live); g.users = Math.round(g.users * 0.9);
-    news(`Server outage hit ${g.title}. Players down 10%`, '#ef476f');
-  } else {
-    const n = 500 * STATE.rank; earn(n);
-    news(`A sponsor sent a gift: +${money(n)}`, '#ffd166');
-  }
+  const pool = STUDIO_EVENTS.filter(e => !e.c || e.c());
+  const total = pool.reduce((a, e) => a + e.w, 0);
+  let r = Math.random() * total;
+  for (const e of pool) { r -= e.w; if (r <= 0) { e.f(); return; } }
 }
+function evPoach() {
+  const cands = STATE.team.filter(m => !m.traits.includes('Loyal') && m.lv >= 2 && m.vac <= 0);
+  if (!cands.length || STATE.team.length < 2) return;
+  const m = pick(cands), rival = pick(STATE.rivals).n;
+  const raise = Math.max(100, Math.round(m.salary * 0.25 / 50) * 50), bonus = Math.round(m.salary * 3 / 100) * 100;
+  showModal(`<h3>Poaching Attempt</h3><div class="note">${esc(rival)} offered ${esc(m.name)} (${staffTitle(m)}, Lv${m.lv}) a job paying ${money(raise)} more a month. ${esc(m.name)} would rather stay, if you make it worth their while.</div>`, [
+    { label: `Match it (+${money(raise)}/mo)`, cls: 'btn-accent', action: () => { m.salary += raise; m.morale = Math.min(100, m.morale + 20); news(`${m.name} is staying! Morale up.`, '#06d6a0'); renderStaff(); } },
+    { label: `Retention bonus (${money(bonus)})`, disabled: STATE.gold < bonus, action: () => { if (!spend(bonus)) return; if (Math.random() < 0.7) { m.morale = Math.min(100, m.morale + 10); news(`${m.name} took the bonus and stayed.`, '#06d6a0'); } else removeStaff(m, `${m.name} took the bonus... then left for ${rival} anyway.`); } },
+    { label: 'Wish them well', action: () => removeStaff(m, `${m.name} left to join ${rival}.`) }]);
+}
+function evInterview() {
+  showModal(`<h3>Magazine Interview</h3><div class="note">Gamer Gazette wants a feature interview with the studio president. How do you play it?</div>`, [
+    { label: 'Humble and grateful', cls: 'btn-accent', action: () => { const f = Math.round(STATE.fans * 0.03) + 50; STATE.fans += f; news(`Readers loved the interview: +${fmt(f)} fans`, '#06d6a0'); } },
+    { label: 'Tease the next project', action: () => { addHype(15); news('The tease landed: +15 hype', '#ffd166'); } },
+    { label: 'Trash-talk the competition', action: () => { if (Math.random() < 0.5) { addHype(30); STATE.fans += Math.round(STATE.fans * 0.04); news('Bold words made headlines: +30 hype!', '#ffd166'); } else { STATE.fans = Math.round(STATE.fans * 0.97); news('It backfired. Fans found you arrogant.', '#ef476f'); } } }]);
+}
+function evInvestor() {
+  const amt = Math.round(20000 * rankK() / 1000) * 1000;
+  showModal(`<h3>Angel Investor</h3><div class="note">An investor offers <b class="gold">${money(amt)}</b> now in exchange for 15% of all game income for the next 48 weeks.</div>`, [
+    { label: 'Take the money', cls: 'btn-accent', action: () => { earn(amt); STATE.investor = { weeks: 48, cut: 0.15, paid: 0 }; news(`Investment secured: +${money(amt)}`, '#ffd166'); } },
+    { label: 'Stay independent', action: () => { STATE.team.forEach(m => { m.morale = Math.min(100, m.morale + 3); }); news('The team respects staying independent.', '#66fcf1'); } }]);
+}
+function discoverTip() {
+  for (let i = 0; i < 20; i++) {
+    const g = pick(STATE.unlocked.g), t = pick(STATE.unlocked.t), k = g + '|' + t;
+    if (!(k in STATE.combos)) { STATE.combos[k] = compat(g, t); return `A jam prototype revealed ${g} × ${t} is ${COMBO_LABEL[STATE.combos[k]]}`; }
+  }
+  return '';
+}
+function evGameJam() {
+  const cost = Math.round(1500 * rankK() / 100) * 100;
+  showModal(`<h3>Weekend Game Jam</h3><div class="note">The team wants to host a 48-hour game jam. It costs ${money(cost)} for food and prizes. Everyone gains EXP, and you might discover a combo.</div>`, [
+    { label: `Host it (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (!spend(cost)) return; STATE.team.forEach(m => { if (m.vac > 0) return; gainExp(m, 15); m.stam = Math.max(1, m.stam - 15); m.morale = Math.min(100, m.morale + 8); }); STATE.rp += 3; const tip = discoverTip(); news(`Game jam done! EXP for all, +3 RP${tip ? '. ' + tip : ''}`, '#06d6a0'); renderLab(); } },
+    { label: 'Not this time' }]);
+}
+function evCopycat() {
+  const h = pick(STATE.history.filter(x => x.total >= 26)); if (!h) return;
+  const rival = pick(STATE.rivals).n, cost = Math.round(8000 * rankK() / 1000) * 1000;
+  showModal(`<h3>Copycat!</h3><div class="note">${esc(rival)} released a shameless clone of ${esc(h.title)}.</div>`, [
+    { label: `Sue them (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (!spend(cost)) return; if (Math.random() < 0.55) { earn(cost * 3); news(`You won the lawsuit: +${money(cost * 3)}`, '#06d6a0'); } else news('The court sided with them. Legal fees lost.', '#ef476f'); } },
+    { label: 'Call it out publicly', action: () => { const f = Math.round(STATE.fans * 0.02) + 40; STATE.fans += f; news(`Fans rallied behind you: +${fmt(f)} fans`, '#06d6a0'); } },
+    { label: 'Ignore it', action: () => { const g = STATE.live.find(x => x.title === h.title); if (g) { g.users = Math.round(g.users * 0.85); news(`${g.title} lost players to the clone.`, '#ef476f'); } else news('Life goes on.', '#9aa5b1'); } }]);
+}
+function evBurnout(m) {
+  if (!m || !findStaff(m.id)) return;
+  const bonus = Math.round(m.salary * 1.5 / 100) * 100;
+  showModal(`<h3>Burnout Warning</h3><div class="note">${esc(m.name)} looks exhausted and miserable (morale ${Math.round(m.morale)}). They might walk out.</div>`, [
+    { label: 'Send them on vacation (2 weeks)', cls: 'btn-accent', action: () => startVacation(m) },
+    { label: `Pay a bonus (${money(bonus)})`, disabled: STATE.gold < bonus, action: () => { if (!spend(bonus)) return; m.morale = Math.min(100, m.morale + 25); news(`${m.name} appreciates the bonus.`, '#06d6a0'); } },
+    { label: "They'll be fine", action: () => { if (!m.traits.includes('Loyal') && STATE.team.length > 1 && Math.random() < 0.4) removeStaff(m, `${m.name} quit. The burnout was real.`); else { m.morale = Math.max(0, m.morale - 5); news(`${m.name} soldiers on, unhappily.`, '#ef476f'); } } }]);
+}
+function evGenius() {
+  const c = randomStaff(3); c.lv = 3; c.traits = [pick(['Visionary', 'Fast Learner', 'Workaholic', 'Rockstar'])];
+  c.salary = Math.round(c.salary * 1.3 / 50) * 50;
+  const fee = c.salary * 3, full = STATE.team.length >= deskCount();
+  showModal(`<h3>A Walk-in Genius</h3><div class="note"><b>${esc(c.name)}</b>, a ${c.role} with a legendary portfolio, wants to join.<br>${STATS.map((x, i) => x + ' ' + c.s[i]).join(' · ')} · SPD ${c.spd}<br>Trait: ${c.traits[0]} · ${money(c.salary)}/mo · signing fee ${money(fee)}${full ? '<br><span class="bad">No free desk.</span>' : ''}</div>`, [
+    { label: 'Hire them', cls: 'btn-accent', disabled: full || STATE.gold < fee, action: () => { if (!spend(fee)) return; c.id = STATE.nextId++; STATE.team.push(c); computeMods(); news(`${c.name} joined! What a coup.`, '#ffd166'); renderStaff(); checkMilestones(); } },
+    { label: 'Not now' }]);
+}
+function evFanArt() {
+  const g = pick(STATE.live); if (!g) return;
+  const cost = Math.round(2000 * rankK() / 100) * 100;
+  showModal(`<h3>Fan Art Contest</h3><div class="note">The ${esc(g.title)} community wants an official fan art contest with prizes.</div>`, [
+    { label: `Run it (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (!spend(cost)) return; g.users = Math.round(g.users * 1.12); g.ret = Math.min(0.985, g.ret + 0.005); STATE.fans += 100 + Math.round(STATE.fans * 0.02); news(`The contest was a hit! ${g.title} players +12%`, '#06d6a0'); } },
+    { label: 'Just share their work', action: () => { STATE.fans += 40; news('Fans appreciated the shout-out.', '#66fcf1'); } }]);
+}
+const ESPORT_GENRES = ['Action', 'Sports', 'Strategy', 'MMO', 'Card Game', 'Racing'];
+function evEsports() {
+  const g = pick(STATE.live.filter(x => ESPORT_GENRES.includes(x.genre))); if (!g) return;
+  const cost = Math.round(10000 * rankK() / 1000) * 1000;
+  showModal(`<h3>Esports Invitation</h3><div class="note">A tournament organiser wants to feature ${esc(g.title)}.</div>`, [
+    { label: `Sponsor the prize pool (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (!spend(cost)) return; g.users = Math.round(g.users * 1.3); g.peak = Math.max(g.peak, g.users); STATE.fans += Math.round(STATE.fans * 0.05) + 200; news(`The tournament drew huge crowds! ${g.title} players +30%`, '#06d6a0'); } },
+    { label: 'License it for a fee', action: () => { const fee = Math.round(3000 * rankK()); earn(fee); g.users = Math.round(g.users * 1.08); news(`Licensing fee: +${money(fee)}`, '#ffd166'); } },
+    { label: 'Decline' }]);
+}
+function evPlatformDeal() {
+  const opts = PLATFORMS.filter(platformOpen); if (!opts.length) return;
+  const p = pick(opts);
+  showModal(`<h3>Platform Partnership</h3><div class="note">The ${p.n} team offers featured placement for your next game, if you release it on ${p.n}.</div>`, [
+    { label: 'Accept (+40% downloads)', cls: 'btn-accent', action: () => { STATE.platDeal = p.n; news(`Deal: your next ${p.n} game gets featured.`, '#ffd166'); } },
+    { label: 'Decline' }]);
+}
+function evSecurity() {
+  const g = pick(STATE.live); if (!g) return;
+  const cost = Math.round(3000 * rankK() / 100) * 100;
+  showModal(`<h3>Security Report</h3><div class="note">A security researcher found a vulnerability in the ${esc(g.title)} servers and asks for a bug bounty.</div>`, [
+    { label: `Pay the bounty (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (!spend(cost)) return; STATE.fans += 60; news('Patched, and praised for handling it well.', '#06d6a0'); } },
+    { label: 'Ignore it', action: () => { if (Math.random() < 0.5) { g.users = Math.round(g.users * 0.75); STATE.fans = Math.round(STATE.fans * 0.97); news(`${g.title} was hacked! Players -25%`, '#ef476f'); } else news('Nothing happened... this time.', '#9aa5b1'); } }]);
+}
+function evParty() {
+  const cost = Math.round(STATE.team.length * 400 * rankK() / 100) * 100;
+  showModal(`<h3>Office Party?</h3><div class="note">The team has been working hard. Throw a party?</div>`, [
+    { label: `Throw a party (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (!spend(cost)) return; STATE.team.forEach(m => { m.morale = Math.min(100, m.morale + 12); m.stam = Math.max(1, m.stam - 10); }); news('Great party! Team morale +12', '#06d6a0'); } },
+    { label: 'Maybe next month' }]);
+}
+function evCharity() {
+  const cost = Math.round(2500 * rankK() / 100) * 100;
+  showModal(`<h3>Charity Stream</h3><div class="note">A charity marathon stream invites your studio to donate and appear on air.</div>`, [
+    { label: `Donate (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (!spend(cost)) return; STATE.fans += Math.round(STATE.fans * 0.04) + 120; STATE.team.forEach(m => { m.morale = Math.min(100, m.morale + 5); }); news('Viewers loved your generosity.', '#06d6a0'); } },
+    { label: 'Decline politely' }]);
+}
+function evRivalFeud() {
+  const r = pick(STATE.rivals);
+  showModal(`<h3>Rival Drama</h3><div class="note">${esc(r.n)}'s CEO mocked your studio during a keynote.</div>`, [
+    { label: 'Fire back on social media', cls: 'btn-accent', action: () => { if (Math.random() < 0.65) { addHype(20); STATE.team.forEach(m => { m.morale = Math.min(100, m.morale + 5); }); news('Your comeback went viral: +20 hype', '#ffd166'); } else { STATE.fans = Math.round(STATE.fans * 0.97); news('The spat made you look petty.', '#ef476f'); } } },
+    { label: 'Rise above it', action: () => { STATE.fans += 50; news('Fans respected the high road.', '#66fcf1'); } }]);
+}
+const STUDIO_EVENTS = [
+  { w: 3, c: () => STATE.live.length, f: () => { const g = pick(STATE.live); g.users = Math.round(g.users * 1.25); news(`A big streamer played ${g.title}! Players +25%`, '#06d6a0'); } },
+  { w: 3, c: () => STATE.team.length, f: () => { const m = pick(STATE.team); STATE.rp += 2; news(`${m.name} had a eureka moment! +2 RP`, '#66fcf1'); } },
+  { w: 2, c: () => STATE.live.length && !STATE.facilities.servers, f: () => { const g = pick(STATE.live); g.users = Math.round(g.users * 0.9); news(`Server outage hit ${g.title}. Players -10%`, '#ef476f'); } },
+  { w: 2, f: () => { const n = 500 * STATE.rank; earn(n); news(`A sponsor sent a gift: +${money(n)}`, '#ffd166'); } },
+  { w: 2, c: () => STATE.team.length, f: () => { const m = pick(STATE.team); STATE.team.forEach(x => { x.morale = Math.min(100, x.morale + 3); }); m.morale = Math.min(100, m.morale + 12); news(`It's ${m.name}'s birthday! Cake for everyone.`, '#ffd166'); } },
+  { w: 2, f: () => { const f = Math.round(STATE.fans * 0.03) + 30; STATE.fans += f; news(`A meme about your studio went viral: +${fmt(f)} fans`, '#06d6a0'); } },
+  { w: 1, f: () => { STATE.team.forEach(x => { x.stam = Math.max(1, x.stam - 20); }); news('The air conditioning broke in a heatwave. Everyone is sluggish.', '#ef476f'); } },
+  { w: 1, c: () => STATE.history.length, f: () => { const h = pick(STATE.history.slice(0, 10)); const f = Math.round(h.total * 15); STATE.fans += f; news(`A retro site praised ${h.title}: +${f} fans`, '#06d6a0'); } },
+  { w: 1, f: () => { const t = discoverTip(); if (t) news(`Industry gossip: ${t.replace('A jam prototype revealed', 'word is')}`, '#66fcf1'); } },
+  { w: 3, c: () => STATE.team.length > 2, f: evPoach },
+  { w: 2, f: evInterview },
+  { w: 1, c: () => STATE.rank >= 2 && !(STATE.investor && STATE.investor.weeks > 0), f: evInvestor },
+  { w: 2, c: () => STATE.team.length, f: evGameJam },
+  { w: 2, c: () => STATE.history.some(h => h.total >= 26), f: evCopycat },
+  { w: 1, c: () => STATE.rank >= 3, f: evGenius },
+  { w: 2, c: () => STATE.live.length, f: evFanArt },
+  { w: 2, c: () => STATE.live.some(g => ESPORT_GENRES.includes(g.genre)), f: evEsports },
+  { w: 2, c: () => !STATE.platDeal, f: evPlatformDeal },
+  { w: 1, c: () => STATE.live.length && !STATE.facilities.servers, f: evSecurity },
+  { w: 2, f: evParty },
+  { w: 1, f: evCharity },
+  { w: 1, c: () => STATE.history.length >= 3, f: evRivalFeud }
+];
 function monthEnd() {
   const cost = monthlyCost();
   STATE.gold -= cost; STATE.ledger.exp += cost;
@@ -1028,6 +1572,8 @@ function monthEnd() {
     if (STATE.cal.m === 1 && p.year === STATE.cal.y) news(`New platform launched: ${p.n}! Licences in Market.`, '#66fcf1');
     if (STATE.cal.m === 1 && p.end === STATE.cal.y) news(`${p.n} has been discontinued.`, '#9aa5b1');
   });
+  rivalsTick();
+  checkMilestones();
   const nextM = STATE.cal.m % 12 + 1;
   if (EVENT_MONTHS[nextM]) news(`Coming next month: ${EVENT_MONTHS[nextM]}`, '#ffd166');
   if (STATE.gold < 0) {
@@ -1040,17 +1586,24 @@ function monthEnd() {
 }
 function yearEnd() {
   const best = STATE.yearBest; STATE.yearBest = null;
-  if (!best) return;
-  let award = null;
-  if (best.total >= 34) award = { n: 'Game of the Year', cash: 40000, fans: 2000 };
-  else if (best.total >= 28) award = { n: 'Award of Excellence', cash: 15000, fans: 600 };
-  else if (STATE.cal.y === 2) award = { n: 'Best Newcomer', cash: 5000, fans: 200 };
-  if (!award) { news(`Awards night: no trophy for Year ${STATE.cal.y - 1}.`, '#9aa5b1'); return; }
+  const rTop = STATE.rivals.reduce((a, r) => (r.yearBest || 0) > (a ? a.yearBest : 0) ? r : a, null);
+  const rScore = rTop ? rTop.yearBest || 0 : 0;
+  STATE.rivals.forEach(r => { r.yearBest = 0; r.skill += 0.4; });
+  const yr = STATE.cal.y - 1;
+  let award = null, rivalLine = '';
+  if (best && best.total >= 34 && best.total >= rScore) award = { n: 'Game of the Year', cash: 40000, fans: 2000, key: 'goty' };
+  else if (best && best.total >= 28) award = { n: 'Award of Excellence', cash: 15000, fans: 600, key: 'excellence' };
+  else if (best && yr === 1) award = { n: 'Best Newcomer', cash: 5000, fans: 200 };
+  if (rTop && rScore >= 34 && (!best || rScore > best.total)) rivalLine = `<br><span class="muted">${esc(rTop.n)} took Game of the Year with a ${rScore}/40 release.</span>`;
+  if (!award) { news(`Awards night: no trophy for Year ${yr}.${rivalLine ? ' ' + rTop.n + ' won GOTY.' : ''}`, '#9aa5b1'); return; }
   earn(award.cash); STATE.fans += award.fans; addRankExp(30);
+  if (award.key) STATE.awards[award.key] = (STATE.awards[award.key] || 0) + 1;
+  STATE.team.forEach(m => { m.morale = Math.min(100, m.morale + 8); });
   playSound('fanfare');
-  showModal(`<h3>🏆 Year ${STATE.cal.y - 1} Awards</h3><div class="big" style="font-size:1.1rem;">${award.n}</div>
+  showModal(`<h3>🏆 Year ${yr} Awards</h3><div class="big" style="font-size:1.1rem;">${award.n}</div>
     <div style="text-align:center;">${esc(best.title)} (${best.total}/40)</div>
-    <div class="note">Prize: <b class="gold">${money(award.cash)}</b> and +${fmt(award.fans)} fans.</div>`, [{ label: 'Celebrate!', cls: 'btn-accent' }]);
+    <div class="note">Prize: <b class="gold">${money(award.cash)}</b> and +${fmt(award.fans)} fans. The team is thrilled.${rivalLine}</div>`, [{ label: 'Celebrate!', cls: 'btn-accent' }]);
+  checkMilestones();
 }
 function gameOver() {
   STATE.over = true;
@@ -1143,13 +1696,13 @@ function buyLicence(n) {
 function findLive(id) { return STATE.live.find(g => g.id === id); }
 function liveEvent(id) {
   const g = findLive(id); if (!g || g.event > 0) return;
-  const cost = Math.round(2000 + g.users * 0.3);
+  const cost = Math.round((2000 + g.users * 0.3) * (hasTech('liveops') ? 0.7 : 1));
   if (!spend(cost)) return;
   g.event = 4; playSound('coin'); news(`Event started in ${g.title}!`, '#06d6a0'); renderLive();
 }
 function liveUpdate(id) {
   const g = findLive(id); if (!g) return;
-  const cost = 3000 + g.updates * 1500;
+  const cost = Math.round((3000 + g.updates * 1500) * (hasTech('liveops') ? 0.7 : 1));
   if (g.ret >= 0.985) { news('This game is already as sticky as it gets.', '#9aa5b1'); return; }
   if (!spend(cost)) return;
   g.ret = Math.min(0.985, g.ret + 0.012); g.updates++;
@@ -1177,21 +1730,53 @@ function findStaff(id) { return STATE.team.find(m => m.id === id); }
 function trainCost(m, k) { return Math.round((k === 4 ? 2500 : 1500) * (1 + 0.15 * (m.lv - 1)) / 50) * 50; }
 function openTraining(id) {
   const m = findStaff(id); if (!m) return;
-  const opts = [['Coding Bootcamp', 'Play +5'], ['Art Class', 'Impact +5'], ['Community Seminar', 'Retention +5'], ['Brainstorm Retreat', 'Craze +5'], ['Speed Drills', 'Speed +3']];
-  const rows = opts.map((o, k) => `<div class="row card" style="flex-direction:row;"><span><b>${o[0]}</b><br><span class="muted">${o[1]} · -20 stamina</span></span>
-    <button class="btn-sm btn-accent" onclick="doTrain(${id},${k})">${money(trainCost(m, k))}</button></div>`).join('');
-  showModal(`<h3>Train ${esc(m.name)}</h3><div class="note">${m.role} · Lv${m.lv} · ${STATS.map((s, i) => s[0] + ':' + m.s[i]).join(' ')} · SPD:${m.spd}<br>Stamina ${Math.round(m.stam)}/${m.maxStam}</div>${rows}`, [{ label: 'Done' }]);
+  const plus = 5 + (hasTech('academy') ? 2 : 0);
+  const opts = [['Coding Bootcamp', `Play +${plus}`], ['Art Class', `Impact +${plus}`], ['Community Seminar', `Retention +${plus}`], ['Brainstorm Retreat', `Craze +${plus}`], ['Speed Drills', 'Speed +3']];
+  const rows = opts.map((o, k) => `<div class="row card" style="flex-direction:row;"><span><b>${o[0]}</b><br><span class="muted">${o[1]} · EXP · -20 stamina</span></span>
+    <button class="btn-sm btn-accent" ${m.vac > 0 ? 'disabled' : ''} onclick="doTrain(${id},${k})">${money(trainCost(m, k))}</button></div>`).join('');
+  showModal(`<h3>Train ${esc(m.name)}</h3><div class="note">${staffTitle(m)} · Lv${m.lv} · ${STATS.map((s, i) => s[0] + ':' + m.s[i]).join(' ')} · SPD:${m.spd}<br>Stamina ${Math.round(m.stam)}/${m.maxStam} · Morale ${Math.round(m.morale)}</div>${rows}`, [{ label: 'Done' }]);
 }
 function doTrain(id, k) {
-  const m = findStaff(id); if (!m) return;
+  const m = findStaff(id); if (!m || m.vac > 0) return;
   if (m.rest > 0 || m.stam < 20) { playSound('error'); news(`${m.name} is too tired to train.`, '#ef476f'); return; }
   if (!spend(trainCost(m, k))) return;
-  if (k === 4) m.spd += 3; else { m.s[k] += 5; if (Math.random() < 0.5) m.s[ri(0, 3)] += 1; }
-  m.stam -= 20; m.exp += 5;
-  if (m.exp >= 20 + m.lv * 15) levelUp(m);
+  const plus = 5 + (hasTech('academy') ? 2 : 0);
+  if (k === 4) m.spd += 3; else { m.s[k] += plus; if (Math.random() < 0.5) m.s[ri(0, 3)] += 1; }
+  m.stam -= 20;
+  gainExp(m, 6 * (hasTech('academy') ? 2 : 1));
   playSound('level');
   openTraining(id); closeModal();
   renderStaff(); save();
+}
+function raiseStaff(id) {
+  const m = findStaff(id); if (!m) return;
+  if (m.raiseCd > 0) { news(`${m.name} had a raise recently. Try again in ${m.raiseCd} weeks.`, '#9aa5b1'); return; }
+  const inc = Math.max(100, Math.round(m.salary * 0.1 / 50) * 50);
+  m.salary += inc; m.morale = Math.min(100, m.morale + 20); m.raiseCd = 12;
+  playSound('coin'); news(`${m.name} got a ${money(inc)}/mo raise. Morale up!`, '#06d6a0');
+  renderStaff(); save();
+}
+function startVacation(m) {
+  if (!m || m.vac > 0) return;
+  m.vac = 2; m.rest = 0; m.morale = Math.min(100, m.morale + 25);
+  news(`${m.name} is off on vacation for 2 weeks.`, '#66fcf1');
+  renderStaff();
+}
+function vacationStaff(id) {
+  const m = findStaff(id); if (!m) return;
+  if (STATE.team.filter(x => x.vac <= 0).length <= 1) { news('Someone has to keep the lights on!', '#ef476f'); return; }
+  startVacation(m); save();
+}
+function promoteStaff(id) {
+  const m = findStaff(id); if (!m || m.senior || m.lv < 10) return;
+  const cost = m.salary * 6;
+  showModal(`<h3>Promote ${esc(m.name)}?</h3><div class="note">${esc(m.name)} becomes <b>${SENIOR_TITLES[m.role]}</b>: main-stat ideas +20%, works 10% faster, and the whole team's ideas +3%. Salary rises 40%.</div>`,
+    [{ label: `Promote (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => {
+        if (!spend(cost)) return;
+        m.senior = true; m.salary = Math.round(m.salary * 1.4 / 50) * 50; m.morale = Math.min(100, m.morale + 15);
+        computeMods(); playSound('fanfare'); news(`${m.name} is now ${SENIOR_TITLES[m.role]}!`, '#ffd166');
+        renderStaff(); checkMilestones(); save();
+      } }, { label: 'Cancel' }]);
 }
 function openRoleChange(id) {
   const m = findStaff(id); if (!m) return;
@@ -1205,46 +1790,51 @@ function setRole(id, r) {
 function fireStaff(id) {
   const m = findStaff(id); if (!m) return;
   if (STATE.team.length <= 1) { news('You need at least one staff member.', '#ef476f'); return; }
-  showModal(`<h3>Let ${esc(m.name)} go?</h3><div class="note">Saves ${money(m.salary)} per month. This can't be undone.</div>`,
-    [{ label: 'Dismiss', cls: 'btn-danger', action: () => { STATE.team = STATE.team.filter(x => x.id !== id); renderStaff(); save(); } }, { label: 'Cancel' }]);
+  showModal(`<h3>Let ${esc(m.name)} go?</h3><div class="note">Saves ${money(m.salary)} per month. The rest of the team will be a little shaken. This can't be undone.</div>`,
+    [{ label: 'Dismiss', cls: 'btn-danger', action: () => { removeStaff(m, `${m.name} has left the studio.`); STATE.team.forEach(x => { x.morale = Math.max(0, x.morale - 4); }); save(); } }, { label: 'Cancel' }]);
 }
 function postAd(tier) {
   const cost = [0, 3000, 12000][tier];
   if (!spend(cost)) return;
-  STATE.candidates = [randomStaff(tier), randomStaff(tier), randomStaff(Math.min(2, tier + (Math.random() < 0.2 ? 1 : 0)))];
+  const third = hasTech('scout') ? Math.min(3, tier + 1) : Math.min(2, tier + (Math.random() < 0.2 ? 1 : 0));
+  STATE.candidates = [randomStaff(tier), randomStaff(tier), randomStaff(third)];
   openCandidates();
 }
+function signFee(c) { return Math.round(c.salary * 2 * (hasTech('hr') ? 0.5 : 1) / 50) * 50; }
 function openCandidates() {
   const full = STATE.team.length >= deskCount();
   const rows = STATE.candidates.map((c, i) => `<div class="card">
       <div class="row"><b>${esc(c.name)} · ${c.role}</b><span class="muted">${money(c.salary)}/mo</span></div>
       <div class="muted">${STATS.map((s, j) => s + ' ' + c.s[j]).join(' · ')} · SPD ${c.spd}</div>
-      <div class="row"><span class="gold">Signing fee ${money(c.salary * 2)}</span>
+      <div>${c.traits.map(t => `<span class="chip ${TRAITS[t].bad ? 'chip-bad' : ''}">${t}</span>`).join('')}</div>
+      <div class="mini muted">${c.traits.map(t => `${t}: ${TRAITS[t].d}`).join(' · ')}</div>
+      <div class="row"><span class="gold">Signing fee ${money(signFee(c))}</span>
       <button class="btn-sm btn-accent" ${full ? 'disabled' : ''} onclick="hireCandidate(${i})">Hire</button></div></div>`).join('');
   showModal(`<h3>Applicants</h3>${full ? '<div class="note bad">All desks are full. Upgrade your floor or dismiss someone first.</div>' : ''}${rows || '<div class="note">No applicants left.</div>'}`, [{ label: 'Close' }]);
 }
 function hireCandidate(i) {
   const c = STATE.candidates[i];
   if (!c || STATE.team.length >= deskCount()) return;
-  if (!spend(c.salary * 2)) return;
+  if (!spend(signFee(c))) return;
   c.id = STATE.nextId++;
+  normStaff(c);
   STATE.team.push(c);
   STATE.candidates.splice(i, 1);
+  computeMods();
   playSound('fanfare'); news(`${c.name} joined the studio!`, '#06d6a0');
-  openCandidates(); closeModal(); renderStaff(); save();
+  openCandidates(); closeModal(); renderStaff(); checkMilestones(); save();
 }
 function snackBundle() {
   if (!spend(1000)) return;
-  STATE.team.forEach(m => { m.stam = Math.min(m.maxStam, m.stam + 50); if (m.rest) { m.rest = 0; m.stam = Math.max(m.stam, 40); } });
+  STATE.team.forEach(m => { m.stam = Math.min(m.maxStam, m.stam + 50); m.morale = Math.min(100, m.morale + 2); if (m.rest) { m.rest = 0; m.stam = Math.max(m.stam, 40); } });
   playSound('coin'); news('Snacks delivered! Everyone perks up.', '#06d6a0'); renderStaff();
 }
 function teamRetreat() {
   const cost = 6000 + STATE.team.length * 800;
   if (!spend(cost)) return;
-  STATE.team.forEach(m => { m.s = m.s.map(v => v + 2); m.stam = m.maxStam; m.rest = 0; });
-  playSound('fanfare'); news('Team retreat: everyone +2 all stats!', '#ffd166'); renderStaff(); save();
+  STATE.team.forEach(m => { m.s = m.s.map(v => v + 2); m.stam = m.maxStam; m.rest = 0; m.morale = Math.min(100, m.morale + 10); });
+  playSound('fanfare'); news('Team retreat: everyone +2 all stats and +10 morale!', '#ffd166'); renderStaff(); save();
 }
-
 /* =========================================================
    LAB & STUDIO ACTIONS
    ========================================================= */
@@ -1262,13 +1852,30 @@ function upgradeFloor() {
   if (!next || STATE.rank < next.rank) { playSound('error'); return; }
   if (!spend(next.cost)) return;
   STATE.floor++;
-  playSound('fanfare'); news(`Moved up to Floor ${STATE.floor}!`, '#ffd166');
-  renderStudio(); save();
+  STATE.team.forEach(m => { m.morale = Math.min(100, m.morale + 15); });
+  playSound('fanfare'); news(`Moved up to Floor ${STATE.floor}! The team loves the new space.`, '#ffd166');
+  renderStudio(); checkMilestones(); save();
+}
+function buyDecor(id) {
+  const dc = DECOR[id]; if (!dc || STATE.decor.includes(id)) return;
+  if (STATE.decor.length >= DECOR_SLOTS[STATE.floor - 1]) { news('No room! Move to a bigger floor.', '#ef476f'); playSound('error'); return; }
+  if (!spend(dc.cost)) return;
+  STATE.decor.push(id); computeMods();
+  playSound('fanfare'); news(`${dc.n} added to the office!`, '#06d6a0');
+  renderStudio(); checkMilestones(); save();
+}
+function unlockTech(id) {
+  const t = TECH.find(x => x.id === id); if (!t || STATE.tech[id]) return;
+  if (STATE.rank < t.rank || (t.req && !STATE.tech[t.req])) { playSound('error'); return; }
+  if (STATE.rp < t.rp) { news('Not enough research points.', '#ef476f'); playSound('error'); return; }
+  STATE.rp -= t.rp; STATE.tech[id] = true; computeMods();
+  playSound('level'); news(`Researched: ${t.n}`, '#ffd166');
+  renderLab(); updateHeader(); save();
 }
 function buyFacility(k) {
   const f = FACILITIES[k]; if (!f || STATE.facilities[k]) return;
   if (!spend(f.cost)) return;
-  STATE.facilities[k] = true; playSound('fanfare'); news(`${f.n} installed!`, '#06d6a0'); renderStudio(); save();
+  STATE.facilities[k] = true; computeMods(); playSound('fanfare'); news(`${f.n} installed!`, '#06d6a0'); renderStudio(); save();
 }
 function toggleSound() { STATE.settings.sound = !STATE.settings.sound; renderStudio(); save(); }
 function resetGame() {
@@ -1305,6 +1912,7 @@ function updateHeader() {
   const c = STATE.cal;
   $('cal-text').textContent = `Y${c.y} M${c.m} W${c.w}`;
   $('rank-text').textContent = STATE.rank;
+  $('tier-text').textContent = studioTier();
   $('rank-exp').textContent = `(${Math.floor(STATE.rankExp / rankNeed() * 100)}%)`;
   const gt = $('gold-text'); gt.textContent = fmt(STATE.gold); gt.parentElement.style.color = STATE.gold < 0 ? 'var(--danger)' : 'var(--gold)';
   $('fans-text').textContent = fmt(STATE.fans);
@@ -1327,6 +1935,10 @@ function refreshDevOptions() {
   if (keep.p && P[keep.p] && platformOpen(P[keep.p])) $('sel-platform').value = keep.p;
   else { const first = (platformOpen(P['Smartphone']) && P['Smartphone']) || PLATFORMS.find(platformOpen); $('sel-platform').value = first ? first.n : ''; }
   $('sel-pub').value = keep.pub && PUB[keep.pub] && pubAvailable(PUB[keep.pub]) ? keep.pub : 'Self-publish';
+  const keepSeq = $('sel-seq').value, seen = new Set();
+  const seqs = STATE.history.filter(h => h.total >= 26 && !seen.has(h.title) && seen.add(h.title));
+  $('sel-seq').innerHTML = '<option value="">None (new game)</option>' + seqs.map(h => `<option value="${esc(h.title)}">${esc(h.title)} (${h.total})</option>`).join('');
+  $('sel-seq').value = seqs.some(h => h.title === keepSeq) ? keepSeq : '';
 }
 function updatePreview() {
   const g = $('sel-genre').value, t = $('sel-theme').value, p = $('sel-platform').value;
@@ -1335,6 +1947,8 @@ function updatePreview() {
   const fi = isNaN(+$('sel-focus').value) ? -1 : +$('sel-focus').value;
   const mi = isNaN(+$('sel-monet').value) ? 1 : +$('sel-monet').value;
   const pb = PUB[$('sel-pub').value] || PUBLISHERS[0];
+  const ai = isNaN(+$('sel-aud').value) ? 2 : +$('sel-aud').value, aud = AUDIENCES[ai];
+  const seq = $('sel-seq').value;
   const key = g + '|' + t, known = key in STATE.combos;
   const plat = P[p], fit = plat.fav.includes(g);
   const drain = (g === 'Card Game' && p === 'PC') ? 0 : plat.drain * (G[g].drain || 1);
@@ -1349,6 +1963,8 @@ function updatePreview() {
     `${esc(g)} rewards <b style="color:${STAT_COLORS[top]}">${STATS[top]}</b>${fi === top ? ' · <span class="good">focus matches</span>' : ''}<br>` +
     `<span class="muted">${BUDGETS[bi].n}: ${BUDGETS[bi].desc}. ${MONET[mi].n}: ${MONET[mi].desc}.</span><br>` +
     (pb.adv ? `${esc(pb.n)}: downloads ×${pb.boost}, takes ${Math.round(pb.cut * 100)}%, expects ${pb.target}+/40<br>` : '') +
+    `${aud.n} audience: ${aud.desc}${aud.good.includes(g) ? ' · <span class="good">loves ' + esc(g) + '</span>' : aud.bad.includes(g) ? ' · <span class="bad">dislikes ' + esc(g) + '</span>' : ''}${ai === 0 && mi === 3 ? ' · <span class="bad">loot boxes for kids will be slammed</span>' : ''}<br>` +
+    (seq ? `<span class="gold">Sequel to ${esc(seq)}: extra hype and downloads, no rerun penalty.</span><br>` : '') +
     `${trend}${STATE.hypeBank ? ` · Banked hype <b class="gold">${STATE.hypeBank}</b>` : ''}`;
 }
 function renderDevMode() {
@@ -1359,6 +1975,16 @@ function renderDevMode() {
   $('btn-boost').disabled = !(d && d.kind === 'game' && d.phase === 3 && !d.boostUsed);
   if (!d) updatePreview();
   updateDevPanel();
+  renderDevControls();
+}
+function renderDevControls() {
+  const d = STATE.activeDev, el = $('dev-controls');
+  if (!d || d.kind !== 'game') { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="mini muted">Work pace</div>
+    <div class="grid3">${PACE.map((p, i) => `<button class="btn-sm ${d.pace === i ? 'btn-accent' : ''}" onclick="setPace(${i})">${p.n}</button>`).join('')}</div>
+    <div class="mini muted">${PACE[d.pace].d}</div>
+    <div class="mini muted">Marketing (each once per project)</div>
+    <div class="grid3">${MARKETING.map((mk, i) => `<button class="btn-sm" ${d.mkt[i] || STATE.gold < mktCost(mk) ? 'disabled' : ''} onclick="buyMarketing(${i})">${mk.n}<br>${d.mkt[i] ? 'done' : money(mktCost(mk))}</button>`).join('')}</div>`;
 }
 function updateDevPanel() {
   const d = STATE.activeDev; if (!d) return;
@@ -1371,7 +1997,7 @@ function updateDevPanel() {
     $('dev-stats').innerHTML = '';
     return;
   }
-  $('dev-info').innerHTML = `<b>${esc(d.phaseName)}</b> · ${esc(d.genre)} × ${esc(d.theme)} · ${esc(d.platform)}<br>Bugs found: <span class="${d.bugs > 6 ? 'bad' : ''}">${d.bugs}</span> · Hype ${Math.round(d.hype || 0)}${d.lead && findStaff(d.lead) ? ' · Lead ' + esc(findStaff(d.lead).name) : ''}${d.phase === 3 && !d.boostUsed ? ' · <span class="gold">Boost ready!</span>' : ''}`;
+  $('dev-info').innerHTML = `<b>${esc(d.phaseName)}</b> · ${esc(d.genre)} × ${esc(d.theme)} · ${esc(d.platform)}${d.hook ? ' · ' + esc(d.hook) : ''}<br>Bugs found: <span class="${d.bugs > 6 ? 'bad' : ''}">${d.bugs}</span> · Hype ${Math.round(d.hype || 0)}${d.lead && findStaff(d.lead) ? ' · Lead ' + esc(findStaff(d.lead).name) : ''}${d.phase === 3 && !d.boostUsed ? ' · <span class="gold">Boost ready!</span>' : ''}`;
   const max = Math.max(60, ...d.stats);
   $('dev-stats').innerHTML = STATS.map((s, i) => `<div class="statrow"><span style="color:${STAT_COLORS[i]}">${s}</span><div class="bar"><div style="background:${STAT_COLORS[i]};width:${d.stats[i] / max * 100}%"></div></div><span>${Math.round(d.stats[i])}</span></div>`).join('');
 }
@@ -1382,7 +2008,7 @@ function renderLive() {
     <div class="note">Released games earn weekly from their players. Events boost income for 4 weeks, updates improve retention, ads bring new players.</div>`;
   STATE.live.forEach(g => {
     const weekly = weeklyRev(g);
-    const evCost = Math.round(2000 + g.users * 0.3), upCost = 3000 + g.updates * 1500, adCost = Math.round(5000 * (1 + 0.2 * (STATE.rank - 1)));
+    const lk = hasTech('liveops') ? 0.7 : 1, evCost = Math.round((2000 + g.users * 0.3) * lk), upCost = Math.round((3000 + g.updates * 1500) * lk), adCost = Math.round(5000 * (1 + 0.2 * (STATE.rank - 1)));
     html += `<div class="card">
       <div class="row"><b>${esc(g.title)}</b><span class="gold">${money(weekly)}/wk</span></div>
       <div class="muted">${esc(g.platform)} · Score ${g.score}/40 · ${g.weeks} wks live${g.cut ? ` · publisher takes ${Math.round(g.cut * 100)}%` : ''}${g.saleWeeks > 0 ? ' · <span class="gold">On sale</span>' : ''}</div>
@@ -1404,26 +2030,40 @@ function renderStaff() {
     <div class="grid2"><button class="btn-accent" onclick="snackBundle()">Snack Bundle $1,000</button>
     <button onclick="teamRetreat()">Team Retreat ${money(6000 + STATE.team.length * 800)}</button></div>`;
   STATE.team.forEach(m => {
-    const stamPct = m.stam / m.maxStam * 100;
+    const stamPct = m.stam / m.maxStam * 100, mor = Math.round(m.morale), expPct = Math.min(100, m.exp / expNeed(m.lv) * 100);
+    const pend = perkPending(m) >= 0;
+    const morCol = mor < 30 ? 'var(--danger)' : mor < 60 ? 'var(--gold)' : 'var(--good)';
     html += `<div class="card">
-      <div class="row"><b><span style="color:${ROLES[m.role].color}">■</span> ${esc(m.name)} · ${m.role}</b><span>Lv${m.lv}</span></div>
+      <div class="row"><b><span style="color:${ROLES[m.role].color}">■</span> ${esc(m.name)}${m.senior ? ' ★' : ''}</b><span>Lv${m.lv}</span></div>
+      <div class="mini">${staffTitle(m)}${m.vac > 0 ? ` · <span class="gold">On vacation (${m.vac}w)</span>` : ''} · Shipped ${m.shipped} · MVP ${m.mvps}${m.hits ? ' · 🏆' + m.hits : ''}</div>
+      <div>${m.traits.map(t => `<span class="chip ${TRAITS[t].bad ? 'chip-bad' : ''}">${t}</span>`).join('')}${m.perks.map(pid => `<span class="chip chip-gold">${PERK_INFO[pid].n}</span>`).join('')}</div>
+      <div class="mini muted">${m.traits.map(t => TRAITS[t].d).concat(m.perks.map(pid => PERK_INFO[pid].d)).join(' · ')}</div>
       <div class="muted">${STATS.map((s, i) => `<span style="color:${STAT_COLORS[i]}">${s[0]}</span>${m.s[i]}`).join(' ')} · SPD ${m.spd} · ${money(m.salary)}/mo</div>
       <div class="statrow"><span>${m.rest > 0 ? '<span class="bad">Resting</span>' : 'Stamina'}</span><div class="bar"><div style="background:${stamPct < 30 ? 'var(--danger)' : 'var(--good)'};width:${stamPct}%"></div></div><span>${Math.round(m.stam)}</span></div>
-      <div class="btns"><button class="btn-sm btn-accent" onclick="openTraining(${m.id})">Train</button>
-      <button class="btn-sm" ${m.lv < 5 ? 'disabled' : ''} onclick="openRoleChange(${m.id})">Role${m.lv < 5 ? ' (Lv5)' : ''}</button>
-      <button class="btn-sm btn-danger" onclick="fireStaff(${m.id})">Dismiss</button></div></div>`;
+      <div class="statrow"><span>Morale</span><div class="bar"><div style="background:${morCol};width:${mor}%"></div></div><span>${mor}</span></div>
+      <div class="statrow"><span>EXP</span><div class="bar"><div style="background:var(--accent);width:${expPct}%"></div></div><span>${Math.round(expPct)}%</span></div>
+      <div class="btns">
+        ${pend ? `<button class="btn-sm btn-gold" onclick="perkQueued.delete(${m.id});perkModal(findStaff(${m.id}))">⭐ Choose perk</button>` : ''}
+        <button class="btn-sm btn-accent" ${m.vac > 0 ? 'disabled' : ''} onclick="openTraining(${m.id})">Train</button>
+        <button class="btn-sm" ${m.raiseCd > 0 ? 'disabled' : ''} onclick="raiseStaff(${m.id})">Raise${m.raiseCd > 0 ? ' (' + m.raiseCd + 'w)' : ''}</button>
+        <button class="btn-sm" ${m.vac > 0 ? 'disabled' : ''} onclick="vacationStaff(${m.id})">Vacation</button>
+        ${m.lv >= 10 && !m.senior ? `<button class="btn-sm btn-gold" onclick="promoteStaff(${m.id})">Promote</button>` : ''}
+        <button class="btn-sm" ${m.lv < 5 ? 'disabled' : ''} onclick="openRoleChange(${m.id})">Role${m.lv < 5 ? ' (Lv5)' : ''}</button>
+        <button class="btn-sm btn-danger" onclick="fireStaff(${m.id})">Dismiss</button></div></div>`;
   });
   html += `<div class="sec">Recruit</div><div class="grid3">
     <button onclick="postAd(0)">Word of Mouth<br>Free</button>
     <button onclick="postAd(1)">Job Board<br>$3,000</button>
     <button onclick="postAd(2)">Headhunter<br>$12,000</button></div>
-    ${STATE.candidates.length ? '<button onclick="openCandidates()">View current applicants</button>' : ''}`;
+    ${STATE.candidates.length ? '<button onclick="openCandidates()">View current applicants</button>' : ''}
+    <div class="note mini">Staff earn perks at Lv5, 10, 15 and 20, and can be promoted to a senior role from Lv10. Morale affects work speed: keep it up with raises, vacations, decor and hits. Unhappy staff may quit or be poached.</div>`;
   $('tab-staff').innerHTML = html;
 }
-
 function renderMarket() {
   const t = yearFrac();
-  let html = `<div class="sec">Industry Calendar</div><div class="note">Month 4: Indie Showcase · Month 8: GameCon · Month 12: Holiday Sale · Year end: Awards${STATE.hypeBank ? `<br>Banked hype for your next project: <b class="gold">${STATE.hypeBank}</b>` : ''}${STATE.pubBonus ? `<br>🤝 Bonus advance waiting with ${esc(STATE.pubBonus)}` : ''}</div>`;
+  const board = STATE.rivals.map(r => ({ n: r.n, fans: r.fans, best: r.yearBest || 0, me: false })).concat([{ n: 'Your studio', fans: STATE.fans, best: STATE.yearBest ? STATE.yearBest.total : 0, me: true }]).sort((a, b) => b.fans - a.fans);
+  let html = `<div class="sec">Industry Ranking</div>` + board.map((r, i) => `<div class="row mini" style="${r.me ? 'color:var(--gold);font-weight:bold;' : ''}"><span>#${i + 1} ${esc(r.n)}</span><span>${fmt(r.fans)} fans · best this year ${r.best || '-'}</span></div>`).join('') +
+    `<div class="sec">Industry Calendar</div><div class="note">Month 4: Indie Showcase · Month 8: GameCon · Month 12: Holiday Sale · Year end: Awards${STATE.hypeBank ? `<br>Banked hype for your next project: <b class="gold">${STATE.hypeBank}</b>` : ''}${STATE.pubBonus ? `<br>🤝 Bonus advance waiting with ${esc(STATE.pubBonus)}` : ''}</div>`;
   html += '<div class="sec">Platforms</div>';
   PLATFORMS.forEach(p => {
     const live = platLive(p), up = t < p.year, gone = p.end && t >= p.end;
@@ -1461,38 +2101,64 @@ function renderLab() {
     return `<div class="row card" style="flex-direction:row;"><span>${esc(it.n)}<br><span class="muted">${rankOk ? it.rp + ' RP' : '🔒 Rank ' + it.rank}</span></span>
       <button class="btn-sm btn-accent" ${!rankOk || STATE.rp < it.rp ? 'disabled' : ''} onclick="unlockItem('${kind}','${it.n}')">Unlock</button></div>`;
   };
+  const techRows = TECH.map(t => {
+    const own = STATE.tech[t.id], reqOk = !t.req || STATE.tech[t.req], rankOk = STATE.rank >= t.rank;
+    const status = own ? '<span class="good">Done</span>' : !reqOk ? `<span class="muted">Needs ${TECH.find(x => x.id === t.req).n}</span>` : !rankOk ? `<span class="muted">🔒 Rank ${t.rank}</span>` :
+      `<button class="btn-sm btn-accent" ${STATE.rp < t.rp ? 'disabled' : ''} onclick="unlockTech('${t.id}')">${t.rp} RP</button>`;
+    return `<div class="row card" style="flex-direction:row;${own ? 'opacity:0.7;' : ''}"><span><b>${t.n}</b><br><span class="muted">${t.d}</span></span>${status}</div>`;
+  }).join('');
   const combos = Object.entries(STATE.combos).sort((a, b) => b[1] - a[1]);
+  const hooks = Object.entries(STATE.hookNotes).sort((a, b) => b[1] - a[1]);
   let html = `<div class="row"><span class="sec">Research Lab</span><span class="hl">${STATE.rp} RP</span></div>
-    <div class="note">Earn research points from releases, contracts and staff ideas. Spend them to unlock new genres and themes.</div>
+    <div class="note">Earn research points from releases, contracts, jams and staff ideas. Spend them on studio tech, genres and themes.</div>
+    <div class="sec">Studio Tech</div>${techRows}
     <div class="sec">Genres</div>${lockedG.map(g => row('g', g)).join('') || '<div class="muted">All genres unlocked!</div>'}
     <div class="sec">Themes</div>${lockedT.map(t => row('t', t)).join('') || '<div class="muted">All themes unlocked!</div>'}
     <div class="sec">Combo Notebook (${combos.length})</div>`;
   html += combos.length
     ? combos.map(([k, v]) => `<div class="row" style="font-size:0.74rem;"><span>${esc(k.replace('|', ' × '))}</span><b style="color:${COMBO_COLOR[v]}">${COMBO_LABEL[v]}</b></div>`).join('')
     : '<div class="muted">Release games to discover combos.</div>';
+  html += `<div class="sec">Hook Notes (${hooks.length})</div>`;
+  html += hooks.length
+    ? hooks.map(([k, v]) => `<div class="row" style="font-size:0.74rem;"><span>${esc(k.replace('|', ' in '))}</span><b style="color:${HOOK_COLOR[v]}">${HOOK_LABEL[v]}</b></div>`).join('')
+    : '<div class="muted">Release games with a hook to learn which hooks suit which genres.</div>';
   $('tab-lab').innerHTML = html;
 }
-
 function renderStudio() {
   const f = FLOORS[STATE.floor - 1], next = FLOORS[STATE.floor];
-  const best = STATE.history.reduce((a, h) => Math.max(a, h.total), 0);
-  let html = `<div class="sec">Finances</div>
+  const tierIdx = TIERS.findIndex(([r, n]) => n === studioTier()), nextTier = TIERS[tierIdx + 1];
+  const msDone = MILESTONES.filter(m => STATE.milestones[m.id]).length;
+  const slots = DECOR_SLOTS[STATE.floor - 1];
+  let html = `<div class="sec">${studioTier()}</div>
+    <div class="note">Rank ${STATE.rank} (${Math.floor(STATE.rankExp / rankNeed() * 100)}% to next)${nextTier ? ` · becomes ${nextTier[1]} at Rank ${nextTier[0]}` : ''}<br>
+    Milestones ${msDone}/${MILESTONES.length} · Game of the Year ×${STATE.awards.goty || 0} · Excellence ×${STATE.awards.excellence || 0}</div>
+    <div class="sec">Finances</div>
     <div class="note">Last month: income <b class="good">${money(STATE.ledger.lastInc)}</b> · spending <b class="bad">${money(STATE.ledger.lastExp)}</b><br>
     This month so far: +${money(STATE.ledger.inc)} / -${money(STATE.ledger.exp)}<br>
-    Next payday (end of month): <b class="bad">${money(monthlyCost())}</b></div>
+    Next payday (end of month): <b class="bad">${money(monthlyCost())}</b>${STATE.investor && STATE.investor.weeks > 0 ? `<br>Investor takes 15% of game income for ${STATE.investor.weeks} more weeks` : ''}</div>
     <div class="sec">Office · Floor ${STATE.floor}</div>
-    <div class="note">${f.desks} desks · ${f.live} live slots · Rent ${money(f.rent)}/mo</div>`;
+    <div class="note">${f.desks} desks · ${f.live} live slots · ${slots} decor spots · Rent ${money(f.rent)}/mo</div>`;
   html += next
-    ? `<button ${STATE.rank < next.rank ? 'disabled' : ''} onclick="upgradeFloor()">Move to Floor ${STATE.floor + 1}: ${money(next.cost)} (Rank ${next.rank})<br><span class="muted">${next.desks} desks · ${next.live} live slots · rent ${money(next.rent)}</span></button>`
+    ? `<button ${STATE.rank < next.rank ? 'disabled' : ''} onclick="upgradeFloor()">Move to Floor ${STATE.floor + 1}: ${money(next.cost)} (Rank ${next.rank})<br><span class="muted">${next.desks} desks · ${next.live} live slots · ${DECOR_SLOTS[STATE.floor]} decor spots · rent ${money(next.rent)}</span></button>`
     : '<div class="muted">Top floor reached!</div>';
+  html += `<div class="sec">Decor (${STATE.decor.length}/${slots} spots)</div>`;
+  for (const k in DECOR) {
+    const dc = DECOR[k], own = STATE.decor.includes(k);
+    html += `<div class="row card" style="flex-direction:row;"><span><b>${dc.n}</b><br><span class="muted">${dc.d}</span></span>
+      ${own ? '<span class="good">Placed</span>' : `<button class="btn-sm btn-accent" ${STATE.decor.length >= slots || STATE.gold < dc.cost ? 'disabled' : ''} onclick="buyDecor('${k}')">${money(dc.cost)}</button>`}</div>`;
+  }
   html += '<div class="sec">Facilities</div>';
   for (const k in FACILITIES) {
     const fa = FACILITIES[k], own = STATE.facilities[k];
     html += `<div class="row card" style="flex-direction:row;"><span><b>${fa.n}</b><br><span class="muted">${fa.desc} Upkeep ${money(fa.upkeep)}/mo</span></span>
       ${own ? '<span class="good">Owned</span>' : `<button class="btn-sm btn-accent" onclick="buyFacility('${k}')">${money(fa.cost)}</button>`}</div>`;
   }
+  html += `<div class="sec">Milestones (${msDone}/${MILESTONES.length})</div>` + MILESTONES.map(m => {
+    const r = m.r, rw = [r.gold ? money(r.gold) : '', r.rp ? r.rp + ' RP' : '', r.fans ? fmt(r.fans) + ' fans' : ''].filter(Boolean).join(' + ');
+    return `<div class="row mini ${STATE.milestones[m.id] ? 'ms-done' : 'muted'}"><span>${STATE.milestones[m.id] ? '✅' : '⬜'} ${m.n}: ${m.d}</span><span>${rw}</span></div>`;
+  }).join('');
   html += `<div class="sec">Records</div>
-    <div class="note">Games released: ${STATE.history.length} · Best score: ${best || '-'}/40<br>Lifetime downloads: ${fmt(STATE.totalDownloads)} / 1,000,000,000<br>Lifetime revenue: ${money(STATE.totalRevenue)}</div>`;
+    <div class="note">Games released: ${STATE.releasedCount} · Best score: ${STATE.bestScore || '-'}/40<br>Lifetime downloads: ${fmt(STATE.totalDownloads)} / 1,000,000,000<br>Lifetime revenue: ${money(STATE.totalRevenue)}</div>`;
   html += STATE.history.slice(0, 10).map(h => `<div class="row" style="font-size:0.72rem;"><span>Y${h.y} ${esc(h.title)}</span><span>${h.total >= 32 ? '🏆' : ''}${h.total}/40 · ${fmt(h.dl)}</span></div>`).join('');
   html += `<div class="sec">Settings</div><div class="grid2">
     <button onclick="toggleSound()">Sound: ${STATE.settings.sound ? 'On' : 'Off'}</button>
@@ -1500,7 +2166,6 @@ function renderStudio() {
     <div class="muted" style="font-size:0.68rem;">Progress autosaves every month and when you leave the app.</div>`;
   $('tab-studio').innerHTML = html;
 }
-
 /* =========================================================
    CANVAS RENDERING
    ========================================================= */
@@ -1516,107 +2181,220 @@ function txt(s, x, y, color, size, align) {
 }
 function deskPos(i) { return i < 5 ? { x: 36 + i * 62, y: 80 } : { x: 60 + (i - 5) * 67, y: 214 }; }
 
-function drawOffice() {
-  const fl = STATE.floor;
-  const wall = ['#b08968', '#8ecae6', '#cdb4db'][fl - 1];
-  const tiles = [['#6b5a60', '#5c4b51'], ['#3d5a80', '#46658f'], ['#6a4c93', '#7a5ca3']][fl - 1];
-  px(wall, 0, 0, 320, 44);
-  px('rgba(0,0,0,0.12)', 0, 30, 320, 14);
-  [30, 118, 206].forEach(wx => {
-    px('#3d405b', wx, 6, 46, 26);
-    px(SKY[STATE.cal.m - 1], wx + 2, 8, 42, 22);
-    px('#ffffff', wx + 8, 13, 10, 3); px('#ffffff', wx + 26, 19, 8, 2);
-    px('#3d405b', wx + 22, 8, 2, 22);
-  });
-  // clock
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(292, 18, 9, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#3d405b'; ctx.lineWidth = 2; ctx.stroke();
-  const ang = (STATE.tick / TPW) * Math.PI * 2 - Math.PI / 2;
-  ctx.beginPath(); ctx.moveTo(292, 18); ctx.lineTo(292 + Math.cos(ang) * 6, 18 + Math.sin(ang) * 6); ctx.stroke();
-  px('#22223b', 0, 42, 320, 4);
-  for (let y = 46; y < 240; y += 16) for (let x = 0; x < 320; x += 16) px(tiles[((x + y) / 16) % 2], x, y, 16, 16);
-  // plants
-  [[6, 112], [300, 112]].forEach(([x, y]) => {
-    px('#8d5524', x + 2, y + 10, 10, 10); px('#2d6a4f', x, y, 14, 10); px('#40916c', x + 3, y - 5, 8, 7);
-  });
-  // facilities
-  if (STATE.facilities.coffee) { px('#495057', 300, 160, 14, 18); px('#e63946', 303, 164, 8, 4); px('#adb5bd', 304, 172, 6, 4); }
-  if (STATE.facilities.servers) { for (let i = 0; i < 2; i++) { px('#212529', 4 + i * 8, 156, 7, 26); px(frameT % 30 < 15 ? '#06d6a0' : '#1b4332', 6 + i * 8, 160, 3, 2); } }
+const BUILDINGS = (() => {
+  const out = []; let x = 0, seed = 7;
+  const rand = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  while (x < 320) {
+    const w = 12 + Math.floor(rand() * 18), h = 10 + Math.floor(rand() * 22), lights = [];
+    for (let i = 0; i < 8; i++) lights.push([1 + Math.floor(rand() * (w - 3)), 2 + Math.floor(rand() * 24)]);
+    out.push({ x, w, h, lights, tone: rand() }); x += w + 1;
+  }
+  return out;
+})();
+function hexToRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+function mix(a, b, t) { const A = hexToRgb(a), B = hexToRgb(b); t = clamp(t, 0, 1); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
+function shade(c, amt) { return '#' + hexToRgb(c).map(v => clamp(v + amt, 0, 255).toString(16).padStart(2, '0')).join(''); }
+function dayPhase() { return ((STATE.cal.w - 1) * TPW + STATE.tick) / (4 * TPW); }
+const SKY_KEYS = [[0, '#141d3b'], [0.08, '#ff9e7a'], [0.16, '#8ecae6'], [0.6, '#8ecae6'], [0.7, '#f4a261'], [0.78, '#6d597a'], [0.86, '#141d3b'], [1, '#141d3b']];
+function skyColor(t) {
+  for (let i = 1; i < SKY_KEYS.length; i++) {
+    const [t1, c1] = SKY_KEYS[i], [t0, c0] = SKY_KEYS[i - 1];
+    if (t <= t1) return mix(c0, c1, (t - t0) / (t1 - t0 || 1));
+  }
+  return SKY_KEYS[0][1];
 }
-
-function drawStaff(m, x, y) {
-  const R = ROLES[m.role];
-  px('#3a3a4a', x - 8, y - 12, 16, 13);
-  if (m.rest > 0) {
-    px(R.color, x - 6, y - 4, 12, 8);
-    px(m.hair, x - 5, y - 6, 10, 6);
+function nightness(t) { return t < 0.08 ? 1 - t / 0.08 : t > 0.78 ? Math.min(1, (t - 0.78) / 0.08) : 0; }
+function drawWindow(x, y, w, h, t, frame) {
+  const night = nightness(t), sky = skyColor(t);
+  px(frame, x - 2, y - 2, w + 4, h + 4);
+  const g = ctx.createLinearGradient(0, y, 0, y + h);
+  g.addColorStop(0, shade(sky, -20)); g.addColorStop(1, shade(sky, 25));
+  ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  if (night > 0.3) for (let i = 0; i < 40; i++) { const sx = (i * 53 + 17) % 320, sy = y + 1 + (i * 29) % Math.max(2, h - 8); if ((i + Math.floor(frameT / 40)) % 9) px('#ffffff', sx, sy, 1, 1); }
+  if (t > 0.08 && t < 0.78) { const f = (t - 0.08) / 0.7, sx = 10 + f * 300, sy = y + h - Math.sin(Math.PI * f) * h * 0.9; ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.arc(sx, sy, 4, 0, Math.PI * 2); ctx.fill(); }
+  else { const f = t > 0.5 ? (t - 0.78) / 0.3 : (t + 0.22) / 0.3, sx = 10 + f * 300, sy = y + h - Math.sin(Math.PI * clamp(f, 0, 1)) * h * 0.85; ctx.fillStyle = '#f1faee'; ctx.beginPath(); ctx.arc(sx, sy, 3, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = shade(sky, -10); ctx.beginPath(); ctx.arc(sx + 1.5, sy - 1, 2.5, 0, Math.PI * 2); ctx.fill(); }
+  const base = y + h, bcol = mix('#8d99ae', '#1b1f3b', night);
+  BUILDINGS.forEach(bd => {
+    if (bd.x + bd.w < x || bd.x > x + w) return;
+    const hh = Math.min(h - 3, Math.round(bd.h * h / 32));
+    px(shade(bcol, Math.round((bd.tone - 0.5) * 24)), bd.x, base - hh, bd.w, hh);
+    if (night > 0.35) bd.lights.forEach(([lx, ly]) => { if (ly < hh - 1) px('#ffe066', bd.x + lx, base - hh + ly, 1, 1); });
+    else bd.lights.slice(0, 4).forEach(([lx, ly]) => { if (ly < hh - 1) px(shade(bcol, 25), bd.x + lx, base - hh + ly, 1, 1); });
+  });
+  if ([12, 1, 2].includes(STATE.cal.m)) for (let i = 0; i < 14; i++) { const sx = x + ((i * 37 + frameT * 0.3 * (1 + i % 3)) % w), sy = y + ((i * 13 + frameT * 0.45) % h); px('#ffffff', sx, sy, 1, 1); }
+  ctx.restore();
+}
+function drawOffice() {
+  const t = dayPhase(), fl = STATE.floor;
+  if (fl === 1) {
+    px('#9c6644', 0, 0, 320, 44);
+    for (let r = 0; r < 9; r++) for (let x = (r % 2) * 7 - 7; x < 320; x += 14) px('#b07a52', x + 1, r * 5 + 1, 12, 3);
+    drawWindow(110, 7, 100, 25, t, '#4a4e69');
+    px('#4a4e69', 159, 7, 2, 25);
+    px('#6c757d', 0, 2, 320, 2); px('#495057', 0, 4, 320, 1);
+    px('#3d2b1f', 0, 42, 320, 4);
+    for (let y = 46, r = 0; y < 240; y += 16, r++) for (let x = 0, c = 0; x < 320; x += 16, c++) px((r + c) % 2 ? '#8d99ae' : '#848fa5', x, y, 16, 16);
+    px('#7a8499', 70, 130, 7, 1); px('#7a8499', 76, 131, 3, 1); px('#7a8499', 230, 180, 8, 1);
+    px('#c8a165', 248, 172, 18, 13); px('#a98245', 248, 172, 18, 2); px('#a98245', 256, 172, 2, 13);
+    px('#d4b07a', 254, 161, 13, 11); px('#a98245', 254, 161, 13, 2);
+  } else if (fl === 2) {
+    px('#cad2c5', 0, 0, 320, 44); px('#84a98c', 0, 30, 320, 12); px('#52796f', 0, 30, 320, 1);
+    [70, 135, 200].forEach(x => drawWindow(x, 6, 50, 21, t, '#354f52'));
+    px('#2f3e46', 0, 42, 320, 4);
+    px('#3d5a80', 0, 46, 320, 194);
+    for (let y = 50, r = 0; y < 240; y += 8, r++) for (let x = (r % 2) * 8; x < 320; x += 16) px('#46658f', x, y, 2, 2);
   } else {
-    px(R.color, x - 6, y - 8, 12, 10);
-    px('#f1c27d', x - 5, y - 17, 10, 9);
-    px(m.hair, x - 5, y - 19, 10, 3); px(m.hair, x - 5, y - 17, 2, 4); px(m.hair, x + 3, y - 17, 2, 4);
+    px('#e9ecef', 0, 0, 320, 44);
+    drawWindow(62, 2, 196, 37, t, '#adb5bd');
+    for (let x = 62 + 28; x < 258; x += 28) px('#adb5bd', x, 2, 2, 37);
+    px('#d4a373', 0, 39, 320, 2);
+    px('#343a40', 0, 42, 320, 4);
+    px('#8a5a36', 0, 46, 320, 194);
+    for (let y = 46, r = 0; y < 240; y += 6, r++) for (let x = (r % 3) * -14, c = 0; x < 320; x += 42, c++) {
+      const k = (r * 7 + c * 3) % 4;
+      px(k === 0 ? '#a47148' : k === 1 ? '#9c6644' : k === 2 ? '#a8774d' : '#996340', x, y, 41, 5);
+      px('#b5835a', x + 4 + (c * 7 + r * 3) % 24, y + 2, 9, 1);
+    }
+    px('#5a189a', 96, 110, 128, 74); px('#7b2cbf', 99, 113, 122, 68); px('#c77dff', 99, 113, 122, 1); px('#c77dff', 99, 180, 122, 1);
+  }
+  drawDecor();
+}
+const DECOR_DRAW = {
+  plant: () => [[3, 194], [303, 194]].forEach(([x, y]) => { px('#8d5524', x + 2, y + 10, 10, 10); px('#6f4518', x + 2, y + 10, 10, 2); px('#2d6a4f', x - 1, y + 2, 16, 9); px('#40916c', x + 2, y - 3, 10, 8); px('#52b788', x + 5, y - 6, 4, 5); }),
+  poster: () => { px('#14213d', 4, 10, 16, 22); px('#fca311', 6, 12, 12, 9); px('#e63946', 8, 23, 8, 2); px('#e5e5e5', 7, 27, 10, 1); px('#e5e5e5', 7, 29, 7, 1); },
+  whiteboard: () => { px('#adb5bd', 24, 11, 34, 20); px('#f8f9fa', 25, 12, 32, 18); px('#4361ee', 28, 15, 12, 1); px('#ef476f', 28, 19, 18, 1); px('#06d6a0', 41, 23, 12, 1); px('#495057', 30, 31, 22, 2); },
+  artwall: () => [[262, 8, '#f72585'], [276, 8, '#4cc9f0'], [262, 21, '#ffd166'], [276, 21, '#7209b7']].forEach(([x, y, c]) => { px('#f8f9fa', x, y, 12, 11); px(c, x + 2, y + 2, 8, 7); }),
+  board: () => { px('#6d4c41', 292, 10, 24, 21); px('#bc8a5f', 293, 11, 22, 19); [[295, 13, '#ffd166'], [303, 14, '#90e0ef'], [297, 21, '#f4acb7'], [306, 22, '#caffbf']].forEach(([x, y, c]) => px(c, x, y, 6, 5)); },
+  neon: () => { const on = frameT % 240 > 8; ctx.save(); if (on) { ctx.shadowColor = '#ff4d6d'; ctx.shadowBlur = 8; } txt('PLAY!', 31, 40, on ? '#ff8fab' : '#6c757d', 8); ctx.restore(); },
+  bookshelf: () => { px('#6d4c41', 2, 50, 16, 34); for (let r = 0; r < 4; r++) { px('#4e342e', 3, 51 + r * 8 + 6, 14, 2); for (let b = 0; b < 5; b++) px(['#e63946', '#457b9d', '#f4a261', '#2a9d8f', '#e9c46a'][(r + b) % 5], 4 + b * 2.6, 52 + r * 8, 2, 5); } },
+  aquarium: () => { px('#495057', 6, 118, 32, 10); px('#212529', 6, 101, 32, 18); px('#48cae4', 7, 102, 30, 16); px('#90e0ef', 7, 102, 30, 2); px('#2d6a4f', 9, 112, 2, 6); px('#2d6a4f', 31, 110, 2, 8);
+    for (let i = 0; i < 3; i++) { const fx = 9 + ((frameT * (0.3 + i * 0.15) + i * 20) % 24), fy = 105 + i * 4; px(['#ff9f1c', '#ff4d6d', '#ffd166'][i], fx, fy, 4, 2); px(['#ff9f1c', '#ff4d6d', '#ffd166'][i], fx - 1, fy - 1 + (Math.floor(frameT / 10) % 2), 1, 1); } },
+  beanbags: () => [[66, 112, '#ef476f'], [82, 116, '#06d6a0'], [98, 111, '#ffd166']].forEach(([x, y, c]) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, y + 6, 8, 6, 0, 0, Math.PI * 2); ctx.fill(); px(shade(c, -40), x - 6, y + 9, 12, 2); }),
+  sofa: () => { px('#6a4c93', 40, 178, 46, 10); px('#7b5ea7', 42, 172, 42, 8); px('#6a4c93', 38, 174, 6, 14); px('#6a4c93', 82, 174, 6, 14); px('#9d84c4', 46, 174, 16, 4); px('#9d84c4', 64, 174, 16, 4); px('#3c2a59', 40, 188, 2, 3); px('#3c2a59', 84, 188, 2, 3); },
+  trophy: () => { px('#6d4c41', 244, 102, 32, 24); px('#cfe8ef', 246, 104, 28, 20); px('#6d4c41', 246, 113, 28, 1);
+    const n = Math.min(6, (STATE.awards.goty || 0) * 2 + (STATE.awards.excellence || 0) + STATE.history.filter(h => h.total >= 32).length);
+    for (let i = 0; i < Math.max(1, n); i++) { const tx = 248 + (i % 3) * 9, ty = i < 3 ? 106 : 115; px(n ? '#ffd166' : '#adb5bd', tx, ty, 5, 4); px(n ? '#e9b949' : '#868e96', tx + 1, ty + 4, 3, 2); px('#6d4c41', tx, ty + 6, 5, 1); } },
+  arcade: () => { px('#3a0ca3', 296, 98, 18, 30); px('#4361ee', 296, 98, 18, 4); px('#111', 298, 104, 14, 10);
+    px(['#f72585', '#4cc9f0', '#06d6a0', '#ffd166'][Math.floor(frameT / 15) % 4], 300, 106 + Math.floor(frameT / 6) % 6, 3, 3); px('#ef476f', 300, 117, 3, 3); px('#adb5bd', 306, 117, 4, 2); px('#3a0ca3', 294, 126, 22, 2); }
+};
+function drawDecor() {
+  STATE.decor.forEach(id => { if (DECOR_DRAW[id]) DECOR_DRAW[id](); });
+  if (STATE.facilities.servers) for (let i = 0; i < 2; i++) { px('#212529', 6 + i * 9, 146, 8, 28); for (let k = 0; k < 5; k++) px((frameT + k * 7 + i * 13) % 30 < 15 ? '#06d6a0' : '#1b4332', 8 + i * 9, 149 + k * 5, 2, 1); }
+  if (STATE.facilities.coffee) { px('#495057', 298, 150, 14, 20); px('#212529', 300, 153, 10, 6); px('#e63946', 301, 154, 3, 2); px('#adb5bd', 303, 162, 6, 5); px('#f8f9fa', 304, 163, 4, 3); if (frameT % 60 < 30) px('rgba(255,255,255,0.6)', 305, 158, 1, 3); }
+}
+function drawHair(m, x, y) {
+  const h = m.hair;
+  if (m.hs === 1) { px(h, x - 6, y - 19, 12, 3); px(h, x - 6, y - 17, 2, 9); px(h, x + 4, y - 17, 2, 9); }
+  else if (m.hs === 2) { px(h, x - 5, y - 19, 10, 3); px(h, x - 5, y - 21, 2, 2); px(h, x - 1, y - 22, 2, 3); px(h, x + 3, y - 21, 2, 2); px(h, x - 5, y - 17, 1, 2); px(h, x + 4, y - 17, 1, 2); }
+  else if (m.hs === 3) { px(h, x - 5, y - 19, 10, 3); px(h, x - 2, y - 23, 4, 4); px(h, x - 5, y - 17, 1, 3); px(h, x + 4, y - 17, 1, 3); }
+  else { px(h, x - 5, y - 19, 10, 3); px(h, x - 5, y - 17, 1, 3); px(h, x + 4, y - 17, 1, 3); }
+}
+function drawDesk(x, y, staffId) {
+  px('#5d4037', x - 12, y + 11, 2, 5); px('#5d4037', x + 10, y + 11, 2, 5);
+  px('#8d6e63', x - 14, y + 1, 28, 10); px('#a1887f', x - 14, y + 1, 28, 2); px('#5d4037', x - 14, y + 10, 28, 2);
+  px('#dee2e6', x - 5, y + 4, 10, 2);
+  if (staffId % 2) { px('#e63946', x + 8, y - 1, 3, 3); px('#e63946', x + 11, y, 1, 1); }
+  else { px('#ffd166', x - 12, y - 1, 4, 3); }
+}
+function drawStaff(m, x, y, working) {
+  const R = ROLES[m.role], skin = m.skin || '#f1c27d', shirt = R.color;
+  px('#2b2d42', x - 8, y - 14, 16, 13); px('#3a3d5c', x - 7, y - 13, 14, 10);
+  if (m.rest > 0) {
+    px(shirt, x - 6, y - 4, 12, 7); px(shade(shirt, -35), x + 3, y - 4, 3, 7);
+    px(m.hair, x - 5, y - 7, 10, 6); px(skin, x - 5, y - 2, 10, 2);
+  } else {
+    px(shirt, x - 6, y - 8, 12, 10); px(shade(shirt, -35), x + 3, y - 8, 3, 10); px('#f8f9fa', x - 2, y - 8, 4, 2);
+    if (m.senior) { px('#ffd166', x - 4, y - 5, 2, 2); px('#ffd166', x - 5, y - 4, 4, 1); }
+    px(skin, x - 5, y - 17, 10, 9); px(shade(skin, -25), x + 3, y - 17, 2, 9);
+    drawHair(m, x, y);
     const blink = (frameT + m.id * 37) % 120 < 4;
     px('#222', x - 3, y - 13, 2, blink ? 1 : 2); px('#222', x + 1, y - 13, 2, blink ? 1 : 2);
-    if (m.anim > 0) px('#f1c27d', x + 6, y - 16, 3, 7);
+    if (m.morale > 75) px('#c9184a', x - 1, y - 10, 2, 1);
+    else if (m.morale < 30) px('#495057', x - 2, y - 10, 4, 1);
+    const tp = working ? Math.floor((frameT + m.id * 3) / 4) % 2 : 0;
+    px(shirt, x - 8, y - 5, 3, 6); px(shirt, x + 5, y - 5, 3, 6);
+    px(skin, x - 7, y + 1 - tp, 3, 2); px(skin, x + 4, y + tp, 3, 2);
+    if (m.anim > 0) { px(shirt, x + 6, y - 12, 3, 6); px(skin, x + 6, y - 15, 3, 3); }
   }
-  px('#8d6e63', x - 13, y + 1, 26, 10); px('#6d4c41', x - 13, y + 9, 26, 2);
-  px('#2b2d42', x - 5, y - 4, 10, 6); px('#555', x - 1, y + 1, 2, 1);
+  drawDesk(x, y, m.id);
+  px('#1b1b2f', x - 6, y - 5, 12, 7); px('#2b2d42', x - 5, y - 4, 10, 5); px('#1b1b2f', x - 1, y + 1, 2, 2);
+  if (STATE.facilities.pcs) { px('#1b1b2f', x + 7, y - 3, 6, 5); px('#2b2d42', x + 8, y - 2, 4, 3); }
   if (m.rest > 0) txt('Zz', x + 10, y - 10 - (frameT % 40) / 8, '#ef476f', 8);
   else {
-    px('#000', x - 8, y - 25, 16, 3);
-    px(m.stam < 30 ? '#ef476f' : '#06d6a0', x - 8, y - 25, Math.max(0, m.stam / m.maxStam * 16), 3);
+    px('#000', x - 8, y - 26, 16, 3);
+    px(m.stam < 30 ? '#ef476f' : '#06d6a0', x - 8, y - 26, Math.max(0, m.stam / m.maxStam * 16), 3);
+    if (m.morale > 85 && frameT % 180 < 60) { px('#ff4d6d', x + 9, y - 22, 2, 2); px('#ff4d6d', x + 12, y - 22, 2, 2); px('#ff4d6d', x + 9, y - 21, 5, 2); px('#ff4d6d', x + 10, y - 19, 3, 1); }
+    else if (m.morale < 25 && frameT % 180 < 90) { px('#adb5bd', x + 8, y - 24, 7, 3); px('#4cc9f0', x + 9, y - 20 + (frameT % 20) / 7, 1, 2); px('#4cc9f0', x + 13, y - 19 + (frameT % 20) / 7, 1, 2); }
   }
-  if (m.flash > 0) txt('LV UP', x, y - 30 - (50 - m.flash) / 5, '#ffd166', 8);
+  if (m.flash > 0) txt('LV UP', x, y - 31 - (50 - m.flash) / 5, '#ffd166', 8);
 }
-
 function drawBalloon(d) {
   const b = d.balloon, by = b.y + Math.sin(frameT / 18) * 2;
   px('#dddddd', b.x, by + b.r, 1, 12);
   ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.ellipse(b.x, 196, b.r * 0.8, 4, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, by, b.r, 0, Math.PI * 2); ctx.fill();
+  const g = ctx.createRadialGradient(b.x - b.r * 0.4, by - b.r * 0.4, 2, b.x, by, b.r);
+  g.addColorStop(0, shade(b.color, 80)); g.addColorStop(0.5, b.color); g.addColorStop(1, shade(b.color, -50));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, by, b.r, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 2; ctx.stroke();
-  px('rgba(255,255,255,0.6)', b.x - b.r * 0.55, by - b.r * 0.6, 5, 5);
+  px('rgba(255,255,255,0.75)', b.x - b.r * 0.55, by - b.r * 0.6, 4, 4);
   px('#fff', b.x - 6, by - 4, 4, 5); px('#fff', b.x + 2, by - 4, 4, 5);
-  px('#000', b.x - 5, by - 2, 2, 3); px('#000', b.x + 3, by - 2, 2, 3);
+  const look = Math.round(Math.sin(frameT / 40));
+  px('#000', b.x - 5 + look, by - 2, 2, 3); px('#000', b.x + 3 + look, by - 2, 2, 3);
   if (b.hp / b.maxHp < 0.3) px('#90e0ef', b.x + b.r - 6, by - 8, 3, 5);
   px(b.color, b.x - 2, by + b.r - 1, 4, 3);
   px('#111', b.x - 26, by - b.r - 12, 52, 6);
   px('#ffd166', b.x - 25, by - b.r - 11, Math.max(0, b.hp / b.maxHp) * 50, 4);
   txt(d.phaseName, b.x, by - b.r - 16, '#fff', 9);
-  if (d.kind === 'game' && d.phase >= 2) {
-    const n = d.phase === 4 ? Math.ceil(b.hp / 14) : Math.min(8, d.bugs);
-    for (let i = 0; i < Math.min(8, n); i++) {
-      const a = frameT / 30 + i * (Math.PI * 2 / Math.max(1, Math.min(8, n)));
+  if (d.kind === 'game' && d.phase >= 2 && d.phase <= 4) {
+    const n = Math.min(8, d.phase === 4 ? Math.ceil(b.hp / 14) : d.bugs);
+    for (let i = 0; i < n; i++) {
+      const a = frameT / 30 + i * (Math.PI * 2 / Math.max(1, n));
       const bx = b.x + Math.cos(a) * (b.r + 10), byy = by + Math.sin(a) * (b.r + 6);
-      px('#2b2d42', bx - 2, byy - 2, 5, 4); px('#ef476f', bx - 1, byy - 1, 3, 2);
+      px('#2b2d42', bx - 2, byy - 2, 5, 4); px('#ef476f', bx - 1, byy - 1, 3, 2); px('#2b2d42', bx - 3, byy + (frameT % 10 < 5 ? 0 : 1), 1, 1); px('#2b2d42', bx + 3, byy + (frameT % 10 < 5 ? 1 : 0), 1, 1);
     }
   }
+  if (d.kind === 'game' && d.pace === 2) txt('CRUNCH!', b.x, by + b.r + 22, frameT % 30 < 15 ? '#ef476f' : '#ff8fab', 8);
 }
-
 function render() {
   frameT++;
+  if (!MODS) computeMods();
   drawOffice();
-  const desks = deskCount(), dv = STATE.activeDev;
+  const desks = deskCount(), dv = STATE.activeDev, working = !!(dv && !dv.awaiting);
   for (let i = 0; i < desks; i++) {
     const p = deskPos(i), m = STATE.team[i];
-    if (m) {
-      m.x = p.x; m.y = p.y; drawStaff(m, p.x, p.y);
-      if (dv && dv.lead === m.id && m.rest <= 0) { px('#ffd166', p.x - 4, p.y - 30, 9, 3); px('#ffd166', p.x - 4, p.y - 33, 2, 3); px('#ffd166', p.x - 1, p.y - 34, 3, 4); px('#ffd166', p.x + 3, p.y - 33, 2, 3); }
+    if (m && m.vac <= 0) {
+      m.x = p.x; m.y = p.y; drawStaff(m, p.x, p.y, working && m.rest <= 0);
+      if (dv && dv.lead === m.id && m.rest <= 0) { px('#ffd166', p.x - 4, p.y - 31, 9, 3); px('#ffd166', p.x - 4, p.y - 34, 2, 3); px('#ffd166', p.x - 1, p.y - 35, 3, 4); px('#ffd166', p.x + 3, p.y - 34, 2, 3); }
+    } else if (m) {
+      m.x = p.x; m.y = p.y;
+      px('#2b2d42', p.x - 8, p.y - 14, 16, 13); drawDesk(p.x, p.y, m.id);
+      px('#fefae0', p.x - 7, p.y - 9, 14, 8); txt('OUT', p.x, p.y - 3, '#e63946', 7);
+    } else {
+      drawDesk(p.x, p.y, i);
+      txt('vacant', p.x, p.y - 4, 'rgba(255,255,255,0.5)', 7);
     }
-    else { px('#8d6e63', p.x - 13, p.y + 1, 26, 10); px('#6d4c41', p.x - 13, p.y + 9, 26, 2); txt('vacant', p.x, p.y - 4, 'rgba(255,255,255,0.5)', 7); }
   }
-  const d = STATE.activeDev;
-  if (d) drawBalloon(d);
+  if (dv) drawBalloon(dv);
   else txt('~ Studio Idle ~', 160, 150, '#66fcf1', 10);
   projectiles.forEach(p => { px(p.color, p.x - 2, p.y - 2, 5, 5); px('#fff', p.x - 1, p.y - 1, 2, 2); });
-  particles.forEach(p => txt(p.text, p.x, p.y, p.color, 9));
+  const night = nightness(dayPhase());
+  if (night > 0) {
+    px(`rgba(12,14,40,${(0.38 * night).toFixed(3)})`, 0, 0, 320, 240);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    STATE.team.forEach(m => { if (m.vac <= 0 && m.rest <= 0 && m.x !== undefined) px(`rgba(70,160,220,${(0.22 * night).toFixed(3)})`, m.x - 9, m.y - 19, 18, 16); });
+    if (STATE.decor.includes('aquarium')) px(`rgba(72,202,228,${(0.25 * night).toFixed(3)})`, 4, 99, 36, 22);
+    if (STATE.decor.includes('arcade')) px(`rgba(247,37,133,${(0.25 * night).toFixed(3)})`, 294, 100, 22, 18);
+    ctx.restore();
+  }
+  particles.forEach(p => { if (p.conf) px(p.color, p.x, p.y, 2, 2); else if (p.spark) { px(p.color, p.x - 1, p.y, 3, 1); px(p.color, p.x, p.y - 1, 1, 3); } else txt(p.text, p.x, p.y, p.color, 9); });
   if (ticker.length) {
     const t = ticker[0];
-    px('rgba(0,0,0,0.75)', 0, 0, 320, 14);
+    px('rgba(0,0,0,0.78)', 0, 0, 320, 14); px(t.color, 0, 13, 320, 1);
     txt(t.msg.length > 52 ? t.msg.slice(0, 51) + '…' : t.msg, 160, 10, t.color, 8);
   }
   if (STATE.speed === 0 && !modalOpen) { px('rgba(0,0,0,0.45)', 110, 226, 100, 14); txt('PAUSED', 160, 236, '#ffd166', 9); }
 }
-
 /* =========================================================
    SIMULATION LOOP (fixed timestep, frame-rate independent)
    ========================================================= */
@@ -1625,28 +2403,36 @@ function update() {
   STATE.tick++;
   if (STATE.tick >= TPW) { STATE.tick = 0; advanceWeek(); if (modalOpen) return; }
   const d = STATE.activeDev;
-  const regen = STATE.facilities.coffee ? 1.6 : 1;
+  const M = computeMods();
+  const regen = (STATE.facilities.coffee ? 1.6 : 1) * M.regen;
   STATE.team.forEach((m, i) => { const p = deskPos(i); m.x = p.x; m.y = p.y; });
+  const pace = d && d.kind === 'game' ? PACE[d.pace] : PACE[1];
   for (const m of STATE.team) {
     if (m.anim > 0) m.anim--;
     if (m.flash > 0) m.flash--;
+    if (m.vac > 0) continue;
     if (m.rest > 0) { m.rest--; m.stam = Math.min(m.maxStam, m.stam + 0.7 * regen); continue; }
     if (d && !d.awaiting) {
       m.stam = Math.min(m.maxStam, m.stam + 0.02 * regen);
-      m.cd += (m.spd / 30) * (STATE.facilities.pcs ? 1.1 : 1) * (d.mods ? d.mods.speedMul : 1) * (d.lead === m.id ? 1.15 : 1);
+      let spd = (m.spd / 30) * (STATE.facilities.pcs ? 1.1 : 1) * (d.mods ? d.mods.speedMul : 1) * (d.lead === m.id ? 1.15 : 1) * pace.spd * (0.85 + m.morale * 0.003);
+      if (m.traits.includes('Slacker')) spd *= 0.85;
+      if (m.traits.includes('Perfectionist')) spd *= 0.9;
+      if (m.senior) spd *= 1.1;
+      if (d.pace === 2 && m.traits.includes('Night Owl')) spd *= 1.3;
+      m.cd += spd;
       if (m.cd >= 55) { m.cd = 0; doHit(m); }
     } else {
       m.stam = Math.min(m.maxStam, m.stam + 0.35 * regen);
     }
   }
-  if (d && d.kind === 'game' && !d.awaiting && d.phase <= 3 && d.eventsFired < 2 && Math.random() < 1 / (TPS * 30)) devEvent(d);
+  if (d && d.kind === 'game' && !d.awaiting && d.phase <= 3 && d.eventsFired < 3 && Math.random() < 1 / (TPS * 25)) devEvent(d);
   for (const p of projectiles) {
     p.x += (p.tx - p.x) * 0.22; p.y += (p.ty - p.y) * 0.22; p.t++;
     if (!p.done && (Math.hypot(p.tx - p.x, p.ty - p.y) < 4 || p.t > 40)) { p.done = true; onImpact(p); }
   }
   projectiles = projectiles.filter(p => !p.done);
-  particles.forEach(p => { p.y += p.vy; p.life--; });
-  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => { if (p.conf) { p.x += p.vx; p.vy = Math.min(1.6, p.vy + 0.01); } p.y += p.vy; p.life--; });
+  particles = particles.filter(p => p.life > 0 && p.y < 250);
   if (ticker.length) { ticker[0].life--; if (ticker[0].life <= 0) ticker.shift(); }
   if (simTick % 6 === 0) { updateDevPanel(); updateHeader(); }
 }
@@ -1672,6 +2458,9 @@ $('sel-budget').value = '1';
 $('sel-focus').innerHTML = '<option value="-1">Balanced</option>' + STATS.map((s, i) => `<option value="${i}">${s}</option>`).join('');
 $('sel-monet').innerHTML = MONET.map((m, i) => `<option value="${i}">${m.n}</option>`).join('');
 $('sel-monet').value = '1';
+$('sel-aud').innerHTML = AUDIENCES.map((a, i) => `<option value="${i}">${a.n}</option>`).join('');
+$('sel-aud').value = '2';
+computeMods();
 refreshDevOptions();
 $('sel-genre').value = 'Adventure'; $('sel-theme').value = 'Detective';
 renderDevMode();
@@ -1679,12 +2468,14 @@ renderAll();
 if (!STATE.trend) STATE.trend = { type: 'genre', n: pick(STATE.unlocked.g) };
 updatePreview();
 if (!STATE.history.length && !STATE.activeDev && STATE.cal.y === 1 && STATE.cal.m === 1 && STATE.cal.w === 1 && STATE.tick === 0) {
-  showModal(`<h3>Welcome, President!</h3><div class="note">Pick a genre, theme, platform, publisher, budget and business model, then guide your team through Concept, Alpha, Beta and Debug. You'll pick a project lead, run a design meeting, react to playtests and decide when to ship.<br><br>
+  showModal(`<h3>Welcome, President!</h3><div class="note">Plan each game (genre, theme, platform, publisher, budget, audience and business model), then guide your team through Concept, Alpha, Beta and Debug. You'll pick a lead and a hook, run design meetings, react to playtests, set the work pace, market the game and decide when to ship.<br><br>Every staff member has traits, morale and perks to unlock. Decorate the office, research studio tech and chase milestones to grow from a garage studio into a legend.<br><br>
     Matching genres and themes make great combos, and each platform has favourite genres. Buy new platform licences and check publishers in the Market tab. GameCon arrives every August.<br><br>
     Released games keep earning in Live Ops. Contract work pays the bills between releases.<br><br>
     Payday is at the end of every month. Three months in the red and it's game over. Good luck!</div>`, [{ label: "Let's go!", cls: 'btn-accent' }]);
 }
 if (STATE.activeDev && STATE.activeDev.kind === 'game' && STATE.activeDev.balloon.hp <= 0) { STATE.activeDev.awaiting = false; checkPhase(); }
+STATE.team.forEach(m => { if (perkPending(m) >= 0) perkModal(m); });
+checkMilestones();
 requestAnimationFrame(frame);
 </script>
 </body>

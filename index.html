@@ -32,6 +32,7 @@
     --gold: var(--sun); --good: var(--mint); --danger: var(--coral); --accent: var(--sky); --muted: var(--dim);
     --px: 'Pixelify Sans', ui-rounded, system-ui, sans-serif;
     --ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    --num: ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
   input { -webkit-user-select: text; user-select: text; }
@@ -67,11 +68,11 @@
     overflow: hidden;
   }
   .hud-top { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-  .hud-date { font-family: var(--px); font-size: 1.05rem; font-weight: 600; }
+  .hud-date { font-family: var(--num); font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; }
   .hud-tier { font-family: var(--px); color: var(--sky); font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hud-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-  .hud-chip { font-family: var(--px); font-size: 0.82rem; background: var(--well); border-radius: 6px; padding: 1px 7px 2px; color: var(--dim); }
-  .hud-chip b { color: var(--text); font-weight: 600; }
+  .hud-chip { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 0.82rem; background: var(--well); border-radius: 6px; padding: 1px 7px 2px; color: var(--dim); }
+  .hud-chip b { color: var(--text); font-weight: 700; }
   .hud-chip.money, .hud-chip.money b { color: var(--sun); }
   .hud-chip.money.neg, .hud-chip.money.neg b { color: var(--coral); }
   .hud-chip.rp b { color: var(--sky); }
@@ -121,7 +122,7 @@
   .cta button { padding: 11px 6px; font-size: 0.95rem; }
   /* ---------- Nav ---------- */
   nav { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 100%; max-width: 480px; flex-shrink: 0; }
-  .nav-btn { font-size: 0.66rem; padding: 5px 0 4px; line-height: 1.25; border-radius: 10px; font-weight: 500; }
+  .nav-btn { font-size: 0.66rem; padding: 5px 0 4px; line-height: 1.25; border-radius: 10px; font-weight: 600; }
   .nav-btn .ic { font-size: 1.05rem; display: block; }
   .nav-btn.active { background: var(--sun); color: var(--sun-ink); border-color: var(--sun-hi) var(--sun-lo) var(--sun-lo) var(--sun-hi); }
   /* ---------- Controls ---------- */
@@ -132,9 +133,10 @@
     border-color: var(--hi) var(--lo) var(--lo) var(--hi);
     border-radius: 8px;
     padding: 8px 10px;
-    font-family: var(--px);
+    font-family: var(--num);
+    font-variant-numeric: tabular-nums;
     font-size: 0.86rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
   }
   button:active:not(:disabled) { border-color: var(--lo) var(--hi) var(--hi) var(--lo); transform: translateY(1px); }
@@ -180,10 +182,12 @@
   .muted { color: var(--dim); }
   .bad { color: var(--coral); }
   .good { color: var(--mint); }
+  .note, .card, .tab-pane, .modal-card { font-variant-numeric: tabular-nums; }
   .note { font-size: 0.8rem; color: #ddd7f3; line-height: 1.5; background: var(--well); border-radius: 9px; padding: 8px 10px; box-shadow: inset 2px 2px 0 var(--lo); }
   .card { background: var(--well); border: 1px solid var(--edge); border-radius: 10px; padding: 9px 10px; display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem; }
   .card b { font-weight: 600; }
   .card .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .row .btns { display: flex; gap: 6px; flex-wrap: nowrap; flex-shrink: 0; }
   .sec { font-family: var(--px); font-size: 1.02rem; font-weight: 600; color: var(--sun); margin-top: 6px; display: flex; align-items: center; gap: 7px; }
   .sec::before { content: ''; width: 6px; height: 6px; background: var(--sun); box-shadow: 2px 2px 0 var(--sun-lo); flex-shrink: 0; }
   .bar { height: 9px; background: var(--lo); border-radius: 2px; overflow: hidden; flex: 1; position: relative; }
@@ -191,7 +195,7 @@
   .bar::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 7px, rgba(12, 9, 25, 0.55) 7px 8px); pointer-events: none; }
   .statrow { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; }
   .statrow span:first-child { width: 78px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .statrow span:last-child { width: 38px; text-align: right; font-family: var(--px); }
+  .statrow span:last-child { width: 40px; text-align: right; font-family: var(--num); font-weight: 600; font-variant-numeric: tabular-nums; }
   .mini { font-size: 0.75rem; }
   .chip { display: inline-block; font-size: 0.68rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--sky); color: var(--sky); margin: 0 3px 3px 0; }
   .chip-bad { border-color: var(--coral); color: var(--coral); }
@@ -205,7 +209,7 @@
   .pl-up { height: 40px; width: 100%; display: flex; align-items: flex-end; }
   .pl-dn { height: 40px; width: 100%; display: flex; align-items: flex-start; border-top: 1px solid var(--hi); }
   .pl-col i { display: block; width: 100%; border-radius: 1px; }
-  .pl-col span { font-size: 0.6rem; color: var(--dim); font-family: var(--px); }
+  .pl-col span { font-size: 0.6rem; color: var(--dim); font-family: var(--num); }
   /* ---------- Windows (modals) ---------- */
   #modal {
     position: fixed; inset: 0;
@@ -252,8 +256,8 @@
   .modal-card label { margin: 2px 0 -4px; }
   #modal-btns { display: flex; flex-direction: column; gap: 7px; }
   .rev { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--well); padding: 6px 9px; border-radius: 8px; font-size: 0.8rem; }
-  .rev b { font-family: var(--px); color: var(--sun); min-width: 24px; text-align: right; font-size: 1.05rem; }
-  .big { font-family: var(--px); font-size: 2.4rem; font-weight: 700; text-align: center; color: var(--sky); line-height: 1.1; }
+  .rev b { font-family: var(--num); font-weight: 800; color: var(--sun); min-width: 24px; text-align: right; font-size: 1.1rem; }
+  .big { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 2.4rem; font-weight: 800; text-align: center; color: var(--sky); line-height: 1.1; }
   .opt { text-align: left; width: 100%; line-height: 1.45; font-family: var(--ui); font-weight: 400; font-size: 0.84rem; }
   .opt b { font-family: var(--px); color: var(--sun); font-weight: 600; font-size: 0.95rem; }
 </style>
@@ -273,7 +277,7 @@
 </div>
 
 <div id="game-viewport">
-  <canvas id="screen" width="320" height="240"></canvas>
+  <canvas id="screen" width="640" height="480"></canvas>
 </div>
 
 <div id="ui-container">
@@ -747,6 +751,13 @@ const HW_INPUT = [
 const HW_STORE = [{ n: 'Cartridges', cost: 0, unit: 20, appeal: 1.0 }, { n: 'Discs', cost: 10000, unit: 8, appeal: 1.0 }, { n: 'Digital only', cost: 0, unit: 0, appeal: 0.92 }];
 const HW_STYLE = [{ n: 'Retro', appeal: 1.05 }, { n: 'Sleek', appeal: 1.08 }, { n: 'Colourful', appeal: 1.05 }];
 const HW_PRICES = [149, 199, 249, 299, 349, 399, 499, 599];
+const HW_LINE_CAP = 500;
+const HW_PARTNERS = [
+  { n: 'Budget factory',   unit: 0.85, defect: 0.06,  appeal: 1.0,  d: 'Cheapest units, but 6% fail' },
+  { n: 'Standard factory', unit: 1.0,  defect: 0.02,  appeal: 1.0,  d: 'Reliable, 2% fail' },
+  { n: 'Premium factory',  unit: 1.15, defect: 0.005, appeal: 1.05, d: 'Costly, flawless build, +5% appeal' }
+];
+const HW_CAMPAIGNS = [{ n: 'No launch campaign', cost: 0, boost: 0 }, { n: 'Ad campaign', cost: 30000, boost: 0.4 }, { n: 'Launch event + ads', cost: 80000, boost: 0.9 }];
 const HW_PRE = ['Nova', 'Pixel', 'Hyper', 'Astro', 'Zen', 'Turbo', 'Echo', 'Lumen', 'Orbit', 'Quantum', 'Nimbus', 'Kite', 'Mega', 'Vivid', 'Comet'];
 const HW_SUF = ['Box', 'Station', 'Play', 'Cube', 'Deck', 'Wave', 'Go', 'Core', 'Drive', 'Arc', 'Boy', 'Pad', 'Link'];
 
@@ -956,7 +967,7 @@ function newGame() {
     decor: [], tech: {}, milestones: {}, hookNotes: {}, releasedCount: 0, bestScore: 0,
     awards: { goty: 0, excellence: 0 }, platformsUsed: [], investor: null, platDeal: null,
     prio: [2, 2, 2, 2, 2, 2], insights: {}, ownPlats: [], hwProj: null, execs: {}, policy: { hours: 0, benefits: 1, bonus: 0 },
-    loans: [], merch: [], book: {}, plHist: [], taxPaid: 0, legends: {}, legendHints: {}, walkIn: null, rpBought: 0,
+    loans: [], merch: [], book: {}, plHist: [], taxPaid: 0, legends: {}, legendHints: {}, store: null, walkIn: null, rpBought: 0,
     rivals: RIVAL_DEFS.map(r => ({ n: r.n, fans: r.fans, growth: r.growth, skill: r.skill, best: 0, yearBest: 0 }))
   };
 }
@@ -992,6 +1003,7 @@ function migrate(s) {
   if (!s.book) s.book = {};
   if (!Array.isArray(s.plHist)) s.plHist = [];
   if (!s.taxPaid) s.taxPaid = 0;
+  if (s.store === undefined) s.store = null;
   if (!s.legends) s.legends = {};
   if (!s.legendHints) s.legendHints = {};
   if (s.walkIn === undefined) s.walkIn = null;
@@ -1074,6 +1086,7 @@ function lvlOf(kind, n) { return Math.min(10, STATE.levels[kind][n] || 0); }
 function yearFrac() { return STATE.cal.y + (STATE.cal.m - 1) / 12; }
 function platLive(p) { if (p.own) return !p.disc; const t = yearFrac(); return t >= p.year && !(p.end && t >= p.end); }
 function marketNow(p) {
+  if (p.store) return p.disc ? 0 : clamp(0.4 + p.users / 120000, 0.4, 3.5);
   if (p.own) return p.disc ? 0 : clamp(0.3 + p.installed / 30000, 0.3, 4);
   if (!platLive(p)) return 0;
   const t = yearFrac();
@@ -1084,7 +1097,8 @@ function marketNow(p) {
 function licensed(p) { return !!p.own || STATE.licences.includes(p.n); }
 function rebuildPlatforms() {
   for (let i = PLATFORMS.length - 1; i >= 0; i--) if (PLATFORMS[i].own) { delete P[PLATFORMS[i].n]; PLATFORMS.splice(i, 1); }
-  (STATE.ownPlats || []).forEach(op => { op.own = true; PLATFORMS.push(op); P[op.n] = op; });
+  (STATE.ownPlats || []).forEach(op => { op.own = true; normHw(op); PLATFORMS.push(op); P[op.n] = op; });
+  const st = STATE.store; if (st && st.stage === 'live') { st.own = true; st.store = true; PLATFORMS.push(st); P[st.n] = st; }
 }
 function platformOpen(p) { return platLive(p) && licensed(p) && STATE.rank >= p.rank; }
 function pubRep(pb) { const r = STATE.pubRep[pb.n]; return r === undefined ? 50 : r; }
@@ -1683,7 +1697,8 @@ function completeProject() {
   STATE.releasedCount++;
   STATE.bestScore = Math.max(STATE.bestScore, total);
   if (!STATE.platformsUsed.includes(d.platform)) STATE.platformsUsed.push(d.platform);
-  if (plat.own) { plat.exBoost += total / 40 * 0.6; plat.games = (plat.games || 0) + 1; }
+  if (plat.own && !plat.store) { plat.exBoost += total / 40 * 0.6; plat.games = (plat.games || 0) + 1; }
+  if (plat.store) { plat.users += Math.round(dl * 0.25); plat.catalog += 1; plat.games = (plat.games || 0) + 1; }
 
   // publisher relationship
   let pubLine = '';
@@ -1772,7 +1787,8 @@ function completeProject() {
   if (mo.rev < 0 && !lootKids) notes.push(`<span class="bad">Critics marked it down for its ${esc(mo.n.toLowerCase())} model.</span>`);
   if (orig) notes.push((total >= orig.total ? `Critics say it surpasses ${esc(orig.title)}.` : `Critics found it a step down from ${esc(orig.title)}.`) + (seqN >= 3 ? ' <span class="bad">Franchise fatigue is setting in.</span>' : '') + (tooSoon ? ' <span class="bad">It came out too soon after the last one.</span>' : ''));
   if (deal) notes.push(`<span class="good">${esc(d.platform)} featured it on their storefront.</span>`);
-  if (plat.own) notes.push(`<span class="good">Sales of the ${esc(plat.n)} got a boost.</span>`);
+  if (plat.own && !plat.store) notes.push(`<span class="good">Sales of the ${esc(plat.n)} got a boost.</span>`);
+  if (plat.store) notes.push(`<span class="good">New players signed up to ${esc(plat.n)} for it.</span>`);
   if (!dir) notes.push('<span class="bad">Nobody directed it. The vision felt muddled.</span>');
   learned.forEach(i => notes.push(`📓 Learned: ${esc(d.genre)} needs <b>${LV_NAME[pe.prof[i]]}</b> ${AREAS[i]}`));
   if (total >= 28) notes.push('<span class="gold">Merchandise licensing is now available in Biz.</span>');
@@ -1842,9 +1858,11 @@ function advanceWeek() {
     if (!STATE.investor.weeks) news(`The investor deal has ended. They took ${money(STATE.investor.paid || 0)} in total.`, '#9aa5b1');
   }
   hardwareWeek();
+  storeWeek();
+  if (STATE.uniWeeks > 0) STATE.uniWeeks--;
   if (STATE.walkIn && --STATE.walkIn.weeks <= 0) { news(`${STATE.walkIn.c.name} took a job elsewhere.`, '#9aa5b1'); STATE.walkIn = null; }
 
-  if (Math.random() < 0.12) randomEvent();
+  if (Math.random() < 0.14) randomEvent();
 
   c.w++;
   if (c.w > 4) {
@@ -2280,53 +2298,229 @@ function hwStart(cfg) {
   if (!spend(sp.cost, 'Hardware')) return;
   let name = String(cfg.name || hwName()).replace(/[^A-Za-z0-9 \-!.]/g, '').trim().slice(0, 20) || hwName();
   while (P[name]) name += '+';
-  STATE.hwProj = { cfg, name, weeks: 0, total: sp.weeks, cost: sp.cost, ready: false };
-  playSound('fanfare'); news(`Hardware team started building the ${name}!`, '#ffd166');
+  STATE.hwProj = { cfg, name, weeks: 0, total: sp.weeks, cost: sp.cost, stage: 'proto', wait: false, bonusAppeal: 0, bonusPow: 0, kits: 0, defect: 0 };
+  playSound('fanfare'); news(`Hardware team started prototyping the ${name}!`, '#ffd166');
   renderMarket(); save();
 }
-function hwLaunchModal() {
+function hwStageName(pr) { return { proto: 'Prototyping', devkit: 'Dev kits', mfg: 'Tooling up factories', done: 'Ready to launch' }[pr.stage] || pr.stage; }
+function hwProtoModal() {
   const pr = STATE.hwProj; if (!pr) return;
-  const sp = hwSpec(pr.cfg);
-  showModal(`<h3>🕹 The ${esc(pr.name)} is ready!</h3><div class="note">Power ${sp.pow}/4 · Appeal ${sp.appeal.toFixed(2)} · Each unit costs ${money(sp.unit)} to make (falling over time).<br><br>Pick a launch price. Cheaper consoles sell far more units and build a bigger audience for your games, but earn less on each sale. You can change the price later in Market.</div>`,
-    HW_PRICES.map(pz => ({ label: `$${pz} · ${pz - sp.unit >= 0 ? '+' : ''}${money(pz - sp.unit)} per unit`, cls: pz === 249 ? 'btn-accent' : '', action: () => hwLaunch(pz) })));
+  const sp = hwSpec(pr.cfg), k = rankK();
+  const c1 = Math.round(15000 * k / 1000) * 1000, c2 = Math.round(40000 * k / 1000) * 1000;
+  const canPow = sp.pow + pr.bonusPow < 4;
+  showModal(`<h3>🔧 Prototype review</h3><div class="note">The first working ${esc(pr.name)} prototype is on the table. Testers like it, but there's room to improve before dev kits go out.</div>`, [
+    { label: `Refine the design (+3 wks, ${money(c1)}): appeal +6%`, cls: 'btn-accent', disabled: STATE.gold < c1, action: () => { if (!spend(c1, 'Hardware')) return hwProtoModal(); pr.bonusAppeal += 0.06; pr.total += 3; hwNextStage('devkit'); } },
+    { label: `Push the specs (+4 wks, ${money(c2)}): power +1`, disabled: !canPow || STATE.gold < c2, action: () => { if (!spend(c2, 'Hardware')) return hwProtoModal(); pr.bonusPow += 1; pr.total += 4; hwNextStage('devkit'); } },
+    { label: 'Lock the design and move on', action: () => hwNextStage('devkit') }]);
 }
-function hwLaunch(price) {
+function hwKitModal() {
   const pr = STATE.hwProj; if (!pr) return;
-  const c = pr.cfg, sp = hwSpec(c);
+  const k = rankK(), a = Math.round(10000 * k / 1000) * 1000, b = Math.round(35000 * k / 1000) * 1000;
+  showModal(`<h3>📦 Dev kits</h3><div class="note">Third-party studios need dev kits to make launch games. A bigger launch library sells more consoles from day one.</div>`, [
+    { label: `Send kits to 15 studios (${money(b)}): ~18 launch games`, cls: 'btn-accent', disabled: STATE.gold < b, action: () => { if (!spend(b, 'Hardware')) return hwKitModal(); pr.kits = 18; hwNextStage('mfg'); } },
+    { label: `Send kits to 5 studios (${money(a)}): ~8 launch games`, disabled: STATE.gold < a, action: () => { if (!spend(a, 'Hardware')) return hwKitModal(); pr.kits = 8; hwNextStage('mfg'); } },
+    { label: 'Keep it in-house: ~3 launch games', action: () => { pr.kits = 3; hwNextStage('mfg'); } }]);
+}
+function hwNextStage(st) { const pr = STATE.hwProj; if (!pr) return; pr.stage = st; pr.wait = false; news(`${pr.name}: ${hwStageName(pr)}`, '#66fcf1'); renderMarket(); save(); }
+function hwBuildEvent(pr) {
+  const r = Math.random(), k = rankK();
+  if (r < 0.35) {
+    const fix = Math.round(12000 * k / 1000) * 1000;
+    showModal(`<h3>🔥 Prototype overheating</h3><div class="note">The ${esc(pr.name)} prototype runs hot under load.</div>`, [
+      { label: `Redesign the cooling (${money(fix)})`, cls: 'btn-accent', disabled: STATE.gold < fix, action: () => { if (spend(fix, 'Hardware')) news('Cooling fixed.', '#06d6a0'); } },
+      { label: 'Add 2 weeks to fix it in-house', action: () => { pr.total += 2; } },
+      { label: 'Ship it as is', action: () => { pr.defect += 0.03; news('Engineers are nervous about failure rates.', '#ef476f'); } }]);
+  } else if (r < 0.7) {
+    showModal(`<h3>📸 Specs leaked</h3><div class="note">Someone leaked the ${esc(pr.name)}'s specs online.</div>`, [
+      { label: 'Confirm it with a teaser', cls: 'btn-accent', action: () => { pr.bonusAppeal += 0.03; STATE.fans += Math.round(STATE.fans * 0.02); news('The teaser trended for days.', '#06d6a0'); } },
+      { label: 'Stay silent', action: () => news('The rumour mill keeps spinning.', '#9aa5b1') }]);
+  } else {
+    const prem = Math.round(20000 * k / 1000) * 1000;
+    showModal(`<h3>🧩 Component shortage</h3><div class="note">A key chip supplier is running short.</div>`, [
+      { label: `Pay a premium to jump the queue (${money(prem)})`, cls: 'btn-accent', disabled: STATE.gold < prem, action: () => { if (spend(prem, 'Hardware')) news('Supply secured.', '#06d6a0'); } },
+      { label: 'Wait it out (+3 weeks)', action: () => { pr.total += 3; } }]);
+  }
+}
+function hwLaunchModal() {
+  const pr = STATE.hwProj; if (!pr || pr.stage !== 'done') return;
+  const sel = (id, opts) => `<select id="${id}" onchange="hwLaunchPreview()">${opts}</select>`;
+  const titles = STATE.history.filter(h => h.total >= 24).slice(0, 8);
+  showModal(`<h3>🕹 Launch the ${esc(pr.name)}</h3><div class="note mini">Set up manufacturing and the launch. Each production line makes ${HW_LINE_CAP} units a week. Units you can't sell sit in a warehouse; units you can't make are lost sales.</div>
+    <label>Factory partner</label>${sel('hl-fac', HW_PARTNERS.map((f, i) => `<option value="${i}" ${i === 1 ? 'selected' : ''}>${f.n}: ${f.d}</option>`).join(''))}
+    <div class="grid2"><div class="fld"><label>Launch price</label>${sel('hl-price', HW_PRICES.map(v => `<option value="${v}" ${v === 299 ? 'selected' : ''}>$${v}</option>`).join(''))}</div>
+    <div class="fld"><label>Production lines</label>${sel('hl-lines', [1, 2, 3, 4, 6, 8].map(v => `<option value="${v}" ${v === 3 ? 'selected' : ''}>${v} (${fmt(v * HW_LINE_CAP)}/wk)</option>`).join(''))}</div></div>
+    <label>Launch campaign</label>${sel('hl-camp', HW_CAMPAIGNS.map((c, i) => `<option value="${i}">${c.n}${c.cost ? ' · ' + money(Math.round(c.cost * rankK() / 1000) * 1000) : ''}</option>`).join(''))}
+    <label>Bundle a game</label>${sel('hl-bundle', '<option value="">No bundle</option>' + titles.map(h => `<option value="${esc(h.title)}">${esc(h.title)} (${h.total})</option>`).join(''))}
+    <div id="hl-prev" class="note mini"></div>`,
+    [{ label: 'Launch!', cls: 'btn-accent', action: () => hwLaunch(hwLaunchForm()) }, { label: 'Decide later' }], hwLaunchPreview);
+}
+function hwLaunchForm() {
+  return { fac: +$('hl-fac').value, price: +$('hl-price').value, lines: +$('hl-lines').value, camp: +$('hl-camp').value, bundle: $('hl-bundle').value };
+}
+function hwLaunchPreview() {
+  const pr = STATE.hwProj; if (!pr || !$('hl-fac')) return;
+  const f = hwLaunchForm(), sp = hwSpec(pr.cfg), fac = HW_PARTNERS[f.fac];
+  const unit = Math.round(sp.unit * fac.unit), camp = Math.round(HW_CAMPAIGNS[f.camp].cost * rankK() / 1000) * 1000;
+  const pre = f.lines * HW_LINE_CAP * 2 * unit;
+  $('hl-prev').innerHTML = `Build cost ${money(unit)} per unit · margin <b class="${f.price - unit >= 0 ? 'good' : 'bad'}">${money(f.price - unit)}</b> per sale<br>Launch stock (2 weeks of production): ${money(pre)}${camp ? ` · campaign ${money(camp)}` : ''}<br>Line running cost ${money(hwLineCost())} per line each week<br>Launch library: about ${pr.kits || 3} third-party games${STATE.gold < pre + camp ? '<br><span class="bad">This will put you in the red. Consider fewer lines.</span>' : ''}`;
+}
+function hwLineCost() { return Math.round(3000 * Math.sqrt(rankK()) / 100) * 100; }
+function hwLaunch(f) {
+  const pr = STATE.hwProj; if (!pr) return;
+  if (typeof f !== 'object') f = { fac: 1, price: +f || 299, lines: 3, camp: 0, bundle: '' };
+  const c = pr.cfg, sp = hwSpec(c), fac = HW_PARTNERS[f.fac] || HW_PARTNERS[1];
   const favs = [...new Set([...c.fav, ...HW_FORMS[c.form].fav, HW_INPUT[c.inp].fav].filter(Boolean))].slice(0, 6);
-  const op = { n: pr.name, own: true, lic: 0, fee: 0, peak: 0, year: yearFrac(), decline: 0, end: 0, arpu: +(3.5 + 0.8 * sp.pow).toFixed(1),
-    drain: 1.1, hp: +(1 + 0.15 * sp.pow).toFixed(2), rank: 1, fav: favs, cfg: c, pow: sp.pow, appeal: sp.appeal, unit: sp.unit, price,
-    installed: 0, weeks: 0, exBoost: 0.3, games: 0, revTotal: 0, lastUnits: 0, lastRoy: 0, digital: c.st === 2, disc: false, launchM: STATE.cal.y * 12 + STATE.cal.m };
+  const pow = Math.min(4, sp.pow + (pr.bonusPow || 0));
+  const unit = Math.round(sp.unit * fac.unit);
+  const camp = Math.round(HW_CAMPAIGNS[f.camp].cost * rankK() / 1000) * 1000;
+  const op = { n: pr.name, own: true, lic: 0, fee: 0, peak: 0, year: yearFrac(), decline: 0, end: 0, arpu: +(3.5 + 0.8 * pow).toFixed(1),
+    drain: 1.1, hp: +(1 + 0.15 * pow).toFixed(2), rank: 1, fav: favs, cfg: c, pow, appeal: +(sp.appeal * (1 + (pr.bonusAppeal || 0)) * fac.appeal).toFixed(3),
+    unit, price: f.price, installed: 0, weeks: 0, exBoost: 0.3 + HW_CAMPAIGNS[f.camp].boost + (f.bundle ? 0.3 : 0), games: 0, revTotal: 0,
+    lastUnits: 0, lastRoy: 0, lastDemand: 0, digital: c.st === 2, disc: false, launchM: STATE.cal.y * 12 + STATE.cal.m,
+    lines: f.lines, stock: 0, library: (pr.kits || 3) + (f.bundle ? 1 : 0), royalty: 0.2, partner: f.fac, defect: fac.defect + (pr.defect || 0),
+    lifeExt: 0, rev: null, exCd: 0, devCost: pr.cost, shortage: 0, cutShock: 0, soldOut: false, model: '' };
+  if (camp) charge(camp, 'Marketing');
+  const pre = op.lines * HW_LINE_CAP * 2;
+  op.stock = pre; charge(pre * unit, 'Hardware');
   STATE.ownPlats.push(op); rebuildPlatforms();
   STATE.hwProj = null;
   STATE.fans += 500; addRankExp(40);
   playSound('fanfare');
   for (let i = 0; i < 80; i++) particles.push({ conf: true, x: rnd(0, 320), y: rnd(-60, 0), vx: rnd(-0.4, 0.4), vy: rnd(0.3, 1.2), color: pick(['#ffd166', '#ef476f', '#06d6a0', '#4cc9f0']), life: 200 });
-  news(`The ${op.n} has launched at $${price}!`, '#ffd166');
+  news(`The ${op.n} has launched at $${op.price}!`, '#ffd166');
   refreshDevOptions(); updatePreview(); checkMilestones(); renderAll(); save();
 }
-function hwUnitCost(op) { const mo = STATE.cal.y * 12 + STATE.cal.m - op.launchM; return Math.round(op.unit * Math.max(0.6, 1 - 0.015 * mo)); }
-function hwUnits(op) {
-  const life = op.weeks < 12 ? 0.5 + op.weeks / 24 : op.weeks < 156 ? 1 : Math.max(0, 1 - (op.weeks - 156) / 104);
+function hwUnitCost(op) {
+  const mo = STATE.cal.y * 12 + STATE.cal.m - op.launchM;
+  return Math.round(op.unit * Math.max(0.6, 1 - 0.015 * mo) * (op.shortage > 0 ? 1.15 : 1));
+}
+function normHw(op) {
+  const defs = { lines: Math.max(1, Math.ceil((op.lastUnits || 800) / HW_LINE_CAP)), stock: 0, library: (op.games || 0) * 2 + 10, royalty: 0.2, partner: 1,
+    defect: 0.02, lifeExt: 0, rev: null, exCd: 0, devCost: 150000, shortage: 0, cutShock: 0, soldOut: false, lastDemand: op.lastUnits || 0, model: '' };
+  for (const k in defs) if (op[k] === undefined) op[k] = defs[k];
+  return op;
+}
+function hwDemand(op) {
+  const L = 156 + (op.lifeExt || 0);
+  const life = op.weeks < 12 ? 0.5 + op.weeks / 24 : op.weeks < L ? 1 : Math.max(0, 1 - (op.weeks - L) / 104);
   const newer = STATE.ownPlats.some(o => o !== op && !o.disc && o.launchM > op.launchM) ? 0.5 : 1;
   const fanF = clamp(Math.pow(Math.max(1, STATE.fans) / 20000, 0.3), 0.5, 2.5);
-  return Math.round(500 * op.appeal * (1 + 0.3 * op.pow) * Math.pow(249 / op.price, 1.4) * life * newer * (1 + op.exBoost) * fanF * rnd(0.9, 1.1));
+  const libF = 0.7 + Math.min(1.2, op.library / 80);
+  return Math.round(500 * op.appeal * (1 + 0.3 * op.pow) * Math.pow(249 / op.price, 1.4) * life * newer * (1 + op.exBoost) * fanF * libF *
+    (op.cutShock > 0 ? 0.7 : 1) * rnd(0.9, 1.1));
 }
 function hardwareWeek() {
   const pr = STATE.hwProj;
-  if (pr && !pr.ready) { pr.weeks++; if (pr.weeks >= pr.total) { pr.ready = true; hwLaunchModal(); } }
+  if (pr) {
+    if (!pr.stage) pr.stage = pr.ready ? 'done' : 'mfg';
+    if (pr.stage !== 'done' && !pr.wait) {
+      pr.weeks++;
+      if (pr.stage === 'proto' && pr.weeks >= Math.round(pr.total * 0.4)) { pr.wait = true; hwProtoModal(); }
+      else if (pr.stage === 'devkit' && pr.weeks >= Math.round(pr.total * 0.7)) { pr.wait = true; hwKitModal(); }
+      else if (pr.stage === 'mfg' && pr.weeks >= pr.total) { pr.stage = 'done'; hwLaunchModal(); }
+      else if (pr.stage !== 'done' && Math.random() < 0.07) hwBuildEvent(pr);
+    }
+  }
   STATE.ownPlats.forEach(op => {
     if (op.disc) return;
+    normHw(op);
     op.weeks++;
-    const units = hwUnits(op), uc = hwUnitCost(op);
-    op.installed += units; op.lastUnits = units;
-    const margin = units * (op.price - uc);
-    if (margin >= 0) earn(margin, 'Hardware'); else charge(-margin, 'Hardware');
-    const roy = Math.round(op.installed * 0.15 * (op.digital ? 1.3 : 1));
+    const uc = hwUnitCost(op);
+    const made = op.lines * HW_LINE_CAP * (op.shortage > 0 ? 0.5 : 1);
+    op.stock += made;
+    charge(Math.round(made * uc + op.lines * hwLineCost()), 'Hardware');
+    const demand = hwDemand(op), sold = Math.min(demand, op.stock);
+    op.stock -= sold; op.installed += sold; op.lastUnits = sold; op.lastDemand = demand;
+    op.soldOut = demand > sold * 1.05;
+    if (op.soldOut) op.exBoost += 0.005;
+    earn(sold * op.price, 'Hardware');
+    if (op.stock > 0) charge(Math.round(op.stock * 0.5), 'Hardware');
+    const royF = op.royalty <= 0.1 ? 1.5 : op.royalty <= 0.2 ? 1 : 0.6;
+    op.library += Math.round(rnd(0, 1.2) * Math.sqrt(op.installed / 20000) * royF);
+    const roy = Math.round(op.installed * 0.6 * Math.min(2.5, 0.5 + op.library / 60) * op.royalty * (op.digital ? 1.3 : 1));
     earn(roy, 'Royalties'); op.lastRoy = roy;
-    op.revTotal += margin + roy; op.exBoost *= 0.97;
-    if (op.weeks > 260) { op.disc = true; news(`The ${op.n} reached the end of its life and was retired.`, '#9aa5b1'); refreshDevOptions(); }
+    op.revTotal += sold * (op.price - uc) + roy - op.lines * hwLineCost();
+    op.exBoost *= 0.97;
+    if (op.shortage > 0) op.shortage--;
+    if (op.cutShock > 0) op.cutShock--;
+    if (op.exCd > 0) op.exCd--;
+    if (op.rev) {
+      op.rev.weeks++;
+      if (op.rev.weeks >= op.rev.total) hwRevisionDone(op);
+    }
+    if (Math.random() < op.defect * 0.12) hwDefectEvent(op);
+    if (op.weeks > 156 + op.lifeExt + 104) { op.disc = true; news(`The ${op.n} reached the end of its life and was retired.`, '#9aa5b1'); refreshDevOptions(); }
   });
+}
+function hwFind(n) { return STATE.ownPlats.find(x => x.n === n && !x.disc); }
+function hwLines(n, dlt) {
+  const op = hwFind(n); if (!op) return;
+  op.lines = clamp(op.lines + dlt, 0, 20); playSound('click'); renderMarket(); save();
+}
+function hwRoyalty(n, r) { const op = hwFind(n); if (!op) return; op.royalty = r; playSound('click'); renderMarket(); save(); }
+const HW_REVS = {
+  slim: { n: 'Slim model', min: 52, cost: 0.3, weeks: 8, d: 'Units 20% cheaper to make, +5% appeal, one more year on shelves' },
+  pro:  { n: 'Pro model',  min: 78, cost: 0.6, weeks: 12, d: 'Power +1, +8% appeal, units 15% dearer, 18 more months on shelves' }
+};
+function hwRevCost(op, k) { return Math.round((op.devCost || 150000) * HW_REVS[k].cost / 1000) * 1000; }
+function hwRevision(n, k) {
+  const op = hwFind(n), R = HW_REVS[k]; if (!op || !R || op.rev || op.weeks < R.min) return;
+  if (k === 'pro' && op.pow >= 4) { news('It is already as powerful as it gets.', '#9aa5b1'); return; }
+  if (!spend(hwRevCost(op, k), 'Hardware')) return;
+  op.rev = { k, weeks: 0, total: Math.round(R.weeks * (hasExec('producer') ? 0.8 : 1)) };
+  playSound('fanfare'); news(`Engineers started work on the ${op.n} ${R.n}.`, '#ffd166'); renderMarket(); save();
+}
+function hwRevisionDone(op) {
+  const k = op.rev.k; op.rev = null;
+  if (k === 'slim') { op.unit = Math.round(op.unit * 0.8); op.appeal *= 1.05; op.lifeExt += 52; op.model = 'Slim'; }
+  else { op.pow = Math.min(4, op.pow + 1); op.appeal *= 1.08; op.unit = Math.round(op.unit * 1.15); op.lifeExt += 78; op.model = 'Pro';
+    op.arpu = +(3.5 + 0.8 * op.pow).toFixed(1); op.hp = +(1 + 0.15 * op.pow).toFixed(2); }
+  op.exBoost += 0.4;
+  playSound('fanfare');
+  showModal(`<h3>🎉 ${esc(op.n)} ${HW_REVS[k].n} is out!</h3><div class="note">${HW_REVS[k].d}. Sales get a launch bump.</div>`);
+  renderMarket();
+}
+function hwExclusiveCost() { return Math.round(40000 * rankK() / 1000) * 1000; }
+function hwExclusive(n) {
+  const op = hwFind(n); if (!op || op.exCd > 0) return;
+  if (!spend(hwExclusiveCost(), 'Hardware')) return;
+  op.exBoost += 0.5; op.library += 1; op.exCd = 26;
+  playSound('coin'); news(`A big third-party game is now a timed ${op.n} exclusive!`, '#06d6a0'); renderMarket(); save();
+}
+function hwDefectEvent(op) {
+  const recall = Math.round(op.installed * 0.02 * 40 / 1000) * 1000 + 5000;
+  showModal(`<h3>⚠ Hardware fault</h3><div class="note">Players report ${esc(op.n)} units failing. ${op.partner === 0 ? 'The budget factory is cutting corners.' : 'It looks like a bad batch.'}</div>`, [
+    { label: `Recall and replace (${money(recall)})`, cls: 'btn-accent', action: () => { charge(recall, 'Hardware'); op.defect *= 0.5; STATE.fans += Math.round(STATE.fans * 0.01); news('The recall won back player trust.', '#06d6a0'); } },
+    { label: 'Deny everything', action: () => { op.exBoost = Math.max(0, op.exBoost - 0.4); STATE.fans = Math.round(STATE.fans * 0.97); news(`Players are furious about failing ${op.n} units.`, '#ef476f'); } }]);
+}
+function hardwareHtml() {
+  let html = '<div class="sec">Hardware division</div>';
+  if (STATE.rank < HW_RANK) html += `<div class="note mini">Reach Rank ${HW_RANK} to open a hardware division and build your own console.</div>`;
+  else if (STATE.hwProj) {
+    const pr = STATE.hwProj, pc = Math.min(100, pr.weeks / pr.total * 100);
+    const steps = ['proto', 'devkit', 'mfg', 'done'].map(st => `<span class="chip ${pr.stage === st ? 'chip-gold' : ''}">${hwStageName({ stage: st })}</span>`).join('');
+    html += `<div class="card"><div class="row"><b>Building the ${esc(pr.name)}</b><span class="mini muted">${pr.weeks}/${pr.total} wks</span></div><div>${steps}</div>
+      <div class="statrow"><span>Progress</span><div class="bar"><div style="background:var(--gold);width:${pc}%"></div></div><span>${Math.round(pc)}%</span></div>
+      ${pr.stage === 'done' ? '<button class="btn-accent" onclick="hwLaunchModal()">Set up the launch</button>' : pr.wait ? `<button class="btn-accent" onclick="${pr.stage === 'proto' ? 'hwProtoModal()' : 'hwKitModal()'}">Decision needed</button>` : ''}</div>`;
+  } else html += `<button class="btn-accent" onclick="hwModal()">🕹 Design a new console</button>`;
+  STATE.ownPlats.forEach(op => {
+    normHw(op);
+    if (op.disc) { html += `<div class="row mini muted"><span>★ ${esc(op.n)} (retired)</span><span>${fmt(op.installed)} sold · ${money(op.revTotal || 0)}</span></div>`; return; }
+    const uc = hwUnitCost(op), mg = op.price - uc, cap = op.lines * HW_LINE_CAP;
+    const revBtns = Object.entries(HW_REVS).map(([k, R]) => `<button class="btn-sm" ${op.rev || op.weeks < R.min || STATE.gold < hwRevCost(op, k) ? 'disabled' : ''} onclick="hwRevision('${op.n}','${k}')">${R.n} ${op.weeks < R.min ? '(wk ' + R.min + ')' : money(hwRevCost(op, k))}</button>`).join('');
+    html += `<div class="card"><div class="row"><b>★ ${esc(op.n)}${op.model ? ' ' + op.model : ''}</b><span class="gold">$${op.price}</span></div>
+      <div class="mini muted">${HW_FORMS[op.cfg.form].n}, power ${op.pow}/4, ${HW_PARTNERS[op.partner].n.toLowerCase()} · ${fmt(op.installed)} in homes · ${op.library} third-party games · ${op.games || 0} of yours</div>
+      <div class="mini">Last week: demand ${fmt(op.lastDemand || 0)}, sold ${fmt(op.lastUnits)}${op.soldOut ? ' <b class="bad">sold out</b>' : ''} · stock ${fmt(op.stock)}${op.shortage ? ' · <span class="bad">chip shortage</span>' : ''}</div>
+      <div class="mini">Margin ${mg >= 0 ? '+' : ''}${money(mg)} per unit · royalties ${money(op.lastRoy || 0)}/wk</div>
+      <div class="row mini"><span>Production: <b>${op.lines}</b> lines (${fmt(cap)}/wk, ${money(op.lines * hwLineCost())}/wk)</span><span class="btns"><button class="btn-sm" onclick="hwLines('${op.n}',-1)">−</button><button class="btn-sm" onclick="hwLines('${op.n}',1)">+</button></span></div>
+      <div class="row mini"><span>Price</span><span class="btns"><button class="btn-sm" onclick="hwPrice('${op.n}',-50)">−$50</button><button class="btn-sm" onclick="hwPrice('${op.n}',50)">+$50</button></span></div>
+      <div class="mini muted">Third-party royalty (lower attracts more games)</div>
+      <div class="grid3">${[0.1, 0.2, 0.3].map(r => `<button class="btn-sm ${op.royalty === r ? 'btn-accent' : ''}" onclick="hwRoyalty('${op.n}',${r})">${Math.round(r * 100)}%</button>`).join('')}</div>
+      ${op.rev ? `<div class="statrow"><span>${HW_REVS[op.rev.k].n}</span><div class="bar"><div style="background:var(--sky);width:${op.rev.weeks / op.rev.total * 100}%"></div></div><span>${op.rev.weeks}/${op.rev.total}</span></div>` : ''}
+      <div class="btns">${revBtns}<button class="btn-sm" ${op.exCd > 0 || STATE.gold < hwExclusiveCost() ? 'disabled' : ''} onclick="hwExclusive('${op.n}')">Timed exclusive ${op.exCd > 0 ? '(' + op.exCd + 'w)' : money(hwExclusiveCost())}</button><button class="btn-sm btn-danger" onclick="hwDiscontinue('${op.n}')">Discontinue</button></div>
+      <div class="mini muted">Favours ${op.fav.map(esc).join(', ')} · lifetime profit ${money(op.revTotal || 0)}</div></div>`;
+  });
+  return html;
 }
 function hwPrice(n, dlt) {
   const op = STATE.ownPlats.find(x => x.n === n); if (!op || op.disc) return;
@@ -2387,7 +2581,7 @@ function licenseMerch(title) {
 function companyValue() {
   const recent = STATE.plHist.slice(-6), avg = recent.length ? recent.reduce((a, e) => a + opProfit(e), 0) / recent.length : 0;
   return Math.max(0, Math.round(STATE.gold - loanOwed() + Math.max(0, avg) * 36 + STATE.fans * 2 +
-    STATE.ownPlats.reduce((a, op) => a + (op.disc ? 0 : op.installed * 30), 0) + STATE.live.reduce((a, g) => a + weeklyRev(g) * 20, 0)));
+    STATE.ownPlats.reduce((a, op) => a + (op.disc ? 0 : op.installed * 30), 0) + (storeLive() ? STATE.store.users * 20 : 0) + STATE.live.reduce((a, g) => a + weeklyRev(g) * 20, 0)));
 }
 function evAcquire() {
   const g = pick(STATE.live.filter(x => x.weeks > 8)); if (!g) return;
@@ -2409,17 +2603,38 @@ function evHwPress() {
   else { op.exBoost = Math.max(0, op.exBoost - 0.2); news(`A teardown video mocked the ${op.n}'s build quality.`, '#ef476f'); }
 }
 function evBulkOrder() {
-  const op = pick(STATE.ownPlats.filter(x => !x.disc)); if (!op) return;
-  const units = Math.round(op.lastUnits * rnd(2, 4)), price = Math.round(op.price * 0.8);
-  showModal(`<h3>Bulk Order</h3><div class="note">A retail chain wants ${fmt(units)} ${esc(op.n)} units at a 20% discount ($${price} each).</div>`, [
-    { label: 'Accept', cls: 'btn-accent', action: () => { op.installed += units; earn(units * (price - hwUnitCost(op)), 'Hardware'); news(`Shipped ${fmt(units)} units to retail.`, '#06d6a0'); } },
+  const op = pick(STATE.ownPlats.filter(x => !x.disc && x.stock > 500)); if (!op) return;
+  const units = Math.min(op.stock, Math.round(Math.max(500, op.lastDemand) * rnd(1.5, 3))), price = Math.round(op.price * 0.8);
+  showModal(`<h3>Bulk order</h3><div class="note">A retail chain wants ${fmt(units)} ${esc(op.n)} units from your warehouse at a 20% discount ($${price} each).</div>`, [
+    { label: 'Accept', cls: 'btn-accent', action: () => { op.stock -= units; op.installed += units; earn(units * price, 'Hardware'); news(`Shipped ${fmt(units)} units to retail.`, '#06d6a0'); } },
     { label: 'Decline' }]);
+}
+function evChipShortage() {
+  const op = pick(STATE.ownPlats.filter(x => !x.disc && x.lines > 0)); if (!op) return;
+  const prem = Math.round(op.lines * 6000 * Math.sqrt(rankK()) / 1000) * 1000;
+  showModal(`<h3>🧩 Chip shortage</h3><div class="note">A global chip shortage will halve ${esc(op.n)} production for six weeks and raise costs.</div>`, [
+    { label: `Pay suppliers a premium (${money(prem)})`, cls: 'btn-accent', disabled: STATE.gold < prem, action: () => { if (spend(prem, 'Hardware')) news('Supply secured. Lines keep running.', '#06d6a0'); } },
+    { label: 'Ride it out', action: () => { op.shortage = 6; news(`${op.n} production is down for six weeks.`, '#ef476f'); } }]);
+}
+function evRivalPriceCut() {
+  const op = pick(STATE.ownPlats.filter(x => !x.disc)); if (!op) return;
+  const r = pick(STATE.rivals).n;
+  showModal(`<h3>Rival price cut</h3><div class="note">${esc(r)} slashed the price of their console to undercut the ${esc(op.n)}.</div>`, [
+    { label: `Match it (−$50, now $${Math.max(99, op.price - 50)})`, cls: 'btn-accent', action: () => { op.price = Math.max(99, op.price - 50); news('Price matched.', '#66fcf1'); } },
+    { label: 'Hold your price', action: () => { op.cutShock = 6; news(`${op.n} demand will dip for a while.`, '#ef476f'); } }]);
+}
+function evUnboxing() {
+  const op = pick(STATE.ownPlats.filter(x => !x.disc)); if (!op) return;
+  op.exBoost += 0.3; news(`A viral unboxing video sent ${op.n} sales soaring!`, '#06d6a0');
 }
 STUDIO_EVENTS.push(
   { w: 2, c: () => STATE.live.some(x => x.weeks > 8), f: evAcquire },
   { w: 1, c: () => !hasExec('cfo') && STATE.plHist.length > 6, f: evAudit },
   { w: 2, c: () => STATE.ownPlats.some(x => !x.disc), f: evHwPress },
-  { w: 1, c: () => STATE.ownPlats.some(x => !x.disc && x.lastUnits), f: evBulkOrder }
+  { w: 2, c: () => STATE.ownPlats.some(x => !x.disc && x.stock > 500), f: evBulkOrder },
+  { w: 1, c: () => STATE.ownPlats.some(x => !x.disc && x.lines > 0 && !x.shortage), f: evChipShortage },
+  { w: 1, c: () => STATE.ownPlats.some(x => !x.disc), f: evRivalPriceCut },
+  { w: 1, c: () => STATE.ownPlats.some(x => !x.disc), f: evUnboxing }
 );
 function renderBiz() {
   const hist = STATE.plHist.slice(-12), profits = hist.map(opProfit), maxAbs = Math.max(1, ...profits.map(Math.abs));
@@ -2492,12 +2707,315 @@ function legendsHtml() {
     hinted.map(i => `<div class="row mini"><span class="muted">❔ ${legendMask(i)}</span><span class="muted">${esc(LEGENDS[i].ref)}?</span></div>`).join('') +
     (found.length + hinted.length === 0 ? '<div class="muted mini">None found yet.</div>' : '');
 }
+
+/* ---------- Digital storefront ---------- */
+const STORE_RANK = 6, STORE_BASE = 90000;
+const STORE_FEATS = {
+  cloud:   { n: 'Cloud saves',        cost: 20000, d: 'Players stay longer (churn −30%)' },
+  ach:     { n: 'Achievements',       cost: 15000, d: 'Players spend 8% more' },
+  reviews: { n: 'User reviews',       cost: 10000, d: '15% more developers list games' },
+  wish:    { n: 'Wishlists & recommendations', cost: 30000, d: 'Players spend 18% more' },
+  work:    { n: 'Mod workshop',       cost: 40000, d: 'Churn −25%, 15% more developers' },
+  friends: { n: 'Friends & chat',     cost: 25000, d: 'Word of mouth: +0.5% users weekly' }
+};
+const STORE_PRE = ['Pixel', 'Hyper', 'Nova', 'Orbit', 'Arc', 'Cloud', 'Nimbus', 'Lumen', 'Comet', 'Kite', 'Quest', 'Retro'];
+const STORE_SUF = ['Shelf', 'Market', 'Hub', 'Arcade', 'Bay', 'Dock', 'Vault', 'Store', 'Port', 'Hangar'];
+let storeDraft = null;
+function storeName() { for (let i = 0; i < 20; i++) { const n = pick(STORE_PRE) + pick(STORE_SUF); if (!P[n]) return n; } return 'Studio Store'; }
+function storeLive() { return !!(STATE.store && STATE.store.stage === 'live' && !STATE.store.disc); }
+function storeFeatCost(k) { return Math.round(STORE_FEATS[k].cost * Math.sqrt(rankK()) / 1000) * 1000; }
+function storeBuildCost(d) { return Math.round(STORE_BASE * Math.sqrt(rankK()) / 1000) * 1000 + Object.keys(d.feats).filter(k => d.feats[k]).reduce((a, k) => a + storeFeatCost(k), 0); }
+function storeModal() {
+  if (STATE.store || STATE.rank < STORE_RANK) return;
+  storeDraft = { name: '', cut: 0.2, feats: {} };
+  showModal(`<h3>🛒 Build a digital store</h3><div class="note mini">Run your own PC storefront. Other developers sell games through it and you keep a cut of every sale. Your own games released there pay no fees and bring players in. A lower cut attracts more developers; features keep players around and spending.</div>
+    <label>Name</label><div class="title-row"><input id="st-name" maxlength="18" placeholder="${esc(storeName())}"><button class="btn-sm" onclick="$('st-name').value=storeName()">🎲</button></div>
+    <label>Revenue cut</label><div id="st-cut" class="seg seg3"></div>
+    <label>Launch features</label><div id="st-feats" style="display:flex;flex-direction:column;gap:5px;"></div>
+    <div id="st-prev" class="note mini"></div>`,
+    [{ label: 'Start building', cls: 'btn-accent', action: () => { storeDraft.name = ($('st-name').value || '').trim() || $('st-name').placeholder; storeStart(storeDraft); } }, { label: 'Cancel' }], storeDraftRender);
+}
+function storeDraftRender() {
+  if (!storeDraft || !$('st-cut')) return;
+  $('st-cut').innerHTML = [0.12, 0.2, 0.3].map(c => `<button class="${storeDraft.cut === c ? 'on' : ''}" onclick="storeDraft.cut=${c};storeDraftRender()">${Math.round(c * 100)}%</button>`).join('');
+  $('st-feats').innerHTML = Object.entries(STORE_FEATS).map(([k, f]) => `<button class="opt ${storeDraft.feats[k] ? 'btn-accent' : ''}" onclick="storeDraft.feats.${k}=!storeDraft.feats.${k};storeDraftRender()"><b>${storeDraft.feats[k] ? '✓ ' : ''}${f.n}</b> · ${money(storeFeatCost(k))}<br><span class="${storeDraft.feats[k] ? '' : 'muted'}">${f.d}</span></button>`).join('');
+  const cost = storeBuildCost(storeDraft);
+  $('st-prev').innerHTML = `Build cost <b class="${STATE.gold >= cost ? 'gold' : 'bad'}">${money(cost)}</b> · ${Math.round(12 * (hasExec('producer') ? 0.8 : 1))} weeks<br>You can add more features after launch.`;
+}
+function storeStart(d) {
+  if (STATE.store || STATE.rank < STORE_RANK) return;
+  const cost = storeBuildCost(d);
+  if (!spend(cost, 'Storefront')) return;
+  let name = String(d.name || storeName()).replace(/[^A-Za-z0-9 \-!.]/g, '').trim().slice(0, 18) || storeName();
+  while (P[name]) name += '+';
+  STATE.store = { stage: 'build', n: name, cut: d.cut || 0.2, feats: Object.assign({}, d.feats), weeks: 0, total: Math.round(12 * (hasExec('producer') ? 0.8 : 1)), cost };
+  playSound('fanfare'); news(`Work started on the ${name} storefront!`, '#ffd166');
+  renderMarket(); save();
+}
+function storeLaunch() {
+  const st = STATE.store; if (!st) return;
+  Object.assign(st, { stage: 'live', own: true, store: true, lic: 0, fee: 0, peak: 0, year: yearFrac(), decline: 0, end: 0, arpu: 4.0, drain: 1.0, hp: 1.2, rank: 1,
+    fav: ['Strategy', 'RPG', 'Roguelike', 'Survival', 'City Builder', 'Sandbox', 'Simulation'], disc: false,
+    users: Math.round(3000 + STATE.fans * 0.15), catalog: 20 + STATE.releasedCount, weeks: 0, free: false, saleWeeks: 0, exCd: 0, exBoost: 0.3,
+    lastGmv: 0, lastInc: 0, lastCost: 0, revTotal: 0, games: 0 });
+  rebuildPlatforms();
+  STATE.fans += 300; addRankExp(30);
+  playSound('fanfare');
+  showModal(`<h3>🛒 ${esc(st.n)} is live!</h3><div class="note">Your storefront opened with ${fmt(st.users)} players and ${st.catalog} games. Release your own games on it from the platform list, and grow it from the Market tab.</div>`);
+  refreshDevOptions(); updatePreview(); checkMilestones(); renderAll(); save();
+}
+function storeWeek() {
+  const st = STATE.store; if (!st) return;
+  if (st.stage === 'build') { st.weeks++; if (st.weeks >= st.total) storeLaunch(); return; }
+  if (st.disc) return;
+  const f = st.feats;
+  const cutF = st.cut <= 0.12 ? 1.6 : st.cut <= 0.2 ? 1.15 : 0.75;
+  st.catalog += Math.max(0, Math.round(cutF * (1 + Math.min(25, Math.sqrt(st.users / 2000))) * (f.work ? 1.15 : 1) * (f.reviews ? 1.15 : 1) * rnd(0.6, 1.4)));
+  const catF = Math.min(2, st.catalog / 300);
+  const cap = storeCap();
+  const growth = (0.012 + 0.01 * catF + (st.free ? 0.02 : 0) + (f.friends ? 0.005 : 0) + (st.saleWeeks > 0 ? 0.01 : 0) + st.exBoost * 0.02) * Math.max(0, 1 - st.users / cap);
+  const churn = 0.01 * (f.cloud ? 0.7 : 1) * (f.work ? 0.75 : 1);
+  st.users = Math.max(500, Math.round(st.users * (1 + growth - churn)));
+  st.exBoost *= 0.9;
+  const spendMul = (f.ach ? 1.08 : 1) * (f.wish ? 1.18 : 1) * (st.saleWeeks > 0 ? 1.8 : 1);
+  const gmv = Math.round(st.users * 0.22 * (1 + Math.min(1.5, st.catalog / 400)) * spendMul);
+  const inc = Math.round(gmv * st.cut), cost = Math.round(st.users * 0.03 + (st.free ? 5000 * rankK() : 0));
+  earn(inc, 'Storefront'); charge(cost, 'Storefront');
+  st.lastGmv = gmv; st.lastInc = inc; st.lastCost = cost; st.revTotal += inc - cost; st.weeks++;
+  if (st.saleWeeks > 0) st.saleWeeks--;
+  if (st.exCd > 0) st.exCd--;
+}
+function storeCap() { const st = STATE.store; return Math.round(300000 + STATE.fans * 1.5 + Math.min(st.catalog, 3000) * 500); }
+function storeSetCut(c) { if (!storeLive()) return; STATE.store.cut = c; playSound('click'); renderMarket(); save(); }
+function storeBuyFeat(k) {
+  const st = STATE.store; if (!storeLive() || st.feats[k]) return;
+  if (!spend(storeFeatCost(k), 'Storefront')) return;
+  st.feats[k] = true; playSound('fanfare'); news(`${st.n} now has ${STORE_FEATS[k].n.toLowerCase()}!`, '#06d6a0'); renderMarket(); save();
+}
+function storeToggleFree() { if (!storeLive()) return; STATE.store.free = !STATE.store.free; playSound('click'); renderMarket(); save(); }
+function storeExCost() { return Math.round(50000 * rankK() / 1000) * 1000; }
+function storeExclusive() {
+  const st = STATE.store; if (!storeLive() || st.exCd > 0) return;
+  if (!spend(storeExCost(), 'Storefront')) return;
+  st.exBoost += 1; st.users = Math.round(st.users * 1.06); st.catalog += 1; st.exCd = 20;
+  playSound('coin'); news(`A huge PC release is now exclusive to ${st.n}!`, '#06d6a0'); renderMarket(); save();
+}
+function storeSaleModal() {
+  const st = STATE.store; if (!storeLive()) return;
+  const season = STATE.cal.m === 6 ? 'Summer' : 'Winter';
+  showModal(`<h3>🏷 ${season} sale on ${esc(st.n)}?</h3><div class="note">A store-wide sale for two weeks: players spend 80% more and new players sign up, but developers expect you to promote it.</div>`, [
+    { label: `Run the ${season} sale (${money(Math.round(8000 * rankK()))})`, cls: 'btn-accent', action: () => { if (!spend(Math.round(8000 * rankK()), 'Marketing')) return; st.saleWeeks = 2; news(`The ${season} sale is live on ${st.n}!`, '#06d6a0'); } },
+    { label: 'Skip it' }]);
+}
+function storeClose() {
+  const st = STATE.store; if (!storeLive()) return;
+  showModal(`<h3>Close ${esc(st.n)}?</h3><div class="note">The store shuts for good. Live games on it will start losing players.</div>`,
+    [{ label: 'Close the store', cls: 'btn-danger', action: () => { st.disc = true; refreshDevOptions(); renderMarket(); save(); } }, { label: 'Keep it open' }]);
+}
+function evStoreExclusiveWar() {
+  const st = STATE.store; if (!storeLive()) return;
+  const r = pick(STATE.rivals).n, cost = Math.round(30000 * rankK() / 1000) * 1000;
+  showModal(`<h3>Store wars</h3><div class="note">${esc(r)} launched a rival store and is paying developers to leave ${esc(st.n)}.</div>`, [
+    { label: `Counter with developer grants (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (spend(cost, 'Storefront')) { st.catalog += 10; news('Developers stayed loyal.', '#06d6a0'); } } },
+    { label: 'Cut your fee to 12% instead', action: () => { st.cut = 0.12; news(`${st.n} now takes only 12%.`, '#66fcf1'); } },
+    { label: 'Ignore them', action: () => { st.users = Math.round(st.users * 0.93); st.catalog = Math.max(0, st.catalog - 15); news(`${st.n} lost players and games to the rival store.`, '#ef476f'); } }]);
+}
+function evStoreIndieHit() {
+  const st = STATE.store; if (!storeLive()) return;
+  st.users = Math.round(st.users * 1.08); st.exBoost += 0.3;
+  news(`A surprise indie hit launched on ${st.n}! Players are flocking in.`, '#06d6a0');
+}
+function evStoreOutage() {
+  const st = STATE.store; if (!storeLive()) return;
+  const cost = Math.round(st.users * 0.05 + 5000);
+  showModal(`<h3>Store outage</h3><div class="note">${esc(st.n)}'s servers buckled under load. Players can't buy or download games.</div>`, [
+    { label: `Emergency server upgrade (${money(cost)})`, cls: 'btn-accent', action: () => { charge(cost, 'Storefront'); news('Servers are back and stronger.', '#06d6a0'); } },
+    { label: 'Patch it and apologise', action: () => { st.users = Math.round(st.users * 0.96); news('Some players gave up and left.', '#ef476f'); } }]);
+}
+function evReviewBomb() {
+  const st = STATE.store; if (!storeLive()) return;
+  showModal(`<h3>Review bombing</h3><div class="note">Angry players are flooding a popular game on ${esc(st.n)} with fake reviews.</div>`, [
+    { label: st.feats.reviews ? 'Use your review tools to filter them' : 'Lock the reviews', cls: 'btn-accent', action: () => news(st.feats.reviews ? 'Your review tools caught the bombers.' : 'Locking reviews annoyed some players.', st.feats.reviews ? '#06d6a0' : '#ef476f') },
+    { label: 'Stay out of it', action: () => { st.catalog = Math.max(0, st.catalog - 5); news('A few developers left in frustration.', '#ef476f'); } }]);
+}
+function storeHtml() {
+  let html = '<div class="sec">Digital store</div>';
+  const st = STATE.store;
+  if (STATE.rank < STORE_RANK) return html + `<div class="note mini">Reach Rank ${STORE_RANK} to build your own PC storefront.</div>`;
+  if (!st) return html + `<button class="btn-accent" onclick="storeModal()">🛒 Build a digital store</button>`;
+  if (st.stage === 'build') {
+    const pc = Math.min(100, st.weeks / st.total * 100);
+    return html + `<div class="card"><div class="row"><b>Building ${esc(st.n)}</b><span class="mini muted">${st.weeks}/${st.total} wks</span></div><div class="statrow"><span>Progress</span><div class="bar"><div style="background:var(--gold);width:${pc}%"></div></div><span>${Math.round(pc)}%</span></div></div>`;
+  }
+  if (st.disc) return html + `<div class="row mini muted"><span>🛒 ${esc(st.n)} (closed)</span><span>${money(st.revTotal)}</span></div>`;
+  const missing = Object.keys(STORE_FEATS).filter(k => !st.feats[k]);
+  html += `<div class="card"><div class="row"><b>🛒 ${esc(st.n)}</b><span class="gold">${Math.round(st.cut * 100)}% cut</span></div>
+    <div class="mini muted">${fmt(st.users)} of ~${fmt(storeCap())} potential players · ${fmt(st.catalog)} games · ${st.games || 0} of yours${st.saleWeeks > 0 ? ' · <span class="good">sale on</span>' : ''}</div>
+    <div class="mini">Last week: sales ${money(st.lastGmv)} · your cut ${money(st.lastInc)} · servers ${money(st.lastCost)}</div>
+    <div class="statrow"><span>Market</span><div class="bar"><div style="background:var(--gold);width:${Math.min(100, marketNow(st) / 3.5 * 100)}%"></div></div><span>${marketNow(st).toFixed(1)}</span></div>
+    <div class="mini muted">Revenue cut (lower attracts more developers)</div>
+    <div class="grid3">${[0.12, 0.2, 0.3].map(c => `<button class="btn-sm ${st.cut === c ? 'btn-accent' : ''}" onclick="storeSetCut(${c})">${Math.round(c * 100)}%</button>`).join('')}</div>
+    <div>${Object.keys(st.feats).filter(k => st.feats[k]).map(k => `<span class="chip">${STORE_FEATS[k].n}</span>`).join('')}</div>
+    ${missing.length ? '<div class="mini muted">Add features</div>' + missing.map(k => `<div class="row mini"><span>${STORE_FEATS[k].n}: <span class="muted">${STORE_FEATS[k].d}</span></span><button class="btn-sm" ${STATE.gold < storeFeatCost(k) ? 'disabled' : ''} onclick="storeBuyFeat('${k}')">${money(storeFeatCost(k))}</button></div>`).join('') : ''}
+    <div class="row mini"><span>Free game every week: players +2%/wk for ${money(Math.round(5000 * rankK()))}/wk</span><button class="btn-sm ${st.free ? 'btn-accent' : ''}" onclick="storeToggleFree()">${st.free ? 'On' : 'Off'}</button></div>
+    <div class="btns"><button class="btn-sm" ${st.exCd > 0 || STATE.gold < storeExCost() ? 'disabled' : ''} onclick="storeExclusive()">Timed exclusive ${st.exCd > 0 ? '(' + st.exCd + 'w)' : money(storeExCost())}</button><button class="btn-sm btn-danger" onclick="storeClose()">Close store</button></div>
+    <div class="mini muted">Lifetime store profit ${money(st.revTotal)}</div></div>`;
+  return html;
+}
+STUDIO_EVENTS.push(
+  { w: 2, c: storeLive, f: evStoreExclusiveWar }, { w: 2, c: storeLive, f: evStoreIndieHit },
+  { w: 1, c: storeLive, f: evStoreOutage }, { w: 1, c: storeLive, f: evReviewBomb }
+);
+MILESTONES.push(
+  { id: 'store', n: 'Shopkeeper', d: 'Launch your own digital store', test: s => !!(s.store && s.store.stage === 'live'), r: { fans: 2000 } },
+  { id: 'store1m', n: 'Storefront Giant', d: 'Reach 1,000,000 store players', test: s => !!(s.store && s.store.users >= 1e6), r: { gold: 1000000 } },
+  { id: 'lib100', n: 'Killer Library', d: 'Reach 100 third-party games on one console', test: s => s.ownPlats.some(x => x.library >= 100), r: { rp: 20 } }
+);
+
+/* ---------- More studio events ---------- */
+function curGame() { const d = STATE.activeDev; return d && d.kind === 'game' && !d.awaiting ? d : null; }
+function evCameo() {
+  const d = curGame(); if (!d) return;
+  const cost = Math.round(8000 * rankK() / 1000) * 1000, who = pick(['a famous rapper', 'a movie star', 'a pro skateboarder', 'a chart-topping DJ', 'a football legend', 'a beloved TV chef']);
+  showModal(`<h3>Celebrity cameo</h3><div class="note">${who[0].toUpperCase() + who.slice(1)} wants a cameo in ${esc(d.title)}.</div>`, [
+    { label: `Sign them up (${money(cost)}): +25 hype`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (spend(cost, 'Marketing')) { d.hype += 25; d.decisions.push('Celebrity cameo'); news('The cameo announcement went viral.', '#06d6a0'); } } },
+    { label: 'Keep the focus on the game', action: () => { d.reviewBonus += 0.1; news('Critics respect the restraint.', '#66fcf1'); } }]);
+}
+function evPowerCut() {
+  const d = curGame(); if (!d) return;
+  const cost = Math.round(2500 * rankK() / 100) * 100;
+  showModal(`<h3>Power cut</h3><div class="note">A storm knocked out the power. Unsaved work on ${esc(d.title)} is at risk.</div>`, [
+    { label: `Rent a generator (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (spend(cost, 'Office')) news('The generator saved the day.', '#06d6a0'); } },
+    { label: 'Hope autosave worked', action: () => { if (Math.random() < 0.5) news('Autosave came through!', '#06d6a0'); else { d.balloon.hp = Math.min(d.balloon.maxHp, Math.round(d.balloon.hp + d.balloon.maxHp * 0.2)); news('A chunk of work was lost.', '#ef476f'); } } }]);
+}
+function evViralGlitch() {
+  const g = pick(STATE.live); if (!g) return;
+  showModal(`<h3>Viral glitch</h3><div class="note">A hilarious physics glitch in ${esc(g.title)} is all over social media.</div>`, [
+    { label: 'Patch it fast', action: () => { g.ret = Math.min(0.985, g.ret + 0.004); news('Players appreciate the quick fix.', '#06d6a0'); } },
+    { label: 'Embrace it: make it a feature', cls: 'btn-accent', action: () => { g.users = Math.round(g.users * 1.12); STATE.fans += Math.round(STATE.fans * 0.02); news(`The glitch became ${g.title}'s favourite meme.`, '#06d6a0'); } }]);
+}
+function evSpeedrun() {
+  const g = pick(STATE.live.filter(x => x.score >= 24)); if (!g) return;
+  const cost = Math.round(4000 * rankK() / 100) * 100;
+  showModal(`<h3>Speedrunners found ${esc(g.title)}</h3><div class="note">The speedrunning community has adopted ${esc(g.title)}. Records are falling every week.</div>`, [
+    { label: `Sponsor a charity marathon (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (spend(cost, 'Marketing')) { g.users = Math.round(g.users * 1.25); STATE.fans += 150 + Math.round(STATE.fans * 0.02); news('The marathon raised money and players.', '#06d6a0'); } } },
+    { label: 'Let it grow on its own', action: () => { g.users = Math.round(g.users * 1.08); } }]);
+}
+function evMuseum() {
+  const h = pick(STATE.history.filter(x => x.total >= 24 && STATE.cal.y - x.y >= 2)); if (!h) return;
+  showModal(`<h3>Museum exhibit</h3><div class="note">A games museum wants to feature ${esc(h.title)} in its retro collection.</div>`, [
+    { label: 'Lend it for free', cls: 'btn-accent', action: () => { STATE.fans += 200 + Math.round(STATE.fans * 0.02); news(`${h.title} is on display. Nostalgia is booming.`, '#06d6a0'); } },
+    { label: 'Charge a licensing fee', action: () => { const f = Math.round(3000 * rankK()); earn(f, 'Other'); news(`Licensing fee: +${money(f)}`, '#ffd166'); } }]);
+}
+function evUniversity() {
+  const cost = Math.round(10000 * rankK() / 1000) * 1000;
+  showModal(`<h3>University partnership</h3><div class="note">A university wants you to sponsor its game design course. Graduates would apply to you first.</div>`, [
+    { label: `Sponsor the course (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (spend(cost, 'Staff')) { STATE.uniWeeks = 52; STATE.rp += 3; news('Partnership signed: better applicants for a year, +3 RP.', '#06d6a0'); } } },
+    { label: 'Not this year' }]);
+}
+function evWedding() {
+  const m = pick(STATE.team.filter(x => x.vac <= 0)); if (!m) return;
+  const cost = Math.round(1500 * rankK() / 100) * 100;
+  showModal(`<h3>Wedding bells</h3><div class="note">${esc(m.name)} is getting married!</div>`, [
+    { label: `Send a generous gift and a week off (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (spend(cost, 'Staff')) { m.morale = 100; STATE.team.forEach(x => { x.morale = Math.min(100, x.morale + 3); }); startVacation(m); } } },
+    { label: 'Sign a card from the team', action: () => { m.morale = Math.min(100, m.morale + 6); news(`${m.name} loved the card.`, '#06d6a0'); } }]);
+}
+function evInfluencerScandal() {
+  const d = curGame(); if (!d || d.hype < 10) return;
+  showModal(`<h3>Influencer scandal</h3><div class="note">An influencer who has been hyping ${esc(d.title)} is caught up in a scandal.</div>`, [
+    { label: 'Publicly cut ties', cls: 'btn-accent', action: () => { d.hype = Math.max(0, d.hype - 10); news('You lost some hype but kept your reputation.', '#66fcf1'); } },
+    { label: 'Say nothing', action: () => { if (Math.random() < 0.5) { STATE.fans = Math.round(STATE.fans * 0.97); news('Fans were upset by your silence.', '#ef476f'); } else news('The story blew over.', '#9aa5b1'); } }]);
+}
+function evHackathon() {
+  const m = pick(STATE.team.filter(x => x.vac <= 0)); if (!m) return;
+  const prize = Math.round(2000 * rankK());
+  gainExp(m, 25); m.morale = Math.min(100, m.morale + 10); earn(prize, 'Awards');
+  news(`${m.name} won a weekend hackathon! +${money(prize)} and lots of EXP.`, '#ffd166');
+}
+function evLocalise() {
+  const g = pick(STATE.live); if (!g) return;
+  const cost = Math.round(6000 * rankK() / 1000) * 1000, region = pick(['Japanese', 'Brazilian', 'Korean', 'German', 'Arabic', 'Spanish', 'Indonesian']);
+  showModal(`<h3>Localisation offer</h3><div class="note">An agency offers to translate ${esc(g.title)} for the ${region} market.</div>`, [
+    { label: `Localise it (${money(cost)}): players +20%`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (spend(cost, 'Live ops')) { g.users = Math.round(g.users * 1.2); g.ret = Math.min(0.985, g.ret + 0.004); news(`${g.title} is a hit with ${region} players!`, '#06d6a0'); } } },
+    { label: 'Maybe later' }]);
+}
+function evFlood() {
+  const cost = Math.round(5000 * rankK() / 100) * 100;
+  showModal(`<h3>Burst pipe</h3><div class="note">A pipe burst above the office. Water is everywhere.</div>`, [
+    { label: `Call emergency repairs (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (spend(cost, 'Office')) news('Fixed within the hour.', '#06d6a0'); } },
+    { label: 'Mop up and carry on', action: () => { STATE.team.forEach(x => { x.stam = Math.max(1, x.stam - 30); x.morale = Math.max(0, x.morale - 5); }); news('The team spent the week with wet socks.', '#ef476f'); } }]);
+}
+function evFanRemake() {
+  const h = pick(STATE.history.filter(x => x.total >= 26)); if (!h) return;
+  showModal(`<h3>Fan remake</h3><div class="note">Fans built an unofficial remake of ${esc(h.title)}, and it's actually good.</div>`, [
+    { label: 'Endorse it', cls: 'btn-accent', action: () => { STATE.fans += 200 + Math.round(STATE.fans * 0.03); news('Fans love that you supported them.', '#06d6a0'); } },
+    { label: 'Offer the lead fan a job', action: () => { const c = randomStaff(1); c.favG = h.genre; STATE.candidates.push(c); news(`${c.name}, the remake's creator, is now in your applicant list.`, '#06d6a0'); } },
+    { label: 'Send a cease and desist', action: () => { STATE.fans = Math.round(STATE.fans * 0.98); news('The community is not impressed.', '#ef476f'); } }]);
+}
+function evDocumentary() {
+  showModal(`<h3>Documentary crew</h3><div class="note">A film crew wants to make a documentary about life at your studio.</div>`, [
+    { label: 'Open the doors', cls: 'btn-accent', action: () => { STATE.fans += 300 + Math.round(STATE.fans * 0.04); STATE.team.forEach(x => { x.morale = Math.max(0, x.morale - 3); }); news('The documentary was a hit, though the team felt watched.', '#06d6a0'); } },
+    { label: 'Politely decline' }]);
+}
+function evBuyout() {
+  const r = pick(STATE.rivals).n, offer = Math.round(companyValue() * 1.3 / 1e5) * 1e5;
+  showModal(`<h3>Acquisition bid</h3><div class="note">${esc(r)} offered ${money(offer)} to buy your entire studio.</div>`, [
+    { label: 'Turn it down publicly', cls: 'btn-accent', action: () => { STATE.team.forEach(x => { x.morale = Math.min(100, x.morale + 6); }); addHype(15); news('The team cheered. Independence it is.', '#06d6a0'); } },
+    { label: 'Use it to negotiate with publishers', action: () => { PUBLISHERS.forEach(pb => { if (pb.adv) STATE.pubRep[pb.n] = Math.min(100, pubRep(pb) + 8); }); news('Publishers are suddenly very friendly.', '#66fcf1'); } }]);
+}
+function evRetroRelease() {
+  const h = pick(STATE.history.filter(x => x.total >= 26 && STATE.cal.y - x.y >= 3)); if (!h) return;
+  const cost = Math.round(5000 * rankK() / 1000) * 1000;
+  showModal(`<h3>Retro re-release</h3><div class="note">A retro label wants to re-release ${esc(h.title)} with modern touches.</div>`, [
+    { label: `Remaster it (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (!spend(cost, 'Development')) return; const rev = Math.round(h.dl * 0.15 * 3); earn(rev, 'Game sales'); STATE.fans += Math.round(h.dl * 0.01); news(`${h.title} Remastered earned ${money(rev)}.`, '#ffd166'); } },
+    { label: 'Leave the classic alone' }]);
+}
+function evTaxCredit() {
+  const fee = Math.round(2000 * rankK() / 100) * 100;
+  showModal(`<h3>Games tax credit</h3><div class="note">The government launched a tax credit for game studios. Applying needs a consultant.</div>`, [
+    { label: `Apply (${money(fee)} consultant)`, cls: 'btn-accent', disabled: STATE.gold < fee, action: () => { if (!spend(fee, 'Other')) return; if (Math.random() < (hasExec('cfo') ? 0.9 : 0.65)) { const g = Math.round(15000 * rankK()); earn(g, 'Other'); news(`Tax credit approved: +${money(g)}`, '#06d6a0'); } else news('The application was rejected.', '#ef476f'); } },
+    { label: 'Skip the paperwork' }]);
+}
+function evCosplay() {
+  const g = pick(STATE.live); if (!g) return;
+  const cost = Math.round(2000 * rankK() / 100) * 100;
+  showModal(`<h3>Cosplay contest</h3><div class="note">A convention wants to run a ${esc(g.title)} cosplay contest.</div>`, [
+    { label: `Sponsor the prizes (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (spend(cost, 'Marketing')) { STATE.fans += 150 + Math.round(STATE.fans * 0.02); g.users = Math.round(g.users * 1.05); news('The costumes were incredible.', '#06d6a0'); } } },
+    { label: 'Just share the photos', action: () => { STATE.fans += 30; } }]);
+}
+function evMentor() {
+  const vets = STATE.team.filter(x => x.lv >= 8 && x.vac <= 0), rookies = STATE.team.filter(x => x.lv <= 4 && x.vac <= 0);
+  if (!vets.length || !rookies.length) return;
+  const v = pick(vets), r = pick(rookies);
+  showModal(`<h3>Mentorship</h3><div class="note">${esc(r.name)} asked ${esc(v.name)} to mentor them.</div>`, [
+    { label: 'Make it official', cls: 'btn-accent', action: () => { gainExp(r, 30); v.morale = Math.min(100, v.morale + 5); v.stam = Math.max(1, v.stam - 15); news(`${r.name} learned a lot from ${v.name}.`, '#06d6a0'); } },
+    { label: 'Keep everyone on their own work' }]);
+}
+function evStaffSideProject() {
+  const m = pick(STATE.team.filter(x => x.vac <= 0)); if (!m) return;
+  showModal(`<h3>Side project</h3><div class="note">${esc(m.name)} has been making a tiny game on weekends and wants to release it under the studio name.</div>`, [
+    { label: 'Release it', cls: 'btn-accent', action: () => { if (Math.random() < 0.5) { const f = 100 + Math.round(STATE.fans * 0.02); STATE.fans += f; m.morale = Math.min(100, m.morale + 12); news(`${m.name}'s side project is a cult hit: +${fmt(f)} fans`, '#06d6a0'); } else { m.morale = Math.min(100, m.morale + 6); news(`${m.name}'s side project got a polite shrug.`, '#9aa5b1'); } } },
+    { label: 'Ask them to stay focused', action: () => { m.morale = Math.max(0, m.morale - 8); } }]);
+}
+STUDIO_EVENTS.push(
+  { w: 2, c: () => !!curGame(), f: evCameo }, { w: 1, c: () => !!curGame(), f: evPowerCut },
+  { w: 2, c: () => STATE.live.length, f: evViralGlitch }, { w: 1, c: () => STATE.live.some(x => x.score >= 24), f: evSpeedrun },
+  { w: 1, c: () => STATE.history.some(x => x.total >= 24 && STATE.cal.y - x.y >= 2), f: evMuseum },
+  { w: 1, c: () => !STATE.uniWeeks, f: evUniversity }, { w: 1, c: () => STATE.team.length > 1, f: evWedding },
+  { w: 1, c: () => !!curGame(), f: evInfluencerScandal }, { w: 1, c: () => STATE.team.length, f: evHackathon },
+  { w: 2, c: () => STATE.live.length, f: evLocalise }, { w: 1, f: evFlood },
+  { w: 1, c: () => STATE.history.some(x => x.total >= 26), f: evFanRemake }, { w: 1, c: () => STATE.rank >= 3, f: evDocumentary },
+  { w: 1, c: () => STATE.rank >= 8, f: evBuyout }, { w: 1, c: () => STATE.history.some(x => x.total >= 26 && STATE.cal.y - x.y >= 3), f: evRetroRelease },
+  { w: 1, f: evTaxCredit }, { w: 1, c: () => STATE.live.length, f: evCosplay },
+  { w: 1, c: () => STATE.team.some(x => x.lv >= 8) && STATE.team.some(x => x.lv <= 4), f: evMentor }, { w: 1, c: () => STATE.team.length > 2, f: evStaffSideProject }
+);
 /* ---------- Calendar events ---------- */
 function monthEvents() {
   const m = STATE.cal.m;
   if (m === 4) showcase();
   else if (m === 8) gameCon();
   else if (m === 12) holidaySale();
+  if ((m === 6 || m === 12) && storeLive()) storeSaleModal();
 }
 function gameCon() {
   const k = rankK();
@@ -2678,6 +3196,7 @@ function fireStaff(id) {
 function postAd(tier) {
   const cost = [0, 3000, 12000][tier];
   if (!spend(cost)) return;
+  if (STATE.uniWeeks > 0) tier = Math.min(2, tier + 1);
   const third = hasTech('scout') ? Math.min(3, tier + 1) : Math.min(2, tier + (Math.random() < 0.2 ? 1 : 0));
   STATE.candidates = [randomStaff(tier), randomStaff(tier), randomStaff(third)];
   openCandidates();
@@ -2818,7 +3337,7 @@ function refreshDevOptions() {
   $('sel-genre').innerHTML = STATE.unlocked.g.map(n => `<option value="${esc(n)}">${esc(n)}${lvlOf('g', n) ? ' ★' + lvlOf('g', n) : ''}</option>`).join('');
   $('sel-theme').innerHTML = STATE.unlocked.t.map(n => `<option value="${esc(n)}">${esc(n)}${lvlOf('t', n) ? ' ★' + lvlOf('t', n) : ''}</option>`).join('');
   $('sel-platform').innerHTML = PLATFORMS.filter(platLive).map(p => platformOpen(p)
-    ? `<option value="${p.n}">${p.n} · ${p.own ? '★ your platform' : money(p.fee) + ' fee'}</option>`
+    ? `<option value="${p.n}">${p.n} · ${p.store ? '★ your store' : p.own ? '★ your console' : money(p.fee) + ' fee'}</option>`
     : `<option value="${p.n}" disabled>🔒 ${p.n} (${STATE.rank < p.rank ? 'Rank ' + p.rank : 'needs licence'})</option>`).join('');
   $('sel-pub').innerHTML = PUBLISHERS.map(pb => pubAvailable(pb)
     ? `<option value="${pb.n}">${pb.n}${pb.adv ? ` · takes ${Math.round(pb.cut * 100)}%` : ''}${STATE.pubBonus === pb.n ? ' · bonus!' : ''}</option>`
@@ -2984,22 +3503,7 @@ function renderMarket() {
   const board = STATE.rivals.map(r => ({ n: r.n, fans: r.fans, best: r.yearBest || 0, me: false })).concat([{ n: 'Your studio', fans: STATE.fans, best: STATE.yearBest ? STATE.yearBest.total : 0, me: true }]).sort((a, b) => b.fans - a.fans);
   let html = `<div class="sec">Industry Ranking</div>` + board.map((r, i) => `<div class="row mini" style="${r.me ? 'color:var(--gold);font-weight:bold;' : ''}"><span>#${i + 1} ${esc(r.n)}</span><span>${fmt(r.fans)} fans · best this year ${r.best || '-'}</span></div>`).join('') +
     `<div class="sec">Industry Calendar</div><div class="note">Month 4: Indie Showcase · Month 8: GameCon · Month 12: Holiday Sale · Year end: Awards${STATE.hypeBank ? `<br>Banked hype for your next project: <b class="gold">${STATE.hypeBank}</b>` : ''}${STATE.pubBonus ? `<br>🤝 Bonus advance waiting with ${esc(STATE.pubBonus)}` : ''}</div>`;
-  html += '<div class="sec">Hardware Division</div>';
-  if (STATE.rank < HW_RANK) html += `<div class="note mini">Reach Rank ${HW_RANK} to open a hardware division and build your own platform.</div>`;
-  else if (STATE.hwProj) {
-    const pr = STATE.hwProj, pc = Math.min(100, pr.weeks / pr.total * 100);
-    html += `<div class="card"><div class="row"><b>Building: ${esc(pr.name)}</b><span>${pr.weeks}/${pr.total} wks</span></div><div class="statrow"><span>Progress</span><div class="bar"><div style="background:var(--gold);width:${pc}%"></div></div><span>${Math.round(pc)}%</span></div>${pr.ready ? '<button class="btn-accent" onclick="hwLaunchModal()">Launch!</button>' : ''}</div>`;
-  } else html += `<button class="btn-accent" onclick="hwModal()">🕹 Design a new platform</button>`;
-  STATE.ownPlats.forEach(op => {
-    const uc = hwUnitCost(op), mg = op.price - uc;
-    html += `<div class="card"><div class="row"><b>★ ${esc(op.n)}</b>${op.disc ? '<span class="muted">Retired</span>' : `<span class="gold">$${op.price}</span>`}</div>
-      <div class="muted">${HW_FORMS[op.cfg.form].n} · power ${op.pow}/4 · ${fmt(op.installed)} sold · ${op.games || 0} of your games</div>
-      ${op.disc ? '' : `<div class="muted">Last week ${fmt(op.lastUnits)} units · ${mg >= 0 ? '+' : ''}${money(mg)}/unit · royalties ${money(op.lastRoy || 0)}/wk</div>
-      <div class="statrow"><span>Market</span><div class="bar"><div style="background:var(--gold);width:${Math.min(100, marketNow(op) / 4 * 100)}%"></div></div><span>${marketNow(op).toFixed(1)}</span></div>
-      <div class="muted mini">Favours: ${op.fav.map(esc).join(', ')}</div>
-      <div class="btns"><button class="btn-sm" onclick="hwPrice('${op.n}',-50)">Price −$50</button><button class="btn-sm" onclick="hwPrice('${op.n}',50)">Price +$50</button><button class="btn-sm btn-danger" onclick="hwDiscontinue('${op.n}')">Discontinue</button></div>`}
-      <div class="muted mini">Lifetime hardware profit ${money(op.revTotal || 0)}</div></div>`;
-  });
+  html += hardwareHtml() + storeHtml();
   html += '<div class="sec">Platforms</div>';
   PLATFORMS.forEach(p => {
     if (p.own) return;
@@ -3111,7 +3615,7 @@ const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 function px(c, x, y, w, h) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); }
 function txt(s, x, y, color, size, align) {
-  ctx.font = `600 ${(size || 8) + 1}px "Pixelify Sans", "Courier New", monospace`;
+  ctx.font = `700 ${(size || 8) + 1}px ui-rounded, "SF Pro Rounded", -apple-system, "Segoe UI", Roboto, sans-serif`;
   ctx.textAlign = align || 'center';
   ctx.fillStyle = '#000'; ctx.fillText(s, x + 1, y + 1);
   ctx.fillStyle = color || '#fff'; ctx.fillText(s, x, y);
@@ -3295,6 +3799,8 @@ function drawBalloon(d) {
 }
 function render() {
   frameT++;
+  ctx.setTransform(2, 0, 0, 2, 0, 0);
+  ctx.imageSmoothingEnabled = false;
   if (!MODS) computeMods();
   drawOffice();
   const desks = deskCount(), dv = STATE.activeDev, working = !!(dv && !dv.awaiting);
@@ -3416,7 +3922,7 @@ if (!STATE.history.length && !STATE.activeDev && STATE.cal.y === 1 && STATE.cal.
 if (STATE.activeDev && STATE.activeDev.kind === 'game' && STATE.activeDev.balloon.hp <= 0) { STATE.activeDev.awaiting = false; checkPhase(); }
 STATE.team.forEach(m => { if (perkPending(m) >= 0) perkModal(m); });
 checkMilestones();
-if (STATE.hwProj && STATE.hwProj.ready) hwLaunchModal();
+if (STATE.hwProj) { const pr = STATE.hwProj; if (!pr.stage) pr.stage = pr.ready ? 'done' : 'mfg'; if (pr.stage === 'done') hwLaunchModal(); else if (pr.wait) (pr.stage === 'proto' ? hwProtoModal : hwKitModal)(); }
 requestAnimationFrame(frame);
 </script>
 </body>

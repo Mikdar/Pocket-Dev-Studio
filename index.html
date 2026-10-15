@@ -140,7 +140,16 @@
     cursor: pointer;
   }
   button:active:not(:disabled) { border-color: var(--lo) var(--hi) var(--hi) var(--lo); transform: translateY(1px); }
-  button:disabled { opacity: 0.38; }
+  button:disabled, button.off { opacity: 0.38; }
+  button.off:active { transform: none; border-color: var(--hi) var(--lo) var(--lo) var(--hi); }
+  button.tapped:not(.off) { filter: brightness(1.35); }
+  #toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom) + 78px); width: min(92vw, 440px);
+    display: flex; flex-direction: column; gap: 6px; z-index: 60; pointer-events: none; }
+  .toast { background: var(--win); color: var(--text); border: 2px solid var(--sky); border-radius: 10px; padding: 8px 12px;
+    font-family: var(--num); font-weight: 600; font-size: 0.86rem; line-height: 1.35; box-shadow: 0 0 0 2px var(--lo), 0 8px 20px rgba(0,0,0,0.5);
+    animation: toastin 0.18s ease-out; transition: opacity 0.3s, transform 0.3s; }
+  .toast.out { opacity: 0; transform: translateY(6px); }
+  @keyframes toastin { from { opacity: 0; transform: translateY(8px); } }
   button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   .btn-accent { background: var(--sun); color: var(--sun-ink); border-color: var(--sun-hi) var(--sun-lo) var(--sun-lo) var(--sun-hi); font-weight: 600; }
   .btn-accent:active:not(:disabled) { border-color: var(--sun-lo) var(--sun-hi) var(--sun-hi) var(--sun-lo); }
@@ -285,7 +294,7 @@
   <div id="tab-dev" class="tab-pane active">
     <div class="row">
       <span id="dev-status" class="pane-title">Studio idle</span>
-      <button id="btn-boost" class="btn-sm btn-gold" disabled onclick="useBoost()">⚡ Assistant boost</button>
+      <button id="btn-boost" class="btn-sm btn-gold" disabled data-why="The assistant boost can be used once per game, during Phase 3 (Beta)." onclick="useBoost()">⚡ Assistant boost</button>
     </div>
     <div id="dev-setup" class="stack">
       <div class="win">
@@ -347,6 +356,7 @@
 </nav>
 
 <div id="modal"><div class="modal-card"><div id="modal-body"></div><div id="modal-btns"></div></div></div>
+<div id="toasts" aria-live="polite"></div>
 
 <script>
 'use strict';
@@ -1238,7 +1248,21 @@ function monthlyCost() {
   const bd = costBreakdown();
   return Object.values(bd).reduce((a, b) => a + b, 0) + STATE.loans.reduce((a, l) => a + Math.min(l.pay, l.left), 0);
 }
-function news(msg, color) { ticker.push({ msg, color: color || '#fff', life: 170 }); if (ticker.length > 6) ticker.shift(); }
+let lastTap = 0;
+function toast(msg, color) {
+  const box = $('toasts'); if (!box) return;
+  const el = document.createElement('div');
+  el.className = 'toast'; el.style.borderColor = color || 'var(--sky)'; el.textContent = msg;
+  box.appendChild(el);
+  while (box.children.length > 3) box.firstChild.remove();
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, 2600);
+}
+function news(msg, color) {
+  const item = { msg, color: color || '#fff', life: 170 };
+  if (performance.now() - lastTap < 900) { toast(msg, color); ticker.unshift(item); }
+  else ticker.push(item);
+  if (ticker.length > 6) ticker.length = 6;
+}
 
 /* =========================================================
    DEVELOPMENT
@@ -1874,7 +1898,13 @@ function advanceWeek() {
     if (!STATE.over) monthEvents();
   }
   updateHeader();
-  renderActiveTab();
+  requestRender();
+}
+let renderTimer = 0;
+function requestRender() {
+  const wait = 1200 - (performance.now() - lastTap);
+  clearTimeout(renderTimer);
+  if (wait <= 0) renderActiveTab(); else renderTimer = setTimeout(renderActiveTab, wait);
 }
 function randomEvent() {
   const pool = STUDIO_EVENTS.filter(e => !e.c || e.c());
@@ -2165,7 +2195,7 @@ function prioUsed() { return STATE.prio.reduce((a, b) => a + b, 0); }
 function prioAdj(i, dlt) {
   const v = STATE.prio[i] + dlt;
   if (v < 0 || v > PRIO_MAX) return;
-  if (dlt > 0 && prioUsed() >= PRIO_BUDGET) { playSound('error'); return; }
+  if (dlt > 0 && prioUsed() >= PRIO_BUDGET) { playSound('error'); toast('No points left. Lower another priority first.', '#ff6b7d'); return; }
   STATE.prio[i] = v; playSound('click'); renderPrio(); updatePreview();
 }
 function prioRecommend() {
@@ -2174,9 +2204,12 @@ function prioRecommend() {
   const sum = raw.reduce((a, b) => a + b, 0);
   const pr = raw.map(x => Math.min(PRIO_MAX, Math.round(x * PRIO_BUDGET / sum)));
   while (pr.reduce((a, b) => a + b, 0) > PRIO_BUDGET) pr[pr.indexOf(Math.max(...pr))]--;
+  const same = pr.join() === STATE.prio.join();
   STATE.prio = pr; playSound('click'); renderPrio(); updatePreview();
+  toast(!Object.keys(ins).length ? 'No insights for this genre yet, so priorities were spread evenly. Release games in it to learn more.'
+    : same ? 'Priorities already match your genre insights.' : 'Priorities set from your genre insights.');
 }
-function prioReset() { STATE.prio = [2, 2, 2, 2, 2, 2]; renderPrio(); updatePreview(); }
+function prioReset() { const same = STATE.prio.every(x => x === 2); STATE.prio = [2, 2, 2, 2, 2, 2]; playSound('click'); renderPrio(); updatePreview(); toast(same ? 'Priorities are already balanced.' : 'Priorities reset to balanced.'); }
 function renderPrio() {
   const g = $('sel-genre').value, ins = STATE.insights[g] || {}, left = PRIO_BUDGET - prioUsed();
   $('prio-box').innerHTML = `<div class="row"><span class="win-t">Priorities</span><span class="mini ${left ? 'gold' : 'muted'}">${left} pts left</span></div>` +
@@ -2464,11 +2497,13 @@ const HW_REVS = {
 };
 function hwRevCost(op, k) { return Math.round((op.devCost || 150000) * HW_REVS[k].cost / 1000) * 1000; }
 function hwRevision(n, k) {
-  const op = hwFind(n), R = HW_REVS[k]; if (!op || !R || op.rev || op.weeks < R.min) return;
+  const op = hwFind(n), R = HW_REVS[k]; if (!op || !R) return;
+  if (op.rev) { toast('A model revision is already in progress.', '#ff6b7d'); return; }
+  if (op.weeks < R.min) { toast(`Available after ${R.min} weeks on sale.`, '#ff6b7d'); return; }
   if (k === 'pro' && op.pow >= 4) { news('It is already as powerful as it gets.', '#9aa5b1'); return; }
   if (!spend(hwRevCost(op, k), 'Hardware')) return;
   op.rev = { k, weeks: 0, total: Math.round(R.weeks * (hasExec('producer') ? 0.8 : 1)) };
-  playSound('fanfare'); news(`Engineers started work on the ${op.n} ${R.n}.`, '#ffd166'); renderMarket(); save();
+  playSound('fanfare'); news(`Engineers started work on the ${op.n} ${R.n}: ready in ${op.rev.total} weeks.`, '#ffd166'); renderMarket(); save();
 }
 function hwRevisionDone(op) {
   const k = op.rev.k; op.rev = null;
@@ -2507,7 +2542,10 @@ function hardwareHtml() {
     normHw(op);
     if (op.disc) { html += `<div class="row mini muted"><span>★ ${esc(op.n)} (retired)</span><span>${fmt(op.installed)} sold · ${money(op.revTotal || 0)}</span></div>`; return; }
     const uc = hwUnitCost(op), mg = op.price - uc, cap = op.lines * HW_LINE_CAP;
-    const revBtns = Object.entries(HW_REVS).map(([k, R]) => `<button class="btn-sm" ${op.rev || op.weeks < R.min || STATE.gold < hwRevCost(op, k) ? 'disabled' : ''} onclick="hwRevision('${op.n}','${k}')">${R.n} ${op.weeks < R.min ? '(wk ' + R.min + ')' : money(hwRevCost(op, k))}</button>`).join('');
+    const revBtns = Object.entries(HW_REVS).map(([k, R]) => {
+      const why = op.rev ? 'A model revision is already in progress.' : op.weeks < R.min ? `The ${R.n.toLowerCase()} unlocks after ${R.min} weeks on sale (${R.min - op.weeks} to go).` : (k === 'pro' && op.pow >= 4) ? 'It is already at maximum power.' : STATE.gold < hwRevCost(op, k) ? `Not enough money: this needs ${money(hwRevCost(op, k))}.` : '';
+      return `<button class="btn-sm" ${why ? 'disabled' : ''} data-why="${esc(why)}" onclick="hwRevision('${op.n}','${k}')">${R.n} ${op.weeks < R.min ? '· in ' + (R.min - op.weeks) + ' wks' : money(hwRevCost(op, k))}</button>`;
+    }).join('');
     html += `<div class="card"><div class="row"><b>★ ${esc(op.n)}${op.model ? ' ' + op.model : ''}</b><span class="gold">$${op.price}</span></div>
       <div class="mini muted">${HW_FORMS[op.cfg.form].n}, power ${op.pow}/4, ${HW_PARTNERS[op.partner].n.toLowerCase()} · ${fmt(op.installed)} in homes · ${op.library} third-party games · ${op.games || 0} of yours</div>
       <div class="mini">Last week: demand ${fmt(op.lastDemand || 0)}, sold ${fmt(op.lastUnits)}${op.soldOut ? ' <b class="bad">sold out</b>' : ''} · stock ${fmt(op.stock)}${op.shortage ? ' · <span class="bad">chip shortage</span>' : ''}</div>
@@ -2517,7 +2555,7 @@ function hardwareHtml() {
       <div class="mini muted">Third-party royalty (lower attracts more games)</div>
       <div class="grid3">${[0.1, 0.2, 0.3].map(r => `<button class="btn-sm ${op.royalty === r ? 'btn-accent' : ''}" onclick="hwRoyalty('${op.n}',${r})">${Math.round(r * 100)}%</button>`).join('')}</div>
       ${op.rev ? `<div class="statrow"><span>${HW_REVS[op.rev.k].n}</span><div class="bar"><div style="background:var(--sky);width:${op.rev.weeks / op.rev.total * 100}%"></div></div><span>${op.rev.weeks}/${op.rev.total}</span></div>` : ''}
-      <div class="btns">${revBtns}<button class="btn-sm" ${op.exCd > 0 || STATE.gold < hwExclusiveCost() ? 'disabled' : ''} onclick="hwExclusive('${op.n}')">Timed exclusive ${op.exCd > 0 ? '(' + op.exCd + 'w)' : money(hwExclusiveCost())}</button><button class="btn-sm btn-danger" onclick="hwDiscontinue('${op.n}')">Discontinue</button></div>
+      <div class="btns">${revBtns}<button class="btn-sm" ${op.exCd > 0 || STATE.gold < hwExclusiveCost() ? 'disabled' : ''} data-why="${op.exCd > 0 ? 'Studios need ' + op.exCd + ' more weeks before another exclusive deal.' : ''}" onclick="hwExclusive('${op.n}')">Timed exclusive ${op.exCd > 0 ? '(' + op.exCd + 'w)' : money(hwExclusiveCost())}</button><button class="btn-sm btn-danger" onclick="hwDiscontinue('${op.n}')">Discontinue</button></div>
       <div class="mini muted">Favours ${op.fav.map(esc).join(', ')} · lifetime profit ${money(op.revTotal || 0)}</div></div>`;
   });
   return html;
@@ -2663,7 +2701,7 @@ function renderBiz() {
     <div class="mini muted">${arr[STATE.policy[k]].d}</div>`).join('');
   html += `<div class="sec">Bank Loans</div><div class="note mini">Credit limit ${money(creditLimit())} · owed ${money(loanOwed())} · ${Math.round(loanRate() * 100)}% interest, repaid monthly over a year.</div>` +
     STATE.loans.map((l, i) => `<div class="row card" style="flex-direction:row;"><span>Loan of ${money(l.amt)}<br><span class="muted">${money(l.pay)}/mo · ${money(l.left)} left</span></span><button class="btn-sm" onclick="repayLoan(${i})">Repay ${money(Math.round(l.left * 0.95))}</button></div>`).join('') +
-    `<div class="grid3">${LOAN_SIZES.map((L, i) => { const a = loanAmt(i); return `<button class="btn-sm" ${loanOwed() + a * (1 + loanRate()) > creditLimit() ? 'disabled' : ''} onclick="takeLoan(${i})">${L.n}<br>${money(a)}</button>`; }).join('')}</div>`;
+    `<div class="grid3">${LOAN_SIZES.map((L, i) => { const a = loanAmt(i); return `<button class="btn-sm" ${loanOwed() + a * (1 + loanRate()) > creditLimit() ? 'disabled' : ''} data-why="That loan would take you over your ${money(creditLimit())} credit limit." onclick="takeLoan(${i})">${L.n}<br>${money(a)}</button>`; }).join('')}</div>`;
   const elig = STATE.history.filter(h => h.total >= 28 && !h.merch);
   html += `<div class="sec">Merchandise</div><div class="note mini">Games scoring 28+ can be licensed for toys, shirts and plushies. Pay once, then earn monthly royalties for two years (fading over time).</div>` +
     STATE.merch.map(mc => `<div class="row mini"><span>${esc(mc.title)}</span><span class="good">+${money(mc.amt)}/mo · ${mc.months} mo left</span></div>`).join('') +
@@ -2858,7 +2896,7 @@ function storeHtml() {
     <div>${Object.keys(st.feats).filter(k => st.feats[k]).map(k => `<span class="chip">${STORE_FEATS[k].n}</span>`).join('')}</div>
     ${missing.length ? '<div class="mini muted">Add features</div>' + missing.map(k => `<div class="row mini"><span>${STORE_FEATS[k].n}: <span class="muted">${STORE_FEATS[k].d}</span></span><button class="btn-sm" ${STATE.gold < storeFeatCost(k) ? 'disabled' : ''} onclick="storeBuyFeat('${k}')">${money(storeFeatCost(k))}</button></div>`).join('') : ''}
     <div class="row mini"><span>Free game every week: players +2%/wk for ${money(Math.round(5000 * rankK()))}/wk</span><button class="btn-sm ${st.free ? 'btn-accent' : ''}" onclick="storeToggleFree()">${st.free ? 'On' : 'Off'}</button></div>
-    <div class="btns"><button class="btn-sm" ${st.exCd > 0 || STATE.gold < storeExCost() ? 'disabled' : ''} onclick="storeExclusive()">Timed exclusive ${st.exCd > 0 ? '(' + st.exCd + 'w)' : money(storeExCost())}</button><button class="btn-sm btn-danger" onclick="storeClose()">Close store</button></div>
+    <div class="btns"><button class="btn-sm" ${st.exCd > 0 || STATE.gold < storeExCost() ? 'disabled' : ''} data-why="${st.exCd > 0 ? 'Publishers need ' + st.exCd + ' more weeks before another exclusive deal.' : ''}" onclick="storeExclusive()">Timed exclusive ${st.exCd > 0 ? '(' + st.exCd + 'w)' : money(storeExCost())}</button><button class="btn-sm btn-danger" onclick="storeClose()">Close store</button></div>
     <div class="mini muted">Lifetime store profit ${money(st.revTotal)}</div></div>`;
   return html;
 }
@@ -3103,7 +3141,7 @@ function liveEvent(id) {
 function liveUpdate(id) {
   const g = findLive(id); if (!g) return;
   const cost = Math.round((3000 + g.updates * 1500) * (hasTech('liveops') ? 0.7 : 1));
-  if (g.ret >= 0.985) { news('This game is already as sticky as it gets.', '#9aa5b1'); return; }
+  if (g.ret >= 0.985) { toast('Retention is already at its maximum.', '#ff6b7d'); return; }
   if (!spend(cost, 'Live ops')) return;
   g.ret = Math.min(0.985, g.ret + 0.012); g.updates++;
   g.users = Math.round(g.users * 1.05);
@@ -3446,8 +3484,8 @@ function renderLive() {
       <div class="muted">${esc(g.platform)} · Score ${g.score}/40 · ${g.weeks} wks live${g.cut ? ` · publisher takes ${Math.round(g.cut * 100)}%` : ''}${g.saleWeeks > 0 ? ' · <span class="gold">On sale</span>' : ''}</div>
       <div class="muted">Players ${fmt(g.users)} (peak ${fmt(g.peak)}) · Retention ${(g.ret * 100).toFixed(1)}%${g.event > 0 ? ` · <span class="good">Event ${g.event}w</span>` : ''}</div>
       <div class="btns">
-        <button class="btn-sm" ${g.event > 0 ? 'disabled' : ''} onclick="liveEvent(${g.id})">Event ${money(evCost)}</button>
-        <button class="btn-sm" onclick="liveUpdate(${g.id})">Update ${money(upCost)}</button>
+        <button class="btn-sm" ${g.event > 0 ? 'disabled' : ''} data-why="An event is already running in this game." onclick="liveEvent(${g.id})">${g.event > 0 ? 'Event running' : 'Event ' + money(evCost)}</button>
+        <button class="btn-sm" ${g.ret >= 0.985 ? 'disabled' : ''} data-why="Retention is already at its maximum. Try an event or ads instead." onclick="liveUpdate(${g.id})">${g.ret >= 0.985 ? 'Update (maxed)' : 'Update ' + money(upCost)}${g.updates ? ' · #' + (g.updates + 1) : ''}</button>
         <button class="btn-sm" onclick="liveAds(${g.id})">Ads ${money(adCost)}</button>
         <button class="btn-sm btn-danger" onclick="retireLive(${g.id})">End</button>
       </div></div>`;
@@ -3487,7 +3525,7 @@ function renderStaff() {
         <button class="btn-sm" ${m.raiseCd > 0 ? 'disabled' : ''} onclick="raiseStaff(${m.id})">Raise${m.raiseCd > 0 ? ' (' + m.raiseCd + 'w)' : ''}</button>
         <button class="btn-sm" ${m.vac > 0 ? 'disabled' : ''} onclick="vacationStaff(${m.id})">Vacation</button>
         ${m.lv >= 10 && !m.senior ? `<button class="btn-sm btn-gold" onclick="promoteStaff(${m.id})">Promote</button>` : ''}
-        <button class="btn-sm" ${m.lv < 5 ? 'disabled' : ''} onclick="openRoleChange(${m.id})">Role${m.lv < 5 ? ' (Lv5)' : ''}</button>
+        <button class="btn-sm" ${m.lv < 5 ? 'disabled' : ''} data-why="Role changes unlock at Lv5 (${esc(m.name)} is Lv${m.lv})." onclick="openRoleChange(${m.id})">Role${m.lv < 5 ? ' (Lv5)' : ''}</button>
         <button class="btn-sm btn-danger" onclick="fireStaff(${m.id})">Dismiss</button></div></div>`;
   });
   html += `<div class="sec">Recruit</div><div class="grid3">
@@ -3540,7 +3578,7 @@ function renderLab() {
   const row = (kind, it) => {
     const rankOk = STATE.rank >= it.rank;
     return `<div class="row card" style="flex-direction:row;"><span>${esc(it.n)}<br><span class="muted">${rankOk ? it.rp + ' RP' : '🔒 Rank ' + it.rank}</span></span>
-      <button class="btn-sm btn-accent" ${!rankOk || STATE.rp < it.rp ? 'disabled' : ''} onclick="unlockItem('${kind}','${it.n}')">Unlock</button></div>`;
+      <button class="btn-sm btn-accent" ${!rankOk || STATE.rp < it.rp ? 'disabled' : ''} data-why="${!rankOk ? 'Unlocks at studio Rank ' + it.rank + '.' : 'Needs ' + it.rp + ' RP (you have ' + STATE.rp + ').'}" onclick="unlockItem('${kind}','${it.n}')">Unlock</button></div>`;
   };
   const techRows = TECH.map(t => {
     const own = STATE.tech[t.id], reqOk = !t.req || STATE.tech[t.req], rankOk = STATE.rank >= t.rank;
@@ -3586,7 +3624,7 @@ function renderStudio() {
   for (const k in DECOR) {
     const dc = DECOR[k], own = STATE.decor.includes(k);
     html += `<div class="row card" style="flex-direction:row;"><span><b>${dc.n}</b><br><span class="muted">${dc.d}</span></span>
-      ${own ? '<span class="good">Placed</span>' : `<button class="btn-sm btn-accent" ${STATE.decor.length >= slots || STATE.gold < dc.cost ? 'disabled' : ''} onclick="buyDecor('${k}')">${money(dc.cost)}</button>`}</div>`;
+      ${own ? '<span class="good">Placed</span>' : `<button class="btn-sm btn-accent" ${STATE.decor.length >= slots || STATE.gold < dc.cost ? 'disabled' : ''} data-why="${STATE.decor.length >= slots ? 'Every decor spot on this floor is used. Move to a bigger floor for more.' : ''}" onclick="buyDecor('${k}')">${money(dc.cost)}</button>`}</div>`;
   }
   html += '<div class="sec">Facilities</div>';
   for (const k in FACILITIES) {
@@ -3895,6 +3933,49 @@ function frame(now) {
 /* =========================================================
    BOOT
    ========================================================= */
+
+/* ---------- Touch handling ---------- */
+(() => {
+  const desc = Object.getOwnPropertyDescriptor(HTMLButtonElement.prototype, 'disabled');
+  Object.defineProperty(HTMLButtonElement.prototype, 'disabled', {
+    configurable: true,
+    get() { return this.classList.contains('off') || desc.get.call(this); },
+    set(v) { this.classList.toggle('off', !!v); if (v) this.setAttribute('aria-disabled', 'true'); else this.removeAttribute('aria-disabled'); desc.set.call(this, false); }
+  });
+  const soften = b => { if (b.hasAttribute('disabled')) { b.removeAttribute('disabled'); b.classList.add('off'); b.setAttribute('aria-disabled', 'true'); } };
+  new MutationObserver(muts => {
+    for (const m of muts) {
+      if (m.type === 'attributes') { if (m.target.tagName === 'BUTTON') soften(m.target); continue; }
+      m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; if (n.tagName === 'BUTTON') soften(n); else n.querySelectorAll('button[disabled]').forEach(soften); });
+    }
+  }).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['disabled'] });
+  document.querySelectorAll('button[disabled]').forEach(soften);
+  const why = b => {
+    if (b.dataset.why) return b.dataset.why;
+    const nums = (b.textContent.match(/\$[\d,]+/g) || []).map(x => +x.replace(/[$,]/g, ''));
+    const need = nums.length ? Math.max(...nums) : 0;
+    const rk = b.textContent.match(/Rank (\d+)/);
+    if (rk && STATE.rank < +rk[1]) return `Unlocks at studio Rank ${rk[1]} (you're Rank ${STATE.rank}).`;
+    if (need && STATE.gold < need) return `Not enough money: this needs ${money(need)}.`;
+    const rp = b.textContent.match(/(\d+)\s*RP/);
+    if (rp && STATE.rp < +rp[1]) return `Not enough research points: this needs ${rp[1]} RP (you have ${STATE.rp}).`;
+    const lock = b.textContent.match(/Rank (\d+)/);
+    if (lock) return `Unlocks at studio Rank ${lock[1]}.`;
+    return 'Not available right now.';
+  };
+  document.addEventListener('pointerdown', e => {
+    lastTap = performance.now();
+    const b = e.target.closest && e.target.closest('button');
+    if (b) { b.classList.add('tapped'); setTimeout(() => b.classList.remove('tapped'), 180); }
+  }, true);
+  document.addEventListener('click', e => {
+    lastTap = performance.now();
+    const b = e.target.closest && e.target.closest('button.off');
+    if (!b) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    playSound('error'); toast(why(b), '#ff6b7d');
+  }, true);
+})();
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 window.addEventListener('pagehide', save);
 $('sel-budget').innerHTML = BUDGETS.map((b, i) => `<option value="${i}">${b.n}</option>`).join('');

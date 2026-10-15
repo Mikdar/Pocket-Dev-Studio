@@ -212,7 +212,15 @@
   .ms-done { color: var(--mint); }
   .prio-row { display: grid; grid-template-columns: 1fr 38px 74px 38px; align-items: center; gap: 6px; font-size: 0.82rem; }
   .prio-row button { padding: 4px 0; }
-  .pips { color: var(--sun); text-align: center; letter-spacing: 2px; font-size: 0.82rem; }
+  .pips { display: flex; justify-content: center; align-items: center; gap: 3px; }
+  .pip { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #3a3266; }
+  .pip.on { background: var(--sky); } .pip.met { background: var(--mint); } .pip.extra { background: var(--sun); }
+  .pip.need { background: transparent; box-shadow: inset 0 0 0 2px var(--coral); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips button { padding: 6px 9px; font-size: 0.78rem; min-height: 34px; }
+  .chips button.on { background: var(--sky); color: var(--ink); }
+  .chips button.on .muted { color: var(--ink); opacity: 0.7; }
+  .lvpips { color: var(--sun); letter-spacing: 1px; }
   .pl-chart { display: flex; gap: 3px; background: var(--well); border-radius: 9px; padding: 8px; box-shadow: inset 2px 2px 0 var(--lo); }
   .pl-col { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
   .pl-up { height: 40px; width: 100%; display: flex; align-items: flex-end; }
@@ -304,11 +312,14 @@
           <div class="fld"><label for="sel-genre">Genre</label><select id="sel-genre" onchange="updatePreview()"></select></div>
           <div class="fld"><label for="sel-theme">Theme</label><select id="sel-theme" onchange="updatePreview()"></select></div>
         </div>
+        <div class="fld"><label for="sel-hook">Hook</label><select id="sel-hook" onchange="updatePreview()"></select></div>
+        <div id="hook-info" class="mini muted"></div>
         <div class="fld"><label for="sel-seq">Sequel to</label><select id="sel-seq" onchange="onSequelPick()"></select></div>
       </div>
       <div class="win">
         <div class="win-t">Release plan</div>
-        <div class="fld"><label for="sel-platform">Platform</label><select id="sel-platform" onchange="updatePreview()"></select></div>
+        <div class="fld"><label for="sel-platform">Lead platform</label><select id="sel-platform" onchange="updatePreview()"></select></div>
+        <div class="fld"><label>Also release on</label><div id="port-chips" class="chips"></div></div>
         <div class="fld"><label for="sel-pub">Publisher</label><select id="sel-pub" onchange="updatePreview()"></select></div>
         <div class="fld"><label>Budget</label><div id="seg-budget" class="seg seg3"></div></div>
         <div class="fld"><label>Audience</label><div id="seg-aud" class="seg seg4"></div></div>
@@ -590,11 +601,10 @@ const HOOKS = [
 const HOOK = Object.fromEntries(HOOKS.map(h => [h.n, h]));
 const HOOK_LABEL = ['Clashes', 'Neutral', 'Good fit', 'Perfect fit!'];
 const HOOK_COLOR = ['#ef476f', '#9aa5b1', '#06d6a0', '#ffd166'];
-const HOOK_REVIEW = [-0.6, 0, 0.5, 1.0];
+const HOOK_REVIEW = [-0.5, 0, 0.3, 0.55];
 function hookCompat(hn, g) {
   const h = HOOK[hn]; if (!h) return 1;
-  const v = hashStr(hn + '#' + g) % 100;
-  return h.good.includes(g) ? (v < 45 ? 3 : 2) : (v < 35 ? 0 : 1);
+  return h.perfect.includes(g) ? 3 : h.good.includes(g) ? 2 : h.clash.includes(g) ? 0 : 1;
 }
 const DECOR = {
   plant:      { n: 'Potted Plants',    cost: 800,   morale: 3, d: '+3 team morale' },
@@ -610,7 +620,7 @@ const DECOR = {
   aquarium:   { n: 'Aquarium',         cost: 14000, morale: 9, d: '+9 morale' },
   neon:       { n: 'Neon Sign',        cost: 18000, morale: 3, hype: 8, d: '+8 hype on every project, +3 morale' }
 };
-const DECOR_SLOTS = [4, 8, 12];
+const DECOR_SLOTS = [4, 8, 12, 16];
 const TECH = [
   { id: 'engine1', n: 'Game Engine v1',    rp: 8,  rank: 1,  d: 'Every idea +5%' },
   { id: 'qa1',     n: 'QA Process',        rp: 10, rank: 1,  d: '25% fewer bugs' },
@@ -648,7 +658,10 @@ const MILESTONES = [
   { id: 'team7',   n: 'Growing Team',      d: 'Have 7 staff',                     test: s => s.team.length >= 7, r: { rp: 10 } },
   { id: 'senior',  n: 'Leadership',        d: 'Promote someone to a senior role', test: s => s.team.some(m => m.senior), r: { fans: 300 } },
   { id: 'legend',  n: 'Veteran Mentor',     d: 'Train a staff member to Lv20',     test: s => s.team.some(m => m.lv >= 20), r: { gold: 100000 } },
-  { id: 'floor3',  n: 'Penthouse',         d: 'Move to the top floor',            test: s => s.floor >= 3, r: { fans: 2000 } },
+  { id: 'floor3',  n: 'Penthouse',         d: 'Move to the Penthouse Loft',       test: s => s.floor >= 3, r: { fans: 2000 } },
+  { id: 'campus',  n: 'Campus Life',       d: 'Move to the Studio Campus',        test: s => s.floor >= 4, r: { rp: 30 } },
+  { id: 'rooms5',  n: 'Fully Equipped',    d: 'Run 5 rooms at once',              test: s => Object.values(s.rooms || {}).filter(v => v > 0).length >= 5, r: { rp: 15 } },
+  { id: 'room3',   n: 'State of the Art',  d: 'Upgrade a room to Lv3',            test: s => Object.values(s.rooms || {}).some(v => v >= 3), r: { fans: 1500 } },
   { id: 'goty',    n: 'Game of the Year',  d: 'Win Game of the Year',             test: s => (s.awards.goty || 0) >= 1, r: { rp: 25 } },
   { id: 'hopper',  n: 'Platform Hopper',   d: 'Release on 5 different platforms', test: s => s.platformsUsed.length >= 5, r: { gold: 30000 } },
   { id: 'decor',   n: 'Interior Designer', d: 'Own 8 decor items',                test: s => s.decor.length >= 8, r: { fans: 500 } },
@@ -662,6 +675,8 @@ const AREAS = ['Gameplay', 'Story', 'Visuals', 'Audio', 'Content', 'Social'];
 const AREA_AB = ['Gp', 'St', 'Vi', 'Au', 'Co', 'So'];
 const AREA_STAT = [[1, 0, 0, 0], [0, 0.5, 0.5, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 0, 0.5, 0.5]];
 const PRIO_BUDGET = 12, PRIO_MAX = 5;
+const REQ = { H: 3, M: 2, L: 1 };
+const BUDGET_PTS = [-2, 0, 2];
 const LV = { H: 3, M: 2, L: 1 };
 const LV_NAME = { H: 'High', M: 'Medium', L: 'Low' };
 const PROF = {
@@ -682,12 +697,6 @@ GENRES.forEach(g => { g.prof = PROF[g.n] || 'MMMMMM'; });
     [['Idle Clicker', 'Farming Sim', 'Tower Defense', 'Pinball'], ['Roguelike', 'Metroidvania', 'Fighting']], [[], []],
     [['Roguelike', 'Fighting', 'Metroidvania', 'Survival', 'Stealth'], ['Idle Clicker', 'Pinball', 'Dating Sim']]];
   AUDIENCES.forEach((a, i) => { a.good.push(...AU[i][0]); a.bad.push(...AU[i][1]); });
-  const HX = { 'Roguelike Runs': ['Roguelike', 'Tower Defense'], 'Open World': ['Survival', 'Sandbox', 'Stealth'], 'Branching Story': ['Dating Sim', 'Text Adventure'],
-    'Physics Sandbox': ['Sandbox', 'Pinball', 'Platformer'], 'Cozy Vibes': ['Farming Sim', 'City Builder', 'Idle Clicker'], 'Competitive Ranked': ['Fighting', 'Battle Royale', 'Shooter'],
-    'Time Loops': ['Roguelike', 'Metroidvania'], 'Cute Mascot': ['Platformer', 'Idle Clicker'], 'Procedural Worlds': ['Roguelike', 'Sandbox', 'Survival'],
-    'Hand-drawn Art': ['Metroidvania', 'Dating Sim', 'Platformer'], 'Party Multiplayer': ['Battle Royale', 'Fighting'], 'Speedrun Friendly': ['Platformer', 'Metroidvania', 'Shooter'],
-    'Motion Controls': ['Shooter'], 'Idle Progression': ['Idle Clicker', 'Farming Sim', 'City Builder', 'Tower Defense'] };
-  HOOKS.forEach(h => { if (HX[h.n]) h.good.push(...HX[h.n]); });
   const PX = { 'Brightleaf Games': ['Idle Clicker', 'Pinball', 'Platformer'], 'Nimbus Interactive': ['Dating Sim', 'Text Adventure', 'Metroidvania'],
     'Redwood Media': ['Fighting', 'Shooter'], 'Titan Arcade Group': ['Battle Royale', 'Survival', 'City Builder'] };
   PUBLISHERS.forEach(pb => { if (PX[pb.n]) pb.fav.push(...PX[pb.n]); });
@@ -803,28 +812,171 @@ MILESTONES.push(
 
 /* ---------- Legendary combos (real-world hits) ---------- */
 THEMES.push({ n: 'Crime', rp: 14, rank: 6 }, { n: 'Military', rp: 16, rank: 6 });
-THEMES.slice(-2).forEach(t => { T[t.n] = t; });
 Object.assign(THEME_WORDS, { 'Crime': ['Heist', 'Mob', 'Street', 'Getaway', 'Vice'], 'Military': ['Warfare', 'Squad', 'Frontline', 'Commando', 'Battalion'] });
-HOOKS.push(
-  { n: 'Base Building',       m: [1.05, 1, 1.15, 1],    good: ['Survival', 'Sandbox', 'Battle Royale', 'Tower Defense', 'Strategy', 'City Builder'] },
-  { n: 'Creature Collecting', m: [1, 1.05, 1.15, 1.05], good: ['RPG', 'Adventure', 'Card Game', 'Idle Clicker'] },
-  { n: 'Brutal Difficulty',   m: [1.2, 1, 1, 0.95],     good: ['Action', 'Roguelike', 'Metroidvania', 'Platformer', 'Fighting'] }
-);
-HOOKS.slice(-3).forEach(h => { HOOK[h.n] = h; });
+/* ---------- Theme catalogue v2: tags drive genre matches ---------- */
+// [name, rp, rank, tags, title words]
+[
+  ['Football', 4, 2, 'sport party', ['Goal', 'Striker', 'Kickoff', 'Pitch', 'Penalty']],
+  ['Basketball', 6, 3, 'sport city', ['Hoops', 'Dunk', 'Court', 'Slam', 'Rebound']],
+  ['Baseball', 6, 3, 'sport', ['Home Run', 'Diamond', 'Pitcher', 'Slugger', 'Inning']],
+  ['Golf', 4, 2, 'sport cozy', ['Golf', 'Birdie', 'Fairway', 'Putt', 'Tee']],
+  ['Boxing', 8, 4, 'sport fight', ['Boxing', 'Uppercut', 'Ring', 'Jab', 'Title Bout']],
+  ['Martial Arts', 8, 4, 'fight sport history', ['Kung Fu', 'Dojo', 'Kick', 'Black Belt', 'Sensei']],
+  ['Skateboarding', 6, 3, 'sport speed city', ['Skate', 'Kickflip', 'Ollie', 'Halfpipe', 'Grind']],
+  ['Snow Sports', 8, 4, 'sport speed nature', ['Snowboard', 'Slalom', 'Avalanche', 'Powder', 'Peak']],
+  ['Olympics', 12, 6, 'sport party', ['Olympic', 'Gold Medal', 'Podium', 'Torch', 'Games']],
+  ['Wrestling', 10, 5, 'sport fight party', ['Smackdown', 'Suplex', 'Wrestle', 'Tag Team', 'Belt']],
+  ['Fishing', 2, 1, 'nature ocean cozy sport', ['Fishing', 'Lure', 'Catch', 'Reel', 'Angler']],
+  ['Cars', 4, 1, 'vehicle speed city', ['Car', 'Motor', 'Turbo', 'Garage', 'Highway']],
+  ['Motorsport', 10, 5, 'vehicle speed sport', ['Grand Prix', 'Pit Stop', 'Formula', 'Podium', 'Pole']],
+  ['Karts', 6, 3, 'vehicle speed cute party', ['Kart', 'Go-Kart', 'Banana', 'Drift', 'Boost']],
+  ['Street Racing', 12, 6, 'vehicle speed crime city', ['Street', 'Nitro', 'Underground', 'Midnight Run', 'Drag']],
+  ['Motorbikes', 8, 4, 'vehicle speed', ['Moto', 'Bike', 'Wheelie', 'Throttle', 'Chopper']],
+  ['Off-Road Rally', 12, 7, 'vehicle speed nature explore', ['Rally', 'Dirt', 'Mudslide', 'Dune', '4x4']],
+  ['Space Racing', 16, 8, 'vehicle speed scifi space', ['Hover', 'Anti-Grav', 'Warp', 'Velocity', 'Zero-G']],
+  ['Trains', 8, 4, 'vehicle business history', ['Rail', 'Express', 'Station', 'Locomotive', 'Junction']],
+  ['Aviation', 12, 6, 'vehicle explore war', ['Sky', 'Pilot', 'Jet', 'Dogfight', 'Ace']],
+  ['Trucking', 6, 3, 'vehicle business life', ['Truck', 'Haul', 'Convoy', 'Rig', 'Freight']],
+  ['Knights', 10, 4, 'history fight war', ['Knight', 'Crusade', 'Castle', 'Joust', 'Squire']],
+  ['Vikings', 14, 6, 'history fight explore myth', ['Viking', 'Valhalla', 'Longship', 'Raider', 'Saga']],
+  ['Ancient Rome', 14, 6, 'history war city', ['Rome', 'Legion', 'Gladiator', 'Caesar', 'Empire']],
+  ['Ancient Egypt', 12, 5, 'history myth mystery', ['Pharaoh', 'Pyramid', 'Sphinx', 'Nile', 'Tomb']],
+  ['World War', 18, 8, 'war history', ['Battlefront', 'Blitz', 'D-Day', 'Trenches', 'Allied']],
+  ['Medieval Kingdom', 12, 5, 'history business war', ['Kingdom', 'Crown', 'Realm', 'Throne', 'Feudal']],
+  ['Mafia', 14, 7, 'crime city business', ['Mafia', 'Godfather', 'Family', 'Racket', 'Cartel']],
+  ['Heist', 14, 7, 'crime stealth mystery', ['Heist', 'Vault', 'Score', 'Getaway', 'Inside Job']],
+  ['Prison', 10, 5, 'crime survival stealth', ['Prison', 'Cellblock', 'Jailbreak', 'Lockup', 'Warden']],
+  ['Hackers', 16, 8, 'tech crime mystery', ['Hack', 'Firewall', 'Root', 'Glitch', 'Exploit']],
+  ['Courtroom', 8, 3, 'mystery crime life', ['Objection', 'Verdict', 'Trial', 'Witness', 'Gavel']],
+  ['Theme Park', 8, 3, 'business party cute', ['Park', 'Coaster', 'Funland', 'Ride', 'Carnival']],
+  ['Restaurant', 6, 2, 'food business life', ['Diner', 'Bistro', 'Grill', 'Café', 'Order Up']],
+  ['Hotel', 8, 3, 'business life', ['Hotel', 'Resort', 'Concierge', 'Suite', 'Lobby']],
+  ['Fashion', 6, 2, 'life party romance', ['Fashion', 'Runway', 'Style', 'Couture', 'Vogue']],
+  ['Pets', 2, 1, 'animal cute life', ['Pet', 'Puppy', 'Paws', 'Buddy', 'Fluffy']],
+  ['Gardening', 4, 1, 'nature cozy life', ['Garden', 'Bloom', 'Petal', 'Greenhouse', 'Sprout']],
+  ['Stock Market', 10, 5, 'business', ['Stocks', 'Wall Street', 'Bull Run', 'Ticker', 'Tycoon']],
+  ['Construction', 8, 4, 'business vehicle city', ['Build', 'Crane', 'Hard Hat', 'Bulldozer', 'Site']],
+  ['Candy', 2, 1, 'food cute', ['Candy', 'Sugar', 'Sweet', 'Lollipop', 'Gummy']],
+  ['Toys', 4, 2, 'cute party life', ['Toy', 'Toybox', 'Plushie', 'Blocks', 'Wind-Up']],
+  ['Circus', 6, 2, 'party cute', ['Circus', 'Big Top', 'Clown', 'Juggle', 'Trapeze']],
+  ['Dance', 6, 2, 'music party romance', ['Dance', 'Disco', 'Groove', 'Step', 'Floor']],
+  ['Magical Girl', 10, 4, 'magic hero cute', ['Magical', 'Sparkle', 'Moonlight', 'Charm', 'Guardian']],
+  ['Monsters', 10, 4, 'animal fantasy cute', ['Monster', 'Critter', 'Beastie', 'Pocket', 'Tamer']],
+  ['Ghosts', 6, 3, 'horror mystery', ['Ghost', 'Spirit', 'Boo', 'Specter', 'Poltergeist']],
+  ['Cosmic Horror', 20, 9, 'horror mystery myth', ['Eldritch', 'Abyssal', 'Void', 'Cult', 'Tentacle']],
+  ['Witches', 10, 4, 'magic fantasy cozy', ['Witch', 'Cauldron', 'Broom', 'Coven', 'Potion']],
+  ['Dungeon', 8, 3, 'fantasy explore fight', ['Dungeon', 'Crypt', 'Depths', 'Loot', 'Keep']],
+  ['Jungle', 8, 3, 'nature explore survival', ['Jungle', 'Canopy', 'Vine', 'Temple', 'Wild']],
+  ['Arctic', 10, 5, 'nature survival explore', ['Frost', 'Glacier', 'Polar', 'Blizzard', 'Tundra']],
+  ['Mars Colony', 18, 8, 'space scifi survival business', ['Mars', 'Colony', 'Red Planet', 'Habitat', 'Outpost']],
+  ['Galactic Empire', 22, 10, 'space war scifi', ['Galactic', 'Empire', 'Starfleet', 'Armada', 'Nebula']],
+  ['Archaeology', 12, 5, 'explore history mystery', ['Relic', 'Ruins', 'Artifact', 'Expedition', 'Lost City']],
+  ['Bugs', 4, 2, 'animal nature cute', ['Bug', 'Beetle', 'Hive', 'Ant', 'Firefly']]
+].forEach(([n, rp, rank, tags, words]) => { THEMES.push({ n, rp, rank, tags: tags.split(' ') }); THEME_WORDS[n] = words; });
+const THEME_TAGS = {
+  'Detective': 'mystery crime city', 'Animal': 'animal cute nature', 'Apartment': 'life city cozy', 'Office Worker': 'life business city',
+  'Tennis': 'sport', 'Seaweed': 'ocean food', 'Cooking': 'food life cozy', 'School': 'school life romance', 'Ninja': 'fight stealth history',
+  'Pirate': 'ocean explore history fight', 'Dinosaur': 'animal explore survival', 'Idol': 'music romance party', 'Space': 'space scifi explore',
+  'Robot': 'tech scifi fight', 'Horror': 'horror mystery survival', 'Samurai': 'fight history war', 'Fantasy': 'fantasy magic explore',
+  'Zombie': 'horror survival fight', 'Cyberpunk': 'scifi tech crime city', 'Time Travel': 'scifi mystery explore', 'Cats': 'animal cute cozy',
+  'Farm': 'nature cozy life animal', 'Hospital': 'life business', 'Desert Island': 'nature survival explore ocean', 'Wild West': 'history fight crime explore',
+  'Fairy Tale': 'fantasy magic cute romance', 'Rock Band': 'music party', 'Underwater': 'ocean explore nature', 'Haunted House': 'horror mystery',
+  'Spy': 'stealth crime tech', 'Superhero': 'hero fight city', 'Wizards': 'magic fantasy school', 'Aliens': 'scifi space war',
+  'Vampires': 'horror romance fantasy', 'Steampunk': 'tech history explore', 'Mythology': 'myth fantasy fight', 'Dragons': 'fantasy fight myth',
+  'Mecha': 'scifi war tech fight', 'Post-Apocalypse': 'survival scifi war explore', 'Kaiju': 'fight scifi city', 'Crime': 'crime city fight', 'Military': 'war fight'
+};
+THEMES.forEach(t => { if (!t.tags) t.tags = (THEME_TAGS[t.n] || '').split(' ').filter(Boolean); T[t.n] = t; });
+// What each genre loves (Great), likes (Good) and clashes with (Poor). Anything else is Fair.
+const GENRE_TASTE = {
+  'Adventure':      ['explore mystery myth', 'fantasy history ocean scifi space magic', 'sport business vehicle'],
+  'Minigames':      ['party cute', 'animal food sport', 'war horror'],
+  'Card Game':      ['magic fantasy', 'myth animal crime history', 'vehicle speed sport'],
+  'Escape Game':    ['mystery horror', 'crime stealth scifi tech', 'sport party vehicle'],
+  'Management Sim': ['business food', 'life city sport history', 'horror stealth'],
+  'Fitness':        ['sport', 'music party nature', 'horror crime business'],
+  'Puzzle':         ['cute mystery', 'food animal tech magic space', 'war crime'],
+  'Quiz':           ['party school', 'history music sport mystery', 'survival war'],
+  'Rhythm':         ['music party', 'romance cute magic', 'war business survival'],
+  'Visual Novel':   ['romance mystery', 'school horror life fantasy crime', 'sport vehicle speed'],
+  'Board Game':     ['party business', 'history war fantasy cute', 'speed vehicle'],
+  'Action':         ['fight hero', 'crime war scifi myth stealth', 'cozy business life'],
+  'Sports':         ['sport', 'party school speed city', 'horror magic myth war'],
+  'Racing':         ['vehicle speed', 'sport scifi crime city', 'cozy romance school food'],
+  'Strategy':       ['war history', 'fantasy space business myth', 'cute romance party'],
+  'RPG':            ['fantasy magic myth', 'scifi explore history survival', 'sport business vehicle'],
+  'MMO':            ['fantasy space', 'magic war scifi explore myth', 'life school'],
+  'Text Adventure': ['mystery horror', 'explore fantasy scifi', 'sport speed vehicle party'],
+  'Pinball':        ['party music', 'space scifi horror sport', 'romance life'],
+  'Platformer':     ['cute explore', 'animal fantasy hero magic', 'business war life'],
+  'Tower Defense':  ['war fantasy', 'scifi horror history nature', 'romance life sport'],
+  'Idle Clicker':   ['business food', 'space cute animal tech', 'stealth romance'],
+  'Dating Sim':     ['romance school', 'life fantasy horror music', 'war vehicle'],
+  'Farming Sim':    ['nature cozy', 'animal life food magic', 'war crime tech'],
+  'Roguelike':      ['fantasy horror', 'myth magic space survival', 'life romance business'],
+  'Shooter':        ['war scifi', 'crime horror space hero', 'cute cozy romance'],
+  'Fighting':       ['fight myth', 'hero sport history scifi', 'cozy business life'],
+  'Stealth':        ['stealth crime', 'war history scifi tech', 'party cute music'],
+  'Survival':       ['survival nature', 'horror explore ocean space', 'party school business'],
+  'City Builder':   ['city history business', 'scifi space fantasy survival', 'horror fight'],
+  'Metroidvania':   ['explore horror', 'fantasy scifi magic myth', 'business sport life'],
+  'Sandbox':        ['explore nature', 'fantasy space tech survival', 'sport romance'],
+  'Battle Royale':  ['war survival', 'fight scifi hero ocean', 'cozy romance school']
+};
+for (const g in GENRE_TASTE) GENRE_TASTE[g] = GENRE_TASTE[g].map(x => x.split(' '));
+function tasteFit(g, t) {
+  const tg = (T[t] && T[t].tags) || [], ta = GENRE_TASTE[g];
+  if (!ta) return 1;
+  const love = tg.some(x => ta[0].includes(x)), like = tg.some(x => ta[1].includes(x)), hate = tg.some(x => ta[2].includes(x));
+  const base = love ? 3 : like ? 2 : 1;
+  return hate ? (love || like ? base - 1 : 0) : base;
+}
+/* ---------- Hooks v2: chosen up front, with logical genre fits ---------- */
+// [name, stat mults, unlock rank, scope (phase length), cost mult, bug mult, perfect, good, clash, blurb]
+HOOKS.length = 0;
+[
+  ['Cute Mascot', [1, 1.05, 1, 1.15], 1, 1, 1, 1, 'Platformer Minigames Puzzle', 'Racing Idle_Clicker Rhythm Quiz Tower_Defense Adventure Farming_Sim', 'Survival Stealth Shooter Strategy', 'A lovable character fans want on everything.'],
+  ['Cozy Vibes', [1, 1.05, 1.1, 1], 1, 1, 1, 1, 'Farming_Sim Management_Sim City_Builder', 'Puzzle Visual_Novel Board_Game Idle_Clicker Sandbox Dating_Sim Adventure', 'Shooter Fighting Battle_Royale Roguelike Survival Stealth', 'Relaxing, low-stress, play-at-your-own-pace.'],
+  ['Party Multiplayer', [1.05, 1, 1, 1.15], 1, 1.05, 1.05, 1.1, 'Minigames Board_Game Quiz Racing', 'Sports Fighting Rhythm Fitness Shooter Battle_Royale Pinball', 'Visual_Novel Text_Adventure Dating_Sim Metroidvania Stealth City_Builder', 'Couch chaos with friends.'],
+  ['Physics Sandbox', [1.15, 1, 1, 1.05], 1, 1.05, 1.05, 1.1, 'Sandbox Puzzle Pinball', 'Racing Platformer Action Minigames Sports', 'Visual_Novel Text_Adventure Dating_Sim Quiz Card_Game', 'Everything wobbles, stacks and topples.'],
+  ['Speedrun Friendly', [1.15, 1, 1, 1.05], 1, 1, 1, 1, 'Platformer Metroidvania', 'Action Racing Shooter Puzzle Roguelike Escape_Game', 'MMO Idle_Clicker Visual_Novel Dating_Sim Farming_Sim City_Builder Management_Sim', 'Tight controls and secret shortcuts.'],
+  ['Idle Progression', [1, 0.95, 1.2, 1], 1, 0.95, 0.95, 1, 'Idle_Clicker Management_Sim', 'Farming_Sim City_Builder Tower_Defense Card_Game RPG', 'Action Fighting Shooter Racing Rhythm Platformer Stealth', 'Numbers go up, even while you sleep.'],
+  ['Branching Story', [1, 1.1, 1.05, 1], 1, 1.1, 1.1, 1, 'Visual_Novel Text_Adventure Dating_Sim RPG', 'Adventure Escape_Game Stealth Survival', 'Puzzle Pinball Rhythm Racing Sports Fitness Idle_Clicker Battle_Royale Minigames', 'Choices that change the ending.'],
+  ['Hand-drawn Art', [1, 1.2, 1, 1], 1, 1.1, 1.1, 1, 'Metroidvania Visual_Novel Platformer Adventure', 'Dating_Sim Rhythm Puzzle Card_Game Roguelike Text_Adventure', 'MMO Battle_Royale Racing Sports', 'Every frame painted by hand.'],
+  ['Roguelike Runs', [1.1, 1, 1.1, 1], 3, 1.05, 1.05, 1, 'Roguelike Card_Game', 'Action Strategy Shooter Platformer Tower_Defense Metroidvania Survival', 'Visual_Novel Dating_Sim Farming_Sim Management_Sim Sports Racing', 'Die, learn, try again, never the same run twice.'],
+  ['Time Loops', [1.05, 1, 1, 1.1], 3, 1.05, 1.05, 1, 'Escape_Game Adventure Roguelike', 'Puzzle Visual_Novel Text_Adventure Metroidvania Stealth', 'Sports Racing Fitness Idle_Clicker Battle_Royale MMO', 'The same day, again, with new knowledge.'],
+  ['Competitive Ranked', [1.1, 1, 1.1, 1.05], 3, 1.05, 1.1, 1.1, 'Fighting Battle_Royale Card_Game Sports', 'Shooter Strategy Racing MMO Board_Game Quiz', 'Visual_Novel Text_Adventure Dating_Sim Farming_Sim Adventure Escape_Game Metroidvania', 'Ladders, seasons and bragging rights.'],
+  ['Motion Controls', [1.1, 1, 1, 1.1], 3, 1.05, 1.1, 1, 'Fitness Rhythm Sports', 'Minigames Shooter Racing Fighting', 'Strategy Visual_Novel Text_Adventure City_Builder MMO Card_Game Idle_Clicker', 'Get off the sofa and move.'],
+  ['Deckbuilding', [1.1, 1, 1.1, 1], 3, 1, 1, 1, 'Card_Game Roguelike', 'Strategy Board_Game RPG Tower_Defense', 'Racing Shooter Fitness Rhythm Platformer Sports', 'Build an engine one card at a time.'],
+  ['Customisation', [1, 1.05, 1.1, 1.05], 3, 1.05, 1.1, 1, 'Racing Sports MMO', 'RPG Fighting Shooter Battle_Royale Management_Sim Sandbox Dating_Sim', 'Puzzle Text_Adventure Escape_Game Quiz Pinball', 'Tune it, paint it, make it yours.'],
+  ['Creature Collecting', [1, 1.05, 1.15, 1.05], 5, 1.1, 1.15, 1, 'RPG Card_Game', 'Adventure Idle_Clicker Farming_Sim MMO Puzzle', 'Shooter Racing Stealth City_Builder', 'Gotta find them all.'],
+  ['Brutal Difficulty', [1.2, 1, 1, 0.95], 5, 1, 1, 1, 'Roguelike Platformer Action', 'Metroidvania Fighting Shooter Strategy Survival Rhythm', 'Farming_Sim Visual_Novel Dating_Sim Idle_Clicker Management_Sim Minigames', 'Hard, fair and hugely satisfying.'],
+  ['Base Building', [1.05, 1, 1.15, 1], 5, 1.08, 1.1, 1.05, 'Survival Tower_Defense City_Builder Strategy', 'Sandbox Battle_Royale MMO Farming_Sim', 'Visual_Novel Rhythm Racing Puzzle Platformer Fighting Sports', 'Fortify, expand, defend.'],
+  ['Crafting', [1.1, 1, 1.15, 1], 5, 1.1, 1.1, 1.05, 'Sandbox Survival', 'RPG MMO Farming_Sim Adventure Battle_Royale Tower_Defense', 'Visual_Novel Rhythm Racing Fighting Quiz Pinball Sports', 'Gather, combine, invent.'],
+  ['Co-op Campaign', [1.05, 1, 1.1, 1.1], 5, 1.1, 1.15, 1.2, 'Shooter Survival Action', 'Adventure Strategy MMO Platformer RPG Minigames Farming_Sim', 'Visual_Novel Dating_Sim Text_Adventure Idle_Clicker', 'Better with a friend at your side.'],
+  ['Life Simulation', [1, 1.05, 1.15, 1], 5, 1.1, 1.15, 1.05, 'Management_Sim Dating_Sim Farming_Sim', 'Visual_Novel RPG City_Builder Sandbox MMO', 'Shooter Fighting Racing Battle_Royale Roguelike Pinball', 'Daily routines, friendships and little dramas.'],
+  ['Open World', [1.05, 1.1, 1.05, 1], 7, 1.25, 1.35, 1.15, 'RPG Adventure Action Racing', 'MMO Survival Sandbox Stealth Shooter', 'Puzzle Card_Game Board_Game Quiz Pinball Rhythm Visual_Novel Text_Adventure Escape_Game Tower_Defense Idle_Clicker Fighting', 'A huge world to roam freely. Big scope.'],
+  ['Procedural Worlds', [1.1, 1, 1.1, 1], 7, 1.1, 1.1, 1.1, 'Sandbox Roguelike Survival', 'Strategy City_Builder RPG MMO Tower_Defense', 'Visual_Novel Dating_Sim Rhythm Fighting Text_Adventure Escape_Game', 'Endless generated worlds.'],
+  ['Cinematic Story', [1, 1.2, 1, 1], 7, 1.15, 1.3, 1, 'Action Adventure Stealth', 'RPG Shooter Survival Visual_Novel', 'Idle_Clicker Puzzle Minigames Board_Game Quiz Pinball Sandbox Battle_Royale MMO', 'Blockbuster set pieces and performances.']
+].forEach(([n, m, rank, hp, cost, bug, perfect, good, clash, d]) => {
+  const L = x => x.split(' ').map(w => w.replace(/_/g, ' '));
+  HOOKS.push({ n, m, rank, hp, cost, bug, perfect: L(perfect), good: L(good), clash: L(clash), d });
+});
+for (const k in HOOK) delete HOOK[k];
+HOOKS.forEach(h => { HOOK[h.n] = h; });
 const LEGENDS = [
   ['Battle Royale', 'Desert Island', 'Base Building', 'Fortnite'],
   ['Action', 'Crime', 'Open World', 'Grand Theft Auto'],
   ['Adventure', 'Wild West', 'Open World', 'Red Dead Redemption'],
   ['RPG', 'Dragons', 'Open World', 'The Elder Scrolls'],
-  ['Sandbox', 'Fantasy', 'Procedural Worlds', 'Minecraft'],
+  ['Sandbox', 'Fantasy', 'Crafting', 'Minecraft'],
   ['RPG', 'Animal', 'Creature Collecting', 'Pokémon'],
-  ['Management Sim', 'Apartment', 'Cozy Vibes', 'The Sims'],
+  ['Management Sim', 'Apartment', 'Life Simulation', 'The Sims'],
   ['Farming Sim', 'Farm', 'Cozy Vibes', 'Stardew Valley'],
-  ['Farming Sim', 'Animal', 'Cozy Vibes', 'Animal Crossing'],
+  ['Farming Sim', 'Desert Island', 'Cozy Vibes', 'Animal Crossing'],
   ['Shooter', 'Military', 'Competitive Ranked', 'Call of Duty'],
   ['Shooter', 'Aliens', 'Party Multiplayer', 'Halo'],
   ['Strategy', 'Fantasy', 'Competitive Ranked', 'League of Legends'],
-  ['Racing', 'Animal', 'Party Multiplayer', 'Mario Kart'],
+  ['Racing', 'Karts', 'Party Multiplayer', 'Mario Kart'],
   ['Platformer', 'Fairy Tale', 'Cute Mascot', 'Super Mario Bros.'],
   ['Adventure', 'Fantasy', 'Open World', 'The Legend of Zelda'],
   ['Action', 'Dragons', 'Brutal Difficulty', 'Dark Souls'],
@@ -839,8 +991,8 @@ const LEGENDS = [
   ['Shooter', 'Horror', 'Speedrun Friendly', 'Doom'],
   ['RPG', 'Fantasy', 'Branching Story', 'Final Fantasy'],
   ['Rhythm', 'Rock Band', 'Motion Controls', 'Guitar Hero'],
-  ['Fitness', 'Tennis', 'Motion Controls', 'Wii Sports'],
-  ['Visual Novel', 'Detective', 'Branching Story', 'Ace Attorney'],
+  ['Sports', 'Tennis', 'Motion Controls', 'Wii Sports'],
+  ['Visual Novel', 'Courtroom', 'Branching Story', 'Ace Attorney'],
   ['Tower Defense', 'Zombie', 'Cute Mascot', 'Plants vs. Zombies'],
   ['Idle Clicker', 'Cooking', 'Idle Progression', 'Cookie Clicker'],
   ['Minigames', 'Cooking', 'Party Multiplayer', 'Overcooked'],
@@ -854,46 +1006,101 @@ const LEGENDS = [
   ['Fighting', 'Ninja', 'Competitive Ranked', 'Mortal Kombat'],
   ['MMO', 'Fantasy', 'Open World', 'World of Warcraft'],
   ['Card Game', 'Wizards', 'Competitive Ranked', 'Hearthstone'],
-  ['Racing', 'Crime', 'Open World', 'Need for Speed'],
+  ['Racing', 'Street Racing', 'Open World', 'Need for Speed'],
   ['Adventure', 'Post-Apocalypse', 'Branching Story', 'The Last of Us'],
-  ['RPG', 'Post-Apocalypse', 'Open World', 'Fallout']
+  ['RPG', 'Post-Apocalypse', 'Open World', 'Fallout'],
+  ['Sports', 'Football', 'Competitive Ranked', 'FIFA'],
+  ['Sports', 'Basketball', 'Customisation', 'NBA 2K'],
+  ['Racing', 'Motorsport', 'Customisation', 'Gran Turismo'],
+  ['Racing', 'Cars', 'Open World', 'Forza Horizon'],
+  ['Sports', 'Skateboarding', 'Speedrun Friendly', "Tony Hawk's Pro Skater"],
+  ['Sports', 'Cars', 'Competitive Ranked', 'Rocket League'],
+  ['Racing', 'Space Racing', 'Brutal Difficulty', 'F-Zero'],
+  ['Card Game', 'Dungeon', 'Deckbuilding', 'Slay the Spire'],
+  ['Survival', 'Vikings', 'Crafting', 'Valheim'],
+  ['Stealth', 'Ancient Egypt', 'Open World', "Assassin's Creed"],
+  ['Strategy', 'Knights', 'Competitive Ranked', 'Age of Empires'],
+  ['Strategy', 'Ancient Rome', 'Procedural Worlds', 'Civilization'],
+  ['City Builder', 'Arctic', 'Base Building', 'Frostpunk'],
+  ['Management Sim', 'Theme Park', 'Physics Sandbox', 'RollerCoaster Tycoon'],
+  ['Management Sim', 'Hospital', 'Cute Mascot', 'Two Point Hospital'],
+  ['Shooter', 'Zombie', 'Co-op Campaign', 'Left 4 Dead'],
+  ['Shooter', 'Heist', 'Co-op Campaign', 'Payday'],
+  ['Battle Royale', 'Military', 'Competitive Ranked', 'PUBG'],
+  ['Adventure', 'Pirate', 'Co-op Campaign', 'Sea of Thieves'],
+  ['Adventure', 'Archaeology', 'Cinematic Story', 'Uncharted'],
+  ['Action', 'Mythology', 'Cinematic Story', 'God of War'],
+  ['RPG', 'School', 'Life Simulation', 'Persona'],
+  ['Rhythm', 'Dance', 'Motion Controls', 'Just Dance'],
+  ['Fighting', 'Martial Arts', 'Competitive Ranked', 'Street Fighter']
 ].map(([g, t, h, ref]) => ({ g, t, h, ref }));
 const legKeyOf = L => L.g + '|' + L.t + '|' + L.h;
 const LEGEND_PAIRS = new Set(LEGENDS.map(L => L.g + '|' + L.t));
-LEGENDS.forEach(L => { const h = HOOK[L.h]; if (h && !h.good.includes(L.g)) h.good.push(L.g); });
+LEGENDS.forEach(L => { const h = HOOK[L.h]; if (h && !h.perfect.includes(L.g)) { h.perfect.push(L.g); h.clash = h.clash.filter(x => x !== L.g); } });
 const REVIEW_BIAS = [0.15, -0.2, 0.3, -0.45];
 MILESTONES.push(
   { id: 'legend1', n: 'Living Legend', d: 'Hit a legendary combo', test: s => Object.keys(s.legends || {}).length >= 1, r: { fans: 2000 } },
   { id: 'legend10', n: 'Hall of Legends', d: 'Hit 10 legendary combos', test: s => Object.keys(s.legends || {}).length >= 10, r: { gold: 1000000 } }
 );
 const AMAZING = new Set([
-  'Adventure|Detective', 'Minigames|Animal', 'Card Game|Animal', 'Escape Game|Apartment',
-  'Management Sim|Office Worker', 'Fitness|Tennis', 'Puzzle|Cooking', 'Quiz|Dinosaur',
-  'Rhythm|Idol', 'Visual Novel|School', 'Board Game|Pirate', 'Action|Ninja', 'Sports|Tennis',
-  'Racing|Robot', 'Strategy|Samurai', 'RPG|Fantasy', 'MMO|Fantasy', 'Escape Game|Horror',
-  'Action|Zombie', 'Adventure|Time Travel', 'Racing|Cyberpunk',
-  'Platformer|Cats', 'Tower Defense|Aliens', 'Idle Clicker|Space', 'Dating Sim|Vampires', 'Farming Sim|Farm',
-  'Roguelike|Wizards', 'Fighting|Kaiju', 'Stealth|Spy', 'Survival|Post-Apocalypse', 'Shooter|Aliens',
-  'City Builder|Steampunk', 'Metroidvania|Vampires', 'Sandbox|Desert Island', 'Battle Royale|Superhero',
-  'Text Adventure|Haunted House', 'Pinball|Rock Band', 'Rhythm|Rock Band', 'Management Sim|Hospital',
-  'RPG|Dragons', 'Adventure|Mythology', 'Action|Superhero', 'Strategy|Mecha', 'Escape Game|Underwater',
-  'Visual Novel|Fairy Tale', 'Card Game|Wizards', 'Survival|Desert Island', 'Puzzle|Cats', 'Racing|Wild West'
+  'Adventure|Archaeology', 'Adventure|Pirate', 'Adventure|Detective', 'Adventure|Time Travel', 'Adventure|Mythology',
+  'Minigames|Circus', 'Minigames|Animal', 'Minigames|Toys', 'Card Game|Wizards', 'Card Game|Monsters',
+  'Escape Game|Haunted House', 'Escape Game|Prison', 'Escape Game|Horror',
+  'Management Sim|Restaurant', 'Management Sim|Hospital', 'Management Sim|Theme Park', 'Management Sim|Hotel',
+  'Fitness|Dance', 'Fitness|Martial Arts', 'Fitness|Tennis', 'Puzzle|Candy', 'Puzzle|Cats', 'Puzzle|Cooking', 'Quiz|School', 'Quiz|Dinosaur',
+  'Rhythm|Idol', 'Rhythm|Rock Band', 'Rhythm|Dance', 'Visual Novel|School', 'Visual Novel|Courtroom', 'Visual Novel|Fairy Tale',
+  'Board Game|Stock Market', 'Board Game|Medieval Kingdom', 'Action|Ninja', 'Action|Superhero', 'Action|Zombie', 'Action|Mythology',
+  'Sports|Football', 'Sports|Basketball', 'Sports|Tennis', 'Sports|Golf', 'Sports|Baseball', 'Sports|Skateboarding', 'Sports|Snow Sports', 'Sports|Olympics', 'Sports|Boxing',
+  'Racing|Motorsport', 'Racing|Street Racing', 'Racing|Karts', 'Racing|Off-Road Rally', 'Racing|Space Racing', 'Racing|Motorbikes',
+  'Strategy|Knights', 'Strategy|World War', 'Strategy|Galactic Empire', 'Strategy|Samurai', 'Strategy|Ancient Rome',
+  'RPG|Fantasy', 'RPG|Dragons', 'RPG|Dungeon', 'RPG|Post-Apocalypse', 'MMO|Fantasy', 'MMO|Galactic Empire',
+  'Text Adventure|Haunted House', 'Text Adventure|Cosmic Horror', 'Pinball|Rock Band', 'Pinball|Circus',
+  'Platformer|Cats', 'Platformer|Fairy Tale', 'Platformer|Candy', 'Tower Defense|Aliens', 'Tower Defense|Knights', 'Tower Defense|Zombie',
+  'Idle Clicker|Stock Market', 'Idle Clicker|Cooking', 'Idle Clicker|Space', 'Dating Sim|Vampires', 'Dating Sim|School', 'Dating Sim|Fashion',
+  'Farming Sim|Farm', 'Farming Sim|Gardening', 'Farming Sim|Desert Island', 'Roguelike|Wizards', 'Roguelike|Dungeon', 'Roguelike|Mythology',
+  'Shooter|Aliens', 'Shooter|World War', 'Shooter|Military', 'Fighting|Martial Arts', 'Fighting|Kaiju', 'Fighting|Wrestling', 'Fighting|Boxing',
+  'Stealth|Spy', 'Stealth|Heist', 'Stealth|Ninja', 'Survival|Post-Apocalypse', 'Survival|Desert Island', 'Survival|Zombie', 'Survival|Arctic',
+  'City Builder|Ancient Rome', 'City Builder|Mars Colony', 'City Builder|Steampunk', 'City Builder|Medieval Kingdom',
+  'Metroidvania|Vampires', 'Metroidvania|Cosmic Horror', 'Sandbox|Desert Island', 'Sandbox|Construction',
+  'Battle Royale|Military', 'Battle Royale|Superhero', 'Battle Royale|Desert Island'
 ]);
 const COMBO_LABEL = ['Poor', 'Fair', 'Good', 'Great!', 'Amazing!'];
 const COMBO_COLOR = ['#ef476f', '#9aa5b1', '#66fcf1', '#06d6a0', '#ffd166'];
-const COMBO_REVIEW = [-1.5, -0.6, 0.3, 1.2, 2.2];
+const COMBO_REVIEW = [-1.2, -0.4, 0.2, 0.7, 1.1];
 const COMBO_DL = [0.7, 0.9, 1.1, 1.35, 1.7];
 function compat(g, t) {
   if (AMAZING.has(g + '|' + t)) return 4;
-  const v = hashStr(g + '|' + t) % 100;
-  const r = v < 22 ? 0 : v < 58 ? 1 : v < 85 ? 2 : 3;
+  const r = tasteFit(g, t);
   return LEGEND_PAIRS.has(g + '|' + t) ? Math.max(3, r) : r;
 }
 const FLOORS = [
-  { desks: 5, rent: 800,  cost: 0,      rank: 1,  live: 2 },
-  { desks: 7, rent: 2200, cost: 60000,  rank: 5,  live: 3 },
-  { desks: 9, rent: 5500, cost: 250000, rank: 12, live: 4 }
+  { n: 'Garage Office',   desks: 5,  rent: 800,   cost: 0,       rank: 1,  live: 2, rooms: 2, decor: 4 },
+  { n: 'Downtown Office', desks: 7,  rent: 2200,  cost: 60000,   rank: 5,  live: 3, rooms: 3, decor: 8 },
+  { n: 'Penthouse Loft',  desks: 9,  rent: 5500,  cost: 250000,  rank: 11, live: 4, rooms: 5, decor: 12 },
+  { n: 'Studio Campus',   desks: 10, rent: 14000, cost: 1200000, rank: 15, live: 5, rooms: 7, decor: 16 }
 ];
+// Rooms: one per slot, each upgradable to Lv3. cost/upkeep per level.
+const ROOMS = {
+  meeting:  { n: 'Meeting Room',       ic: '🗂', rank: 1, cost: [10000, 40000, 120000], up: [150, 350, 700],    d: l => `+${l} design point${l > 1 ? 's' : ''} on every game${l >= 2 ? '; design meetings pitch 4 ideas' : ''}` },
+  break:    { n: 'Break Room',         ic: '☕', rank: 1, cost: [8000, 30000, 90000],    up: [200, 350, 600],    d: l => `Staff recover stamina ${[60, 100, 150][l - 1]}% faster` },
+  tech:     { n: 'Workstations',       ic: '🖥', rank: 2, cost: [15000, 50000, 150000],  up: [300, 500, 900],    d: l => `Staff work ${[8, 14, 20][l - 1]}% faster` },
+  servers:  { n: 'Server Room',        ic: '🗄', rank: 2, cost: [25000, 80000, 200000],  up: [800, 1300, 2000],  d: l => `Live games keep ${[1.2, 1.8, 2.4][l - 1]}% more players each week; no outages or breaches` },
+  qa:       { n: 'QA Lab',             ic: '🐞', rank: 3, cost: [20000, 60000, 160000],  up: [400, 700, 1100],   d: l => `${[15, 25, 35][l - 1]}% fewer bugs; Debug ${[10, 20, 30][l - 1]}% shorter` },
+  art:      { n: 'Art Studio',         ic: '🎨', rank: 3, cost: [25000, 70000, 180000],  up: [400, 700, 1100],   d: l => `Impact ideas +${4 * l}%; Art grade counts as ${[1, 2, 3][l - 1] * 4}% higher` },
+  sound:    { n: 'Recording Studio',   ic: '🎙', rank: 3, cost: [25000, 70000, 180000],  up: [400, 700, 1100],   d: l => `Craze ideas +${4 * l}%; Audio grade counts as ${[1, 2, 3][l - 1] * 4}% higher` },
+  training: { n: 'Training Centre',    ic: '📚', rank: 4, cost: [30000, 90000, 220000],  up: [500, 800, 1200],   d: l => `Staff gain ${10 * l}% more EXP; training ${15 * l}% cheaper` },
+  marketing:{ n: 'Marketing Suite',    ic: '📣', rank: 4, cost: [30000, 90000, 220000],  up: [500, 800, 1300],   d: l => `+${6 * l} hype on every project; marketing ${10 * l}% cheaper` },
+  playtest: { n: 'Playtest Lab',       ic: '🧪', rank: 5, cost: [40000, 120000, 280000], up: [600, 1000, 1500],  d: l => `+${(0.1 * l).toFixed(1)} on every review; ${['rough', 'good', 'exact'][l - 1]} score forecast before launch` },
+  rnd:      { n: 'R&D Lab',            ic: '🔬', rank: 6, cost: [60000, 180000, 400000], up: [900, 1500, 2400],  d: l => `+${l} RP every quarter` },
+  mocap:    { n: 'Motion Capture Stage', ic: '🎬', rank: 8, cost: [80000, 220000, 500000], up: [1200, 2000, 3000], d: l => `Impact ideas +${5 * l}%; Action, Sports, Fighting, Shooter, Stealth, Adventure and RPG reviews +${(0.1 * l).toFixed(1)}` },
+  hwlab:    { n: 'Hardware Lab',       ic: '🔧', rank: 8, cost: [100000, 250000, 600000], up: [1500, 2500, 4000], d: l => `Consoles built about ${10 * l}% faster; units ${4 * l}% cheaper to make` }
+};
+const MOCAP_G = ['Action', 'Sports', 'Fighting', 'Shooter', 'Stealth', 'Adventure', 'RPG'];
+function roomLv(id) { return (STATE && STATE.rooms && STATE.rooms[id]) || 0; }
+function roomsUsed() { return Object.keys(STATE.rooms || {}).filter(k => STATE.rooms[k] > 0).length; }
+function roomSlots() { return FLOORS[STATE.floor - 1].rooms; }
+function roomRank(id, lv) { return ROOMS[id].rank + (lv - 1) * 3; }
+function roomUpkeep() { return Object.keys(ROOMS).reduce((a, k) => a + (roomLv(k) ? ROOMS[k].up[roomLv(k) - 1] : 0), 0); }
 const FACILITIES = {
   coffee:  { n: 'Coffee Machine', cost: 8000,  upkeep: 200, desc: 'Staff recover stamina 60% faster.' },
   pcs:     { n: 'Hi-Spec PCs',    cost: 15000, upkeep: 300, desc: 'Staff work 10% faster.' },
@@ -910,7 +1117,7 @@ const CONTRACTS = ['Corporate Website', 'Ringtone Pack', 'Bank App Patch', 'Stic
 const SKY = ['#bde0fe', '#bde0fe', '#cdeac0', '#a8dadc', '#90e0ef', '#48cae4', '#48cae4', '#90e0ef', '#ffd6a5', '#f4a261', '#d4a5a5', '#bde0fe'];
 
 const TPS = 30;           // simulation ticks per second
-const TPW = 200;          // ticks per in-game week (~6.7s at 1x)
+const TPW = 260;          // ticks per in-game week (~8.7s at 1x)
 const SAVE_KEY = 'pocketDevStudio_v1';
 const perkQueued = new Set();
 let MODS = null;
@@ -961,14 +1168,14 @@ function newGame() {
   ];
   team.forEach((m, i) => { m.id = i + 1; m.skin = SKINS[i]; m.hs = i % 4; });
   return {
-    v: 5, gold: 20000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
+    v: 6, gold: 20000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
     cal: { y: 1, m: 1, w: 1 }, tick: 0, speed: 1,
     settings: { sound: true },
     team, nextId: 6,
     unlocked: { g: GENRES.filter(g => g.rp === 0).map(g => g.n), t: THEMES.filter(t => t.rp === 0).map(t => t.n) },
     levels: { g: {}, t: {} },
     combos: {}, history: [], live: [], activeDev: null, nextDevId: 1,
-    facilities: { coffee: false, pcs: false, servers: false },
+    facilities: { coffee: false, pcs: false, servers: false }, rooms: {},
     trend: null, yearBest: null, debtMonths: 0,
     ledger: { inc: 0, exp: 0, lastInc: 0, lastExp: 0 },
     totalDownloads: 0, totalRevenue: 0, candidates: [], contractOffers: [], over: false,
@@ -1018,15 +1225,25 @@ function migrate(s) {
   if (!s.legendHints) s.legendHints = {};
   if (s.walkIn === undefined) s.walkIn = null;
   if (!s.rpBought) s.rpBought = 0;
+  if (!s.rooms || typeof s.rooms !== 'object') s.rooms = {};
+  if (s.v < 6) {
+    const fa = s.facilities || {};
+    if (fa.coffee) s.rooms.break = 1; if (fa.pcs) s.rooms.tech = 1; if (fa.servers) s.rooms.servers = 1;
+    // combos and hook notes now follow logical rules: refresh what the player has learned
+    for (const k in s.combos) { const [g, t] = k.split('|'); if (G[g] && T[t]) s.combos[k] = compat(g, t); else delete s.combos[k]; }
+    for (const k in s.hookNotes) { const [h, g] = k.split('|'); if (HOOK[h] && G[g]) s.hookNotes[k] = hookCompat(h, g); else delete s.hookNotes[k]; }
+    THEMES.forEach(t => { if (t.rp === 0 && !s.unlocked.t.includes(t.n)) s.unlocked.t.push(t.n); });
+    if (s.activeDev && s.activeDev.kind === 'game' && !s.activeDev.plats) s.activeDev.plats = [s.activeDev.platform];
+  }
   s.team.forEach(normStaff);
   if (s.activeDev) normDev(s.activeDev);
-  s.v = 5;
+  s.v = 6;
   return s;
 }
 function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) { const s = JSON.parse(raw); if (s && s.v >= 1 && s.v <= 5) return migrate(Object.assign(newGame(), s)); }
+    if (raw) { const s = JSON.parse(raw); if (s && s.v >= 1 && s.v <= 6) return migrate(Object.assign(newGame(), s)); }
   } catch (e) {}
   return null;
 }
@@ -1121,7 +1338,7 @@ function pubAdvance(pb, genre) {
   return Math.round(a / 500) * 500;
 }
 function rankK() { return 1 + 0.25 * (STATE.rank - 1); }
-function devCost(genre, b) { return Math.round((G[genre].cost + 1000 * rankK()) * BUDGETS[b].cost / 100) * 100; }
+function devCost(genre, b) { return Math.round(((G[genre] ? G[genre].cost : 1000) + 1000 * rankK()) * (BUDGETS[b] || BUDGETS[1]).cost / 100) * 100; }
 function weeklyRev(g) {
   return Math.round(g.users * g.arpu * 0.1 * (g.event > 0 ? 1.3 : 1) * (g.liveMul || 1) * (g.saleWeeks > 0 ? g.saleMul : 1) * (1 - (g.cut || 0)));
 }
@@ -1158,6 +1375,8 @@ function computeMods() {
   if (hasExec('cmo')) m.hype += 10;
   m.bug = hasExec('producer') ? 0.85 : 1;
   if (hasTech('mkt1')) m.hype += 10;
+  m.stat[1] += 0.04 * roomLv('art') + 0.05 * roomLv('mocap'); m.stat[3] += 0.04 * roomLv('sound');
+  m.exp += 0.1 * roomLv('training'); m.hype += 6 * roomLv('marketing');
   STATE.team.forEach(x => { if (x.traits.includes('Team Player')) m.team += 0.03; if (x.senior) m.team += 0.03; if (x.perks.includes('legend')) m.team += 0.05; });
   m.mentor = STATE.team.some(x => x.perks.includes('ment'));
   m.hunter = STATE.team.some(x => x.perks.includes('hunter'));
@@ -1239,7 +1458,7 @@ function costBreakdown() {
   return {
     'Salaries': STATE.team.reduce((a, m) => a + m.salary, 0),
     'Rent': FLOORS[STATE.floor - 1].rent,
-    'Upkeep': Object.keys(FACILITIES).reduce((a, k) => a + (STATE.facilities[k] ? FACILITIES[k].upkeep : 0), 0),
+    'Upkeep': roomUpkeep(),
     'Executives': Object.values(STATE.execs).reduce((a, v) => a + v, 0),
     'Benefits': (pol.cost || 0) * STATE.team.length
   };
@@ -1269,13 +1488,15 @@ function news(msg, color) {
    ========================================================= */
 function staminaDrain(d) {
   if (d.kind === 'contract') return 1.5;
-  if (d.genre === 'Card Game' && d.platform === 'PC') return 0;
-  return 2 * P[d.platform].drain * (G[d.genre].drain || 1) * ((d.mods && d.mods.drainMul) || 1) * PACE[d.pace === undefined ? 1 : d.pace].drain;
+  const ps = platsOf(d);
+  if (d.genre === 'Card Game' && ps.length === 1 && ps[0].n === 'PC') return 0;
+  return 2 * Math.max(...ps.map(x => x.drain || 1)) * (G[d.genre].drain || 1) * ((d.mods && d.mods.drainMul) || 1) * PACE[d.pace === undefined ? 1 : d.pace].drain;
 }
 function phaseHp(d, phase) {
   const base = [160, 220, 320][phase - 1];
   const bud = BUDGETS[d.budget === undefined ? 1 : d.budget];
-  return Math.round(base * 1.15 * P[d.platform].hp * bud.hp * ((d.mods && d.mods.hpMul) || 1) * (1 + 0.08 * (d.rank - 1)));
+  const ps = platsOf(d), php = Math.max(...ps.map(x => x.hp || 1)) * (1 + 0.15 * (ps.length - 1));
+  return Math.round(base * 1.15 * php * bud.hp * ((d.mods && d.mods.hpMul) || 1) * (1 + 0.08 * (d.rank - 1)));
 }
 function setupPhase(d) {
   const b = d.balloon;
@@ -1283,11 +1504,51 @@ function setupPhase(d) {
   const colors = ['#4cc9f0', '#9d4edd', '#ef476f', '#06d6a0', '#ffd166'];
   d.phaseName = names[d.phase - 1];
   b.color = colors[d.phase - 1];
-  b.maxHp = d.phase === 4 ? Math.round((30 + d.bugs * 14) * (hasTech('qa2') ? 0.65 : 1)) : d.phase === 5 ? Math.round(phaseHp(d, 3) * 0.4) : phaseHp(d, d.phase);
+  b.maxHp = d.phase === 4 ? Math.round((30 + d.bugs * 14) * (hasTech('qa2') ? 0.65 : 1) * [1, 0.9, 0.8, 0.7][roomLv('qa')]) : d.phase === 5 ? Math.round(phaseHp(d, 3) * 0.4) : phaseHp(d, d.phase);
   b.hp = b.maxHp;
   $('btn-boost').disabled = !(d.phase === 3 && !d.boostUsed);
 }
 
+
+/* ---------- Hooks, ports and project cost ---------- */
+function hookOpen(h) { return STATE.rank >= h.rank; }
+function refreshHookOptions() {
+  const sel = $('sel-hook'); if (!sel) return;
+  const g = $('sel-genre').value, keep = sel.value;
+  sel.innerHTML = '<option value="">No special hook</option>' + HOOKS.map(h => {
+    if (!hookOpen(h)) return `<option value="${h.n}" disabled>🔒 ${h.n} (Rank ${h.rank})</option>`;
+    const k = h.n + '|' + g;
+    return `<option value="${h.n}">${h.n}${k in STATE.hookNotes ? ' · ' + HOOK_LABEL[STATE.hookNotes[k]] : ''}</option>`;
+  }).join('');
+  sel.value = keep && HOOK[keep] && hookOpen(HOOK[keep]) ? keep : '';
+}
+let portSel = [];
+function portOptions() { const lead = $('sel-platform').value; return PLATFORMS.filter(p => platformOpen(p) && p.n !== lead); }
+function portCost(p, g, b) { return p.fee + Math.round(devCost(g, b) * 0.4 / 100) * 100; }
+function renderPorts() {
+  const box = $('port-chips'); if (!box) return;
+  const opts = portOptions(), g = $('sel-genre').value, b = curBudget();
+  portSel = portSel.filter(n => opts.some(p => p.n === n));
+  box.innerHTML = opts.length ? opts.map(p => `<button class="${portSel.includes(p.n) ? 'on' : ''}" onclick="togglePort('${p.n}')">${portSel.includes(p.n) ? '✓' : '+'} ${esc(p.n)}<span class="muted"> ${money(portCost(p, g, b))}</span></button>`).join('')
+    : '<span class="mini muted">License more platforms in Market to release on several at once.</span>';
+}
+function togglePort(n) { const i = portSel.indexOf(n); if (i >= 0) portSel.splice(i, 1); else portSel.push(n); playSound('click'); toast(i >= 0 ? `Dropped the ${n} version.` : `Added a ${n} version: more players, +15% development time.`); updatePreview(); }
+function projectCost(g, b, lead, ports, hook) {
+  const h = HOOK[hook];
+  return (lead ? lead.fee : 0) + Math.round(devCost(g, b) * (h ? h.cost : 1) / 100) * 100 + ports.reduce((a, p) => a + portCost(p, g, b), 0);
+}
+function platsOf(d) {
+  const list = (d.plats && d.plats.length ? d.plats : [d.platform]).map(n => P[n]).filter(Boolean);
+  return list.length ? list : [P['Smartphone']];
+}
+const PORT_W = [1, 0.5, 0.35, 0.25, 0.2, 0.15, 0.15, 0.15, 0.15, 0.15];
+function platShares(plats) {
+  const mk = plats.map(p => Math.max(0.2, marketNow(p)));
+  const order = mk.map((x, i) => i).sort((a, b) => mk[b] - mk[a]);
+  const share = new Array(plats.length).fill(0);
+  order.forEach((i, r) => { share[i] = mk[i] * (PORT_W[r] || 0.2); });
+  return share;
+}
 function startDevelopment() {
   if (STATE.activeDev) return;
   let genre = $('sel-genre').value, theme = $('sel-theme').value;
@@ -1303,7 +1564,10 @@ function startDevelopment() {
   const audience = isNaN(+$('sel-aud').value) ? 2 : +$('sel-aud').value;
   const pb = PUB[$('sel-pub').value] || PUBLISHERS[0];
   if (!pubAvailable(pb)) { playSound('error'); return; }
-  const cost = plat.fee + devCost(genre, budget);
+  const hookN = $('sel-hook') ? $('sel-hook').value : '', hk = HOOK[hookN] && hookOpen(HOOK[hookN]) ? HOOK[hookN] : null;
+  const ports = portSel.map(n => P[n]).filter(x => x && platformOpen(x) && x.n !== plat.n);
+  clampPrio();
+  const cost = projectCost(genre, budget, plat, ports, hk ? hk.n : '');
   if (!spend(cost, 'Development')) return;
   const adv = pubAdvance(pb, genre);
   if (adv) {
@@ -1319,21 +1583,24 @@ function startDevelopment() {
   const mult = (1 + 0.03 * lvlOf('g', genre)) * (1 + 0.03 * lvlOf('t', theme)) * BUDGETS[budget].q;
   const pr = STATE.prio.slice(), pe = prioEval(genre, pr);
   const d = normDev({
-    kind: 'game', id: STATE.nextDevId++, title, genre, theme, platform, rank: STATE.rank,
+    kind: 'game', id: STATE.nextDevId++, title, genre, theme, platform, plats: [platform, ...ports.map(x => x.n)], hook: hk ? hk.n : '', rank: STATE.rank,
     phase: 1, phaseName: '', mult, bugs: 0, hits: 0, gainSum: 0, boostUsed: false,
     stats: [0, 0, 0, 0], budget, focus: -1, monet, pub: pb.n, adv, audience, prio: pr, prioMul: pe.statMul,
     hype: STATE.hypeBank + M.hype, sequelOf: seq ? seq.title : '',
     balloon: { x: 160, y: 146, r: 20, hp: 1, maxHp: 1, color: '#4cc9f0' }
   });
   if (hasExec('producer')) d.mods.hpMul *= 0.9;
+  if (hk) { d.mods.hpMul *= hk.hp; d.mods.bugMul *= hk.bug; }
   STATE.hypeBank = 0;
   d.decisions.push(`${BUDGETS[budget].n} budget`, `Priorities ${AREA_AB.map((a, i) => a + pr[i]).join(' ')}`, MONET[monet].n, `${AUDIENCES[audience].n} audience`);
   if (seq) d.decisions.push(`Sequel to ${seq.title}`);
   if (pb.adv) d.decisions.push(`Signed with ${pb.n}`);
-  if (plat.own) d.decisions.push(`On our ${plat.n}`);
+  if (hk) d.decisions.push(`Hook: ${hk.n}`);
+  if (ports.length) d.decisions.push(`Multi-platform: ${d.plats.join(', ')}`);
+  else if (plat.own) d.decisions.push(`${plat.n} exclusive`);
   STATE.activeDev = d;
   setupPhase(d);
-  $('inp-title').value = ''; $('sel-seq').value = '';
+  $('inp-title').value = ''; $('sel-seq').value = ''; portSel = [];
   playSound('click');
   news(`Production started: ${title}`, '#66fcf1');
   renderDevMode();
@@ -1347,6 +1614,7 @@ function pickLead(id) {
   closeModal();
 }
 function hookModal(d) {
+  return; // hooks are now chosen in the Concept panel
   if (!d || d.hook) return;
   const opts = HOOKS.map(h => h.n).sort(() => Math.random() - 0.5).slice(0, 3);
   d.hookChoices = opts;
@@ -1370,7 +1638,7 @@ function setPace(i) {
   if (d.pace !== i) { d.pace = i; if (i === 2 && !d.decisions.includes('Crunched')) d.decisions.push('Crunched'); news(`Work pace: ${PACE[i].n}`, i === 2 ? '#ef476f' : '#66fcf1'); }
   playSound('click'); renderDevControls();
 }
-function mktCost(mk) { return Math.round(mk.cost * rankK() * (hasTech('mkt2') ? 0.5 : 1) * (hasExec('cmo') ? 0.75 : 1) / 100) * 100; }
+function mktCost(mk) { return Math.round(mk.cost * rankK() * (hasTech('mkt2') ? 0.5 : 1) * (hasExec('cmo') ? 0.75 : 1) * (1 - 0.1 * roomLv('marketing')) / 100) * 100; }
 function buyMarketing(i) {
   const d = STATE.activeDev, mk = MARKETING[i];
   if (!d || d.kind !== 'game' || !mk || d.mkt[i]) return;
@@ -1383,19 +1651,19 @@ function buyMarketing(i) {
 }
 function onSequelPick() {
   const h = STATE.history.find(x => x.title === $('sel-seq').value);
-  if (h) { $('sel-genre').value = h.genre; $('sel-theme').value = h.theme; }
+  if (h) { $('sel-genre').value = h.genre; $('sel-theme').value = h.theme; refreshHookOptions(); if (h.hook && HOOK[h.hook] && hookOpen(HOOK[h.hook])) $('sel-hook').value = h.hook; }
   updatePreview();
   if (h) $('inp-title').placeholder = sequelTitle(h); else refreshTitleHint();
 }
 function cardCost(c) { return Math.round(c.cost * rankK() / 100) * 100; }
 function designModal(d) {
-  const idx = CARDS.map((c, i) => i).sort(() => Math.random() - 0.5).slice(0, 3);
+  const idx = CARDS.map((c, i) => i).sort(() => Math.random() - 0.5).slice(0, roomLv('meeting') >= 2 ? 4 : 3);
   d.cardChoices = idx;
   const rows = idx.map(i => {
     const c = CARDS[i], cost = cardCost(c);
     return `<button class="opt" ${cost > STATE.gold ? 'disabled' : ''} onclick="pickCard(${i})"><b>${c.n}</b> · ${cost ? `<span class="gold">${money(cost)}</span>` : '<span class="good">free</span>'}<br><span class="muted">${c.d}</span></button>`;
   }).join('');
-  showModal(`<h3>Design Meeting</h3><div class="note">Alpha is starting. The team pitches three ideas for ${esc(d.title)}. Pick one, or stick to the plan.</div>${rows}`, [{ label: 'Stick to the plan' }]);
+  showModal(`<h3>Design Meeting</h3><div class="note">Alpha is starting. The team pitches ${idx.length === 4 ? 'four' : 'three'} ideas for ${esc(d.title)}. Pick one, or stick to the plan.</div>${rows}`, [{ label: 'Stick to the plan' }]);
 }
 function pickCard(i) {
   const d = STATE.activeDev, c = CARDS[i];
@@ -1437,11 +1705,23 @@ function pickPlaytest(k) {
   d.ptWeak = undefined;
   closeModal();
 }
+function execScore(q) { return 8 * (1 - Math.exp(-0.55 * q)) - 0.4; }
+function forecastScore(d) {
+  const q = d.hits ? (d.gainSum / d.hits) / (targetSkill(d.rank) / 12) : 0.5;
+  const combo = compat(d.genre, d.theme), hc = d.hook ? hookCompat(d.hook, d.genre) : -1, pe = prioEval(d.genre, d.prio);
+  const aud = AUDIENCES[d.audience] || AUDIENCES[2], mo = MONET[d.monet] || MONET[1];
+  const legend = d.hook ? LEGENDS.some(L => L.g === d.genre && L.t === d.theme && L.h === d.hook) : false;
+  const raw = execScore(q) + COMBO_REVIEW[combo] + (hc >= 0 ? HOOK_REVIEW[hc] : 0) + pe.adj + d.reviewBonus + mo.rev + aud.rev +
+    (aud.good.includes(d.genre) ? 0.3 : aud.bad.includes(d.genre) ? -0.4 : 0) + 0.1 * roomLv('playtest') + (legend ? 0.8 : 0) - Math.min(1.2, (STATE.rank - 1) * 0.08);
+  const capped = raw <= 7 ? raw : 7 + 3 * (1 - Math.exp(-(raw - 7) / 2.5));
+  return clamp(Math.round(capped * 4 - 0.4), 4, 40);
+}
 function releaseModal(d) {
   const q = d.hits ? (d.gainSum / d.hits) / (targetSkill(d.rank) / 12) : 0.5;
   const est = clamp(Math.round((q * 3 - 0.5) * 2) / 2, 1, 5);
   const cost = Math.round(2000 * rankK() / 100) * 100;
-  showModal(`<h3>Ready to Ship?</h3><div class="note">${esc(d.title)} is through debugging. The team's gut feel on build quality: <b class="gold">${'★'.repeat(Math.floor(est))}${est % 1 ? '½' : ''}</b> (before combo, hook, platform and critics). Hype: <b>${Math.round(d.hype)}</b>.<br><br>A polish sprint adds a short extra phase where every idea counts 25% more, and critics notice the care. A launch discount trades launch revenue for more downloads and fans.</div>`,
+  const ptl = roomLv('playtest'), fc = ptl ? forecastScore(d) : 0, spread = [0, 6, 3, 1][ptl];
+  showModal(`<h3>Ready to Ship?</h3><div class="note">${esc(d.title)} is through debugging. The team's gut feel on build quality: <b class="gold">${'★'.repeat(Math.floor(est))}${est % 1 ? '½' : ''}</b> (before combo, hook, platform and critics). Hype: <b>${Math.round(d.hype)}</b>.${ptl ? `<br>🧪 Playtest Lab forecast: <b class="gold">${Math.max(4, fc - spread)}–${Math.min(40, fc + spread)}</b> / 40.` : ''}<br><br>A polish sprint adds a short extra phase where every idea counts 25% more, and critics notice the care. A launch discount trades launch revenue for more downloads and fans.</div>`,
     [{ label: 'Release now 🚀', cls: 'btn-accent', action: () => { d.awaiting = false; completeProject(); } },
      { label: 'Launch at a discount (+25% downloads, -40% launch revenue)', action: () => { d.awaiting = false; d.discount = true; d.decisions.push('Launch discount'); completeProject(); } },
      { label: `Polish sprint (${money(cost)})`, disabled: STATE.gold < cost || d.polished, action: () => {
@@ -1587,6 +1867,7 @@ function doHit(m) {
       if (tr.includes('Bug Magnet')) bc *= 1.5;
       if (M.hunter) bc *= 0.8;
       if (hasTech('qa1')) bc *= 0.75;
+      bc *= [1, 0.85, 0.75, 0.65][roomLv('qa')];
       if (Math.random() < bc) d.bugs++;
     }
     label = '+' + Math.max(1, Math.round(gain));
@@ -1601,7 +1882,7 @@ function doHit(m) {
   if (tr.includes('Workaholic')) drain *= 0.75;
   if (pk.includes('iron')) drain *= 0.7;
   m.stam -= drain;
-  if (m.stam <= 0) { m.stam = 0; m.rest = 90; }
+  if (m.stam <= 0) { m.stam = 0; m.rest = 117; }
   gainExp(m, 1);
 }
 function levelUp(m) {
@@ -1650,7 +1931,9 @@ function completeProject() {
   const d = normDev(STATE.activeDev);
   STATE.activeDev = null; projectiles = [];
   const M = computeMods();
-  const plat = P[d.platform], pb = PUB[d.pub] || PUBLISHERS[0], mo = MONET[d.monet] || MONET[1], w = G[d.genre].w;
+  const plats = platsOf(d), plat = plats[0], pb = PUB[d.pub] || PUBLISHERS[0], mo = MONET[d.monet] || MONET[1], w = G[d.genre].w;
+  const share = platShares(plats), shTot = share.reduce((a, b) => a + b, 0) || 1;
+  const arpuW = plats.reduce((a, p, i) => a + p.arpu * share[i] / shTot, 0);
   const aud = AUDIENCES[d.audience] || AUDIENCES[2], hook = HOOK[d.hook];
   const q = d.hits ? (d.gainSum / d.hits) / (targetSkill(d.rank) / 12) : 0.5;
   const combo = compat(d.genre, d.theme);
@@ -1658,7 +1941,7 @@ function completeProject() {
   const newCombo = !(key in STATE.combos);
   STATE.combos[key] = combo;
   const trend = STATE.trend && (STATE.trend.n === d.genre || STATE.trend.n === d.theme);
-  const fit = plat.fav.includes(d.genre);
+  const fitLead = plat.fav.includes(d.genre), fitPort = !fitLead && plats.some(p => p.fav.includes(d.genre)), fit = fitLead || fitPort;
   const repeats = d.sequelOf ? 0 : STATE.history.slice(0, 3).filter(h => h.genre === d.genre && h.theme === d.theme).length;
   const audAdj = aud.good.includes(d.genre) ? 0.3 : aud.bad.includes(d.genre) ? -0.4 : 0;
   const lootKids = d.audience === 0 && d.monet === 3 ? -1.0 : 0;
@@ -1680,16 +1963,16 @@ function completeProject() {
   const grades = SECTIONS.map((sc, k) => {
     const m = d.assign ? findStaff(d.assign[k]) : null;
     const sk = m ? staffSkill(m, k, d.genre) * (postsOf(d, m.id).length > 1 ? 0.9 : 1) : avgSkill(k) * (d.assign ? 0.75 : 0.95);
-    const r = sk / tgt;
+    const r = sk / tgt * (k === 1 ? 1 + 0.04 * roomLv('art') : k === 3 ? 1 + 0.04 * roomLv('sound') : 1);
     return { k, m, r, g: gradeOf(r) };
   });
   const secAdj = grades.reduce((a, x) => a + clamp((x.r - 1) * 1.2, -0.6, 0.5) * w[x.k], 0) / wsum;
   const dir = findStaff(d.lead);
   const dirAdj = dir ? (dir.role === 'Planner' ? 0.2 : 0.05) + (dir.senior ? 0.15 : 0) + (dir.perks.includes('legend') ? 0.1 : 0) : -0.2;
-  const base = 8.5 * (1 - Math.exp(-0.9 * q)) - 1.2 + COMBO_REVIEW[combo] + (trend ? 0.5 : 0) + (fit ? 0.4 : 0) + mo.rev + aud.rev + audAdj + lootKids +
-    hookAdj + seqAdj + d.reviewBonus + pe.adj + secAdj + dirAdj - repeats * 0.8;
+  const base = execScore(q) + COMBO_REVIEW[combo] + (trend ? 0.5 : 0) + (fitLead ? 0.3 : fitPort ? 0.15 : 0) + mo.rev + aud.rev + audAdj + lootKids +
+    hookAdj + seqAdj + d.reviewBonus + pe.adj + secAdj + dirAdj - repeats * 0.8 + 0.1 * roomLv('playtest') + (MOCAP_G.includes(d.genre) ? 0.1 * roomLv('mocap') : 0);
   const expect = Math.min(1.2, (STATE.rank - 1) * 0.08);
-  const rawQ = base + (legend ? 1.2 : 0) - expect;
+  const rawQ = base + (legend ? 0.8 : 0) - expect;
   const capped = rawQ <= 7 ? rawQ : 7 + 3 * (1 - Math.exp(-(rawQ - 7) / 2.5));
   const scores = REVIEWERS.map((r, i) => clamp(Math.round(capped + REVIEW_BIAS[i] + rnd(-1, 1)), 1, 10));
   const total = scores.reduce((a, b) => a + b, 0);
@@ -1698,18 +1981,18 @@ function completeProject() {
   let hype = d.hype;
   STATE.team.forEach(m => { if (!d.contrib[m.id]) return; if (m.traits.includes('Rockstar')) hype += 5; if (m.perks.includes('legend')) hype += 10; });
   if (orig) hype += (15 + orig.total / 2) / (seqN - 1) * (tooSoon ? 0.5 : 1);
-  const hypeMul = 1 + Math.min(hype, 100) / 125;
-  const deal = STATE.platDeal === d.platform;
+  const hypeMul = 1 + Math.min(hype, 100) / 150;
+  const dealName = plats.some(p => p.n === STATE.platDeal) ? STATE.platDeal : '', deal = !!dealName;
   if (deal) STATE.platDeal = null;
-  const mkt = Math.max(0.2, marketNow(plat));
-  const dl = Math.round((400 + 25 * Math.pow(STATE.fans, 0.6)) * Math.pow(total / 20, 2) * mkt * COMBO_DL[combo] *
+  const mkt = shTot;
+  const dl = Math.round((400 + 25 * Math.pow(STATE.fans, 0.6)) * Math.pow(total / 20, 1.7) * mkt * COMBO_DL[combo] *
     (trend ? 1.3 : 1) * (fit ? 1.2 : 1) * pb.boost * mo.dl * aud.dl * hypeMul * (orig ? 1 + 0.15 / (seqN - 1) : 1) * (deal ? 1.4 : 1) *
-    (d.discount ? 1.25 : 1) * (legend ? 1.6 : 1) * rnd(0.85, 1.15));
-  const gross = Math.round(dl * plat.arpu * 1.5 * mo.launch * (d.discount ? 0.6 : 1));
+    (d.discount ? 1.25 : 1) * (legend ? 1.3 : 1) * rnd(0.85, 1.15));
+  const gross = Math.round(dl * arpuW * 1.5 * mo.launch * (d.discount ? 0.6 : 1));
   const pubTake = Math.round(gross * pb.cut);
   const invTake = investorCut(gross - pubTake);
   const rev = gross - pubTake - invTake;
-  const fansGain = Math.round(dl * (hof ? 0.08 : 0.04) * mo.fans * aud.fans * M.fans * (d.discount ? 1.2 : 1) * (legend ? 1.5 : 1));
+  const fansGain = Math.round(dl * (hof ? 0.07 : 0.04) * mo.fans * aud.fans * M.fans * (d.discount ? 1.2 : 1) * (legend ? 1.25 : 1) * 3e6 / (3e6 + STATE.fans));
   let rpGain = 1 + (newCombo ? 3 : 0) + (newHook ? 2 : 0) + (firstGenre ? 2 : 0) + (newLegend ? 5 : 0) + (hof ? 1 : 0);
   earn(rev, 'Game sales');
   STATE.fans += fansGain; STATE.totalDownloads += dl;
@@ -1720,9 +2003,12 @@ function completeProject() {
   if (hof) earn(10000, 'Awards');
   STATE.releasedCount++;
   STATE.bestScore = Math.max(STATE.bestScore, total);
-  if (!STATE.platformsUsed.includes(d.platform)) STATE.platformsUsed.push(d.platform);
-  if (plat.own && !plat.store) { plat.exBoost += total / 40 * 0.6; plat.games = (plat.games || 0) + 1; }
-  if (plat.store) { plat.users += Math.round(dl * 0.25); plat.catalog += 1; plat.games = (plat.games || 0) + 1; }
+  const solo = plats.length === 1;
+  plats.forEach((pl, i) => {
+    if (!STATE.platformsUsed.includes(pl.n)) STATE.platformsUsed.push(pl.n);
+    if (pl.own && !pl.store) { pl.exBoost += total / 40 * 0.6 * (solo ? 1 : 0.4); pl.games = (pl.games || 0) + 1; }
+    if (pl.store) { pl.users += Math.round(dl * share[i] / shTot * 0.25); pl.catalog += 1; pl.games = (pl.games || 0) + 1; }
+  });
 
   // publisher relationship
   let pubLine = '';
@@ -1763,18 +2049,18 @@ function completeProject() {
 
   // genre insights
   const ins = STATE.insights[d.genre] = STATE.insights[d.genre] || {};
-  const worst = pe.diff.map(Math.abs).indexOf(Math.max(...pe.diff.map(Math.abs)));
+  const worst = pe.worst;
   const learned = [];
-  if (!ins[worst]) { ins[worst] = pe.prof[worst]; learned.push(worst); }
+  if (worst >= 0 && !ins[worst]) { ins[worst] = pe.prof[worst]; learned.push(worst); }
   const unknown = AREAS.map((a, i) => i).filter(i => !ins[i]);
   if (unknown.length) { const u = pick(unknown); ins[u] = pe.prof[u]; learned.push(u); }
   rpGain += learned.length;
   STATE.rp += rpGain;
   let prioLine = '';
-  if (Math.abs(pe.diff[worst]) > 0.06) prioLine = pe.diff[worst] > 0 ? `Critics felt too much went into <b>${AREAS[worst]}</b> for ${an(esc(d.genre))}.` : `Critics wanted more <b>${AREAS[worst]}</b> from ${an(esc(d.genre))}.`;
-  else prioLine = `Critics loved how well the priorities suited ${an(esc(d.genre))}.`;
+  if (worst >= 0) prioLine = pe.diff[worst] > 0 ? `Critics felt too much went into <b>${AREAS[worst]}</b> for ${an(esc(d.genre))}.` : `Critics wanted more <b>${AREAS[worst]}</b> from ${an(esc(d.genre))}${pe.short > 1 ? ` (${pe.short} points short overall)` : ''}.`;
+  else prioLine = pe.extra ? `Critics loved how well the design suited ${an(esc(d.genre))}, with extra polish on top.` : `Critics loved how well the design suited ${an(esc(d.genre))}.`;
 
-  const entry = { title: d.title, genre: d.genre, theme: d.theme, platform: d.platform, total, dl, y: STATE.cal.y,
+  const entry = { title: d.title, genre: d.genre, theme: d.theme, platform: plat.n, plats: plats.map(p => p.n), total, dl, y: STATE.cal.y,
     t: STATE.cal.y * 12 + STATE.cal.m, pub: pb.n, hook: d.hook, audience: aud.n, sequelOf: d.sequelOf, seqN };
   STATE.history.unshift(entry);
   if (STATE.history.length > 40) STATE.history.length = 40;
@@ -1784,7 +2070,7 @@ function completeProject() {
   const statSum = d.stats.reduce((a, b) => a + b, 0) || 1;
   const retShare = d.stats[2] / (statSum / 4);
   const ret = clamp(0.84 + 0.05 * (retShare - 1) + 0.1 * (total / 40) + mo.ret, 0.78, 0.975);
-  const game = { id: d.id, title: d.title, genre: d.genre, platform: d.platform, users: dl, peak: dl, arpu: plat.arpu, ret, score: total, weeks: 0, event: 0,
+  const game = { id: d.id, title: d.title, genre: d.genre, platform: plat.n, plats: plats.map(p => p.n), users: dl, peak: dl, arpu: +arpuW.toFixed(2), ret, score: total, weeks: 0, event: 0,
     revTotal: rev, updates: 0, cut: pb.cut, liveMul: mo.live, monet: d.monet, saleWeeks: 0, saleMul: 1 };
   let liveNote = '';
   if (STATE.live.length < liveSlots()) { STATE.live.push(game); liveNote = 'Live service launched.'; }
@@ -1810,9 +2096,13 @@ function completeProject() {
   if (lootKids) notes.push('<span class="bad">Parents were furious about loot boxes in a kids’ game.</span>');
   if (mo.rev < 0 && !lootKids) notes.push(`<span class="bad">Critics marked it down for its ${esc(mo.n.toLowerCase())} model.</span>`);
   if (orig) notes.push((total >= orig.total ? `Critics say it surpasses ${esc(orig.title)}.` : `Critics found it a step down from ${esc(orig.title)}.`) + (seqN >= 3 ? ' <span class="bad">Franchise fatigue is setting in.</span>' : '') + (tooSoon ? ' <span class="bad">It came out too soon after the last one.</span>' : ''));
-  if (deal) notes.push(`<span class="good">${esc(d.platform)} featured it on their storefront.</span>`);
-  if (plat.own && !plat.store) notes.push(`<span class="good">Sales of the ${esc(plat.n)} got a boost.</span>`);
-  if (plat.store) notes.push(`<span class="good">New players signed up to ${esc(plat.n)} for it.</span>`);
+  if (deal) notes.push(`<span class="good">${esc(dealName)} featured it on their storefront.</span>`);
+  plats.forEach(pl => {
+    if (pl.own && !pl.store) notes.push(`<span class="good">Sales of the ${esc(pl.n)} got a ${solo ? 'big boost from the exclusive' : 'boost'}.</span>`);
+    if (pl.store) notes.push(`<span class="good">New players signed up to ${esc(pl.n)} for it.</span>`);
+  });
+  if (!solo) notes.push(`Released on ${plats.length} platforms: ${plats.map(pl => esc(pl.n)).join(', ')}.`);
+  if (fitPort) notes.push(`<span class="muted">${esc(d.genre)} is a favourite on one of the ports, though not on the lead platform.</span>`);
   if (!dir) notes.push('<span class="bad">Nobody directed it. The vision felt muddled.</span>');
   learned.forEach(i => notes.push(`📓 Learned: ${esc(d.genre)} needs <b>${LV_NAME[pe.prof[i]]}</b> ${AREAS[i]}`));
   if (total >= 28) notes.push('<span class="gold">Merchandise licensing is now available in Biz.</span>');
@@ -1823,7 +2113,7 @@ function completeProject() {
   const gradeLine = grades.map(x => `${SECTIONS[x.k].n} <b style="color:${GRADE_COLOR[x.g]}">${x.g}</b>`).join(' · ');
   const html = `
     <h3>${esc(d.title)}</h3>
-    <div class="muted" style="text-align:center;">${esc(d.genre)} × ${esc(d.theme)} · ${esc(d.platform)}</div>
+    <div class="muted" style="text-align:center;">${esc(d.genre)} × ${esc(d.theme)}${d.hook ? ' + ' + esc(d.hook) : ''} · ${plats.map(pl => esc(pl.n)).join(' + ')}</div>
     <div style="text-align:center;">Combo: ${legend ? '<b class="gold">🌟 Legendary!</b> · ' : ''}<b style="color:${COMBO_COLOR[combo]}">${COMBO_LABEL[combo]}</b>${newCombo ? ' <span class="gold">(new!)</span>' : ''}${trend ? ' · <span class="good">Trending!</span>' : ''}${fit ? ' · <span class="good">Platform favourite</span>' : ''}</div>
     ${repeats ? `<div class="note bad">Critics feel it's a rerun of your recent work (-${(repeats * 0.8).toFixed(1)} per review). Mix up your combos!</div>` : ''}
     ${revRows}
@@ -1849,7 +2139,7 @@ function advanceWeek() {
     weekly -= investorCut(weekly);
     earn(weekly, 'Live ops'); g.revTotal += weekly;
     const p = P[g.platform];
-    const ret = g.ret + (STATE.facilities.servers ? 0.012 : 0) + (hasTech('ana') ? 0.01 : 0) + (hasExec('cm') ? 0.008 : 0) - (p && !platLive(p) ? 0.08 : 0);
+    const ret = g.ret + [0, 0.012, 0.018, 0.024][roomLv('servers')] + (hasTech('ana') ? 0.01 : 0) + (hasExec('cm') ? 0.008 : 0) - (p && !platLive(p) ? 0.08 : 0);
     const growth = 0.07 * (g.score / 40) * Math.max(0, 1 - g.weeks / 16) + (g.event > 0 ? 0.03 : 0);
     g.users = Math.round(g.users * Math.min(1.03, ret + growth));
     if (g.monet === 3 && Math.random() < 0.03) { g.users = Math.round(g.users * 0.85); news(`Players revolt over loot boxes in ${g.title}!`, '#ef476f'); }
@@ -2055,7 +2345,7 @@ function evRivalFeud() {
 const STUDIO_EVENTS = [
   { w: 3, c: () => STATE.live.length, f: () => { const g = pick(STATE.live); g.users = Math.round(g.users * 1.25); news(`A big streamer played ${g.title}! Players +25%`, '#06d6a0'); } },
   { w: 3, c: () => STATE.team.length, f: () => { const m = pick(STATE.team); STATE.rp += 2; news(`${m.name} had a eureka moment! +2 RP`, '#66fcf1'); } },
-  { w: 2, c: () => STATE.live.length && !STATE.facilities.servers, f: () => { const g = pick(STATE.live); g.users = Math.round(g.users * 0.9); news(`Server outage hit ${g.title}. Players -10%`, '#ef476f'); } },
+  { w: 2, c: () => STATE.live.length && !roomLv('servers'), f: () => { const g = pick(STATE.live); g.users = Math.round(g.users * 0.9); news(`Server outage hit ${g.title}. Players -10%`, '#ef476f'); } },
   { w: 2, f: () => { const n = 500 * STATE.rank; earn(n); news(`A sponsor sent a gift: +${money(n)}`, '#ffd166'); } },
   { w: 2, c: () => STATE.team.length, f: () => { const m = pick(STATE.team); STATE.team.forEach(x => { x.morale = Math.min(100, x.morale + 3); }); m.morale = Math.min(100, m.morale + 12); news(`It's ${m.name}'s birthday! Cake for everyone.`, '#ffd166'); } },
   { w: 2, f: () => { const f = Math.round(STATE.fans * 0.03) + 30; STATE.fans += f; news(`A meme about your studio went viral: +${fmt(f)} fans`, '#06d6a0'); } },
@@ -2071,7 +2361,7 @@ const STUDIO_EVENTS = [
   { w: 2, c: () => STATE.live.length, f: evFanArt },
   { w: 2, c: () => STATE.live.some(g => ESPORT_GENRES.includes(g.genre)), f: evEsports },
   { w: 2, c: () => !STATE.platDeal, f: evPlatformDeal },
-  { w: 1, c: () => STATE.live.length && !STATE.facilities.servers, f: evSecurity },
+  { w: 1, c: () => STATE.live.length && !roomLv('servers'), f: evSecurity },
   { w: 2, f: evParty },
   { w: 1, f: evCharity },
   { w: 1, c: () => STATE.history.length >= 3, f: evRivalFeud }
@@ -2102,6 +2392,7 @@ function monthEnd() {
     if (STATE.cal.m === 1 && p.end === STATE.cal.y) news(`${p.n} has been discontinued.`, '#9aa5b1');
   });
   rivalsTick();
+  if (roomLv('rnd') && STATE.cal.m % 3 === 1) { STATE.rp += roomLv('rnd'); news(`R&D Lab delivered +${roomLv('rnd')} RP this quarter`, '#7cc8ff'); }
   checkMilestones();
   const nextM = STATE.cal.m % 12 + 1;
   if (EVENT_MONTHS[nextM]) news(`Coming next month: ${EVENT_MONTHS[nextM]}`, '#ffd166');
@@ -2177,47 +2468,81 @@ function refreshTitleHint() {
 function sequelTitle(h) { const mm = h.title.match(/^(.*?)(?:\s(\d+))?$/); return `${mm[1]} ${mm[2] ? +mm[2] + 1 : 2}`.slice(0, 24); }
 
 /* ---------- Development priorities ---------- */
+function genreReq(g) { return ((G[g] && G[g].prof) || 'MMMMMM').split('').map(c => REQ[c]); }
+function designPoints(g, b) { return genreReq(g).reduce((a, x) => a + x, 0) + BUDGET_PTS[b === undefined ? 1 : b] + roomLv('meeting'); }
+function curBudget() { const b = +$('sel-budget').value; return isNaN(b) ? 1 : b; }
+function prioCap() { return designPoints($('sel-genre').value, curBudget()); }
+function clampPrio() {
+  const cap = prioCap(); let guard = 0;
+  while (prioUsed() > cap && guard++ < 60) { const i = STATE.prio.indexOf(Math.max(...STATE.prio)); STATE.prio[i]--; }
+}
 function prioEval(genre, pr) {
   const prof = (G[genre] && G[genre].prof) || 'MMMMMM';
-  const v = prof.split('').map(c => LV[c]);
-  const p = pr && pr.some(x => x > 0) ? pr : [1, 1, 1, 1, 1, 1];
-  const dot = v.reduce((a, x, i) => a + x * p[i], 0);
-  const fit = dot / (Math.hypot(...v) * Math.hypot(...p));
-  const adj = clamp((fit - 0.95) * 14, -1.5, 0.75);
+  const req = prof.split('').map(c => REQ[c]);
+  const p = pr && pr.length === 6 ? pr : [2, 2, 2, 2, 2, 2];
+  const W_SHORT = { H: 0.26, M: 0.18, L: 0.12 }, W_EXTRA = { H: 0.12, M: 0.06, L: 0 };
+  let adj = 0, short = 0, extra = 0, wasted = 0;
+  const diff = req.map((r, i) => p[i] - r);
+  diff.forEach((d, i) => {
+    const c = prof[i];
+    if (d < 0) { adj += d * W_SHORT[c]; short -= d; }
+    else if (d > 0) { adj += d * W_EXTRA[c]; extra += d; if (c === 'L') wasted += d; }
+  });
+  if (!short) adj += 0.25;
+  adj = clamp(adj, -1.8, 0.8);
   const e = [0, 1, 2, 3].map(st => p.reduce((a, x, i) => a + x * AREA_STAT[i][st], 0));
   const mean = e.reduce((a, b) => a + b, 0) / 4 || 1;
   const statMul = e.map(x => 0.8 + 0.2 * x / mean);
-  const sv = v.reduce((a, b) => a + b, 0), sp = p.reduce((a, b) => a + b, 0);
-  const diff = v.map((x, i) => p[i] / sp - x / sv);
-  return { fit, adj, statMul, diff, prof };
+  const weight = diff.map((d, i) => d < 0 ? -d * 2 : prof[i] === 'L' && d > 0 ? d : 0);
+  const worst = weight.indexOf(Math.max(...weight));
+  return { adj, statMul, diff, prof, req, short, extra, wasted, worst: weight[worst] > 0 ? worst : -1 };
 }
 function prioUsed() { return STATE.prio.reduce((a, b) => a + b, 0); }
 function prioAdj(i, dlt) {
   const v = STATE.prio[i] + dlt;
-  if (v < 0 || v > PRIO_MAX) return;
-  if (dlt > 0 && prioUsed() >= PRIO_BUDGET) { playSound('error'); toast('No points left. Lower another priority first.', '#ff6b7d'); return; }
+  if (v < 0) return;
+  if (v > PRIO_MAX) { playSound('error'); toast(`${AREAS[i]} is already at the maximum of ${PRIO_MAX} points.`, '#ff6b7d'); return; }
+  if (dlt > 0 && prioUsed() >= prioCap()) { playSound('error'); toast('No design points left. Lower another area first, or pick a bigger budget.', '#ff6b7d'); return; }
   STATE.prio[i] = v; playSound('click'); renderPrio(); updatePreview();
 }
 function prioRecommend() {
-  const g = $('sel-genre').value, ins = STATE.insights[g] || {};
-  const raw = AREAS.map((a, i) => LV[ins[i]] || 2);
-  const sum = raw.reduce((a, b) => a + b, 0);
-  const pr = raw.map(x => Math.min(PRIO_MAX, Math.round(x * PRIO_BUDGET / sum)));
-  while (pr.reduce((a, b) => a + b, 0) > PRIO_BUDGET) pr[pr.indexOf(Math.max(...pr))]--;
+  const g = $('sel-genre').value, ins = STATE.insights[g] || {}, cap = prioCap();
+  const idx = AREAS.map((a, i) => i);
+  const pr = idx.map(i => ins[i] ? REQ[ins[i]] : 2);
+  let sum = pr.reduce((a, b) => a + b, 0), guard = 0;
+  const trimRank = i => !ins[i] ? 4 : ins[i] === 'L' ? 3 : ins[i] === 'M' ? 2 : 1;
+  while (sum > cap && guard++ < 60) { const i = idx.filter(i => pr[i] > 0).sort((x, y) => trimRank(y) - trimRank(x) || pr[y] - pr[x])[0]; pr[i]--; sum--; }
+  const addRank = i => ins[i] === 'H' ? 4 : !ins[i] ? 3 : ins[i] === 'M' ? 2 : 0;
+  while (sum < cap && guard++ < 60) { const c = idx.filter(i => pr[i] < PRIO_MAX && addRank(i) > 0).sort((x, y) => addRank(y) - addRank(x) || pr[x] - pr[y]); if (!c.length) break; pr[c[0]]++; sum++; }
   const same = pr.join() === STATE.prio.join();
   STATE.prio = pr; playSound('click'); renderPrio(); updatePreview();
-  toast(!Object.keys(ins).length ? 'No insights for this genre yet, so priorities were spread evenly. Release games in it to learn more.'
-    : same ? 'Priorities already match your genre insights.' : 'Priorities set from your genre insights.');
+  toast(!Object.keys(ins).length ? 'No insights for this genre yet, so points were spread evenly. Release games in it to learn its needs.'
+    : same ? 'Design points already match your genre insights.' : 'Design points set from your genre insights.');
 }
-function prioReset() { const same = STATE.prio.every(x => x === 2); STATE.prio = [2, 2, 2, 2, 2, 2]; playSound('click'); renderPrio(); updatePreview(); toast(same ? 'Priorities are already balanced.' : 'Priorities reset to balanced.'); }
+function prioReset() {
+  const cap = prioCap(), base = Math.min(PRIO_MAX, Math.floor(cap / 6)), pr = [0, 1, 2, 3, 4, 5].map(() => base);
+  let left = cap - base * 6;
+  for (let i = 0; i < 6 && left > 0; i++) if (pr[i] < PRIO_MAX) { pr[i]++; left--; }
+  const same = pr.join() === STATE.prio.join();
+  STATE.prio = pr; playSound('click'); renderPrio(); updatePreview();
+  toast(same ? 'Points are already spread evenly.' : 'Design points spread evenly.');
+}
 function renderPrio() {
-  const g = $('sel-genre').value, ins = STATE.insights[g] || {}, left = PRIO_BUDGET - prioUsed();
-  $('prio-box').innerHTML = `<div class="row"><span class="win-t">Priorities</span><span class="mini ${left ? 'gold' : 'muted'}">${left} pts left</span></div>` +
-    AREAS.map((a, i) => `<div class="prio-row"><span>${a}${ins[i] ? ` <span class="chip ${ins[i] === 'H' ? 'chip-gold' : ins[i] === 'L' ? 'chip-bad' : ''}">${ins[i]}</span>` : ''}</span>` +
-      `<button class="btn-sm" onclick="prioAdj(${i},-1)">−</button><span class="pips">${'●'.repeat(STATE.prio[i])}${'○'.repeat(PRIO_MAX - STATE.prio[i])}</span>` +
-      `<button class="btn-sm" onclick="prioAdj(${i},1)">+</button></div>`).join('') +
-    `<div class="mini muted">Each genre wants a different mix. Reviews teach you what ${esc(g || 'each genre')} needs (H/M/L).</div>` +
-    `<div class="grid2"><button class="btn-sm" onclick="prioRecommend()">Use genre insights</button><button class="btn-sm" onclick="prioReset()">Reset</button></div>`;
+  const g = $('sel-genre').value, ins = STATE.insights[g] || {};
+  clampPrio();
+  const cap = prioCap(), left = cap - prioUsed(), b = curBudget(), ml = roomLv('meeting');
+  const reqTot = genreReq(g).reduce((a, x) => a + x, 0);
+  const known = AREAS.filter((a, i) => ins[i]).length;
+  $('prio-box').innerHTML = `<div class="row"><span class="win-t">Design points</span><span class="mini ${left ? 'gold' : 'muted'}">${left} of ${cap} left</span></div>` +
+    `<div class="mini muted">${esc(g)} needs ${reqTot} points${BUDGET_PTS[b] ? ` · ${BUDGETS[b].n} budget ${BUDGET_PTS[b] > 0 ? '+' : ''}${BUDGET_PTS[b]}` : ''}${ml ? ` · Meeting Room +${ml}` : ''}${known < 6 ? ` · ${known}/6 needs known` : ''}</div>` +
+    AREAS.map((a, i) => {
+      const lv = ins[i], need = lv ? REQ[lv] : 0, v = STATE.prio[i];
+      const pips = [0, 1, 2, 3, 4].map(j => `<i class="pip ${j < v ? (need ? (j < need ? 'met' : 'extra') : 'on') : (j < need ? 'need' : '')}"></i>`).join('');
+      return `<div class="prio-row"><span>${a}${lv ? ` <span class="chip ${lv === 'H' ? 'chip-gold' : lv === 'L' ? 'chip-bad' : ''}">${lv} ${need}</span>` : ' <span class="mini muted">?</span>'}</span>` +
+        `<button class="btn-sm" onclick="prioAdj(${i},-1)" aria-label="Less ${a}">−</button><span class="pips">${pips}</span><button class="btn-sm" onclick="prioAdj(${i},1)" aria-label="More ${a}">+</button></div>`;
+    }).join('') +
+    `<div class="mini muted">Each area needs points: High 3, Medium 2, Low 1. Short areas cost review points; spare points in High or Medium areas add polish; spare points in Low areas are wasted. Reviews reveal what ${esc(g || 'each genre')} needs.</div>` +
+    `<div class="grid2"><button class="btn-sm" onclick="prioRecommend()">Use genre insights</button><button class="btn-sm" onclick="prioReset()">Spread evenly</button></div>`;
 }
 function insightsHtml() {
   const head = `<div class="row mini muted"><span>Genre</span><span style="font-family:monospace;white-space:pre">${AREA_AB.join(' ')}</span></div>`;
@@ -2273,7 +2598,6 @@ function confirmAssign() {
   const lead = +$('as-dir').value || 0, m = findStaff(lead);
   d.lead = m ? lead : 0;
   if (m) { d.decisions.push(`Director: ${m.name}`); news(`${m.name} is directing ${d.title}`, '#ffd166'); }
-  hookModal(d);
 }
 function gxText(m) {
   const e = Object.entries(m.gx || {}).sort((a, b) => b[1] - a[1]).slice(0, 3);
@@ -2425,7 +2749,7 @@ function hwLaunch(f) {
 }
 function hwUnitCost(op) {
   const mo = STATE.cal.y * 12 + STATE.cal.m - op.launchM;
-  return Math.round(op.unit * Math.max(0.6, 1 - 0.015 * mo) * (op.shortage > 0 ? 1.15 : 1));
+  return Math.round(op.unit * Math.max(0.6, 1 - 0.015 * mo) * (op.shortage > 0 ? 1.15 : 1) * (1 - 0.04 * roomLv('hwlab')));
 }
 function normHw(op) {
   const defs = { lines: Math.max(1, Math.ceil((op.lastUnits || 800) / HW_LINE_CAP)), stock: 0, library: (op.games || 0) * 2 + 10, royalty: 0.2, partner: 1,
@@ -2447,7 +2771,7 @@ function hardwareWeek() {
   if (pr) {
     if (!pr.stage) pr.stage = pr.ready ? 'done' : 'mfg';
     if (pr.stage !== 'done' && !pr.wait) {
-      pr.weeks++;
+      pr.weeks++; if (Math.random() < 0.1 * roomLv('hwlab')) pr.weeks = Math.min(pr.weeks + 1, pr.total);
       if (pr.stage === 'proto' && pr.weeks >= Math.round(pr.total * 0.4)) { pr.wait = true; hwProtoModal(); }
       else if (pr.stage === 'devkit' && pr.weeks >= Math.round(pr.total * 0.7)) { pr.wait = true; hwKitModal(); }
       else if (pr.stage === 'mfg' && pr.weeks >= pr.total) { pr.stage = 'done'; hwLaunchModal(); }
@@ -3165,7 +3489,7 @@ function retireLive(id) {
    STAFF ACTIONS
    ========================================================= */
 function findStaff(id) { return STATE.team.find(m => m.id === id); }
-function trainCost(m, k) { return Math.round((k === 4 ? 2500 : 1500) * (1 + 0.15 * (m.lv - 1)) / 50) * 50; }
+function trainCost(m, k) { return Math.round((k === 4 ? 2500 : 1500) * (1 + 0.15 * (m.lv - 1)) * (1 - 0.15 * roomLv('training')) / 50) * 50; }
 function openTraining(id) {
   const m = findStaff(id); if (!m) return;
   const plus = 5 + (hasTech('academy') ? 2 : 0);
@@ -3296,12 +3620,12 @@ function upgradeFloor() {
   if (!spend(next.cost, 'Office')) return;
   STATE.floor++;
   STATE.team.forEach(m => { m.morale = Math.min(100, m.morale + 15); });
-  playSound('fanfare'); news(`Moved up to Floor ${STATE.floor}! The team loves the new space.`, '#ffd166');
+  playSound('fanfare'); news(`Moved to the ${FLOORS[STATE.floor - 1].n}! The team loves the new space.`, '#ffd166');
   renderStudio(); checkMilestones(); save();
 }
 function buyDecor(id) {
   const dc = DECOR[id]; if (!dc || STATE.decor.includes(id)) return;
-  if (STATE.decor.length >= DECOR_SLOTS[STATE.floor - 1]) { news('No room! Move to a bigger floor.', '#ef476f'); playSound('error'); return; }
+  if (STATE.decor.length >= DECOR_SLOTS[STATE.floor - 1]) { toast('No decor spots left. Move to a bigger office.', '#ff6b7d'); playSound('error'); return; }
   if (!spend(dc.cost, 'Office')) return;
   STATE.decor.push(id); computeMods();
   playSound('fanfare'); news(`${dc.n} added to the office!`, '#06d6a0');
@@ -3315,10 +3639,21 @@ function unlockTech(id) {
   playSound('level'); news(`Researched: ${t.n}`, '#ffd166');
   renderLab(); updateHeader(); save();
 }
-function buyFacility(k) {
-  const f = FACILITIES[k]; if (!f || STATE.facilities[k]) return;
-  if (!spend(f.cost, 'Office')) return;
-  STATE.facilities[k] = true; computeMods(); playSound('fanfare'); news(`${f.n} installed!`, '#06d6a0'); renderStudio(); save();
+function buildRoom(id) {
+  const R = ROOMS[id]; if (!R) return;
+  const lv = roomLv(id);
+  if (lv >= 3) { toast(`${R.n} is already at its top level.`, '#ff6b7d'); return; }
+  if (!lv && roomsUsed() >= roomSlots()) { playSound('error'); toast('Every room slot in this office is used. Move to a bigger office or close a room.', '#ff6b7d'); return; }
+  if (STATE.rank < roomRank(id, lv + 1)) { playSound('error'); toast(`Needs studio Rank ${roomRank(id, lv + 1)}.`, '#ff6b7d'); return; }
+  if (!spend(R.cost[lv], 'Office')) return;
+  STATE.rooms[id] = lv + 1; computeMods();
+  playSound('fanfare'); news(lv ? `${R.n} upgraded to Lv${lv + 1}!` : `${R.n} built!`, '#06d6a0');
+  refreshDevOptions(); updatePreview(); renderStudio(); checkMilestones(); save();
+}
+function closeRoom(id) {
+  const R = ROOMS[id]; if (!R || !roomLv(id)) return;
+  showModal(`<h3>Close the ${R.n}?</h3><div class="note">This frees a room slot and stops its ${money(R.up[roomLv(id) - 1])}/month upkeep. The money spent on it is not refunded.</div>`,
+    [{ label: 'Close it', cls: 'btn-danger', action: () => { delete STATE.rooms[id]; computeMods(); news(`${R.n} closed.`, '#9aa5b1'); renderStudio(); save(); } }, { label: 'Keep it' }]);
 }
 function toggleSound() { STATE.settings.sound = !STATE.settings.sound; renderStudio(); save(); }
 function resetGame() {
@@ -3389,12 +3724,22 @@ function refreshDevOptions() {
   const seqs = STATE.history.filter(h => h.total >= 26 && !seen.has(h.title) && seen.add(h.title));
   $('sel-seq').innerHTML = '<option value="">None (new game)</option>' + seqs.map(h => `<option value="${esc(h.title)}">${esc(h.title)} (${h.total})</option>`).join('');
   $('sel-seq').value = seqs.some(h => h.title === keepSeq) ? keepSeq : '';
+  refreshHookOptions();
 }
 let lastGT = '';
 function updatePreview() {
   const g = $('sel-genre').value, t = $('sel-theme').value, p = $('sel-platform').value;
   renderSegs();
-  if (g + '|' + t !== lastGT) { lastGT = g + '|' + t; refreshTitleHint(); renderPrio(); }
+  if (g + '|' + t !== lastGT) { lastGT = g + '|' + t; refreshTitleHint(); refreshHookOptions(); }
+  renderPrio(); renderPorts();
+  const hk = HOOK[$('sel-hook') ? $('sel-hook').value : ''];
+  if ($('hook-info')) {
+    const hkey = hk ? hk.n + '|' + g : '', hknown = hk && hkey in STATE.hookNotes;
+    $('hook-info').innerHTML = hk ? `${esc(hk.d)} Known for ${hk.perfect.slice(0, 4).map(esc).join(', ')}. ` +
+      (hknown ? `With ${esc(g)}: <b style="color:${HOOK_COLOR[STATE.hookNotes[hkey]]}">${HOOK_LABEL[STATE.hookNotes[hkey]]}</b>. ` : `Untested with ${esc(g)}. `) +
+      (hk.hp > 1 ? `<span class="bad">Scope +${Math.round((hk.hp - 1) * 100)}%, cost +${Math.round((hk.cost - 1) * 100)}%.</span>` : '<span class="good">No extra scope.</span>')
+      : 'A hook defines the game. The right one for the genre lifts reviews, and some hits need a specific hook.';
+  }
   if (!g || !t || !P[p]) { $('dev-preview').innerHTML = 'Pick a platform you hold a licence for (see the Market tab).'; return; }
   const bi = isNaN(+$('sel-budget').value) ? 1 : +$('sel-budget').value;
   const mi = isNaN(+$('sel-monet').value) ? 1 : +$('sel-monet').value;
@@ -3406,17 +3751,22 @@ function updatePreview() {
   const drain = (g === 'Card Game' && p === 'PC') ? 0 : plat.drain * (G[g].drain || 1);
   const drainTxt = drain === 0 ? '<span class="good">None</span>' : drain <= 0.8 ? '<span class="good">Low</span>' : drain <= 1.2 ? 'Normal' : '<span class="bad">High</span>';
   const trend = STATE.trend ? `Trending: <b class="gold">${esc(STATE.trend.n)}</b>` : 'Trending: none yet';
-  const cost = plat.fee + devCost(g, bi), adv = pubAdvance(pb, g);
+  const ports = portSel.map(n => P[n]).filter(Boolean), allP = [plat, ...ports];
+  const cost = projectCost(g, bi, plat, ports, hk ? hk.n : ''), adv = pubAdvance(pb, g);
   const ins = STATE.insights[g] || {}, nIns = Object.keys(ins).length, pe = prioEval(g, STATE.prio);
-  const warn = AREAS.map((a, i) => ins[i] === 'H' && STATE.prio[i] <= 1 ? `<span class="bad">${a} matters for ${esc(g)}</span>` : ins[i] === 'L' && STATE.prio[i] >= 4 ? `<span class="bad">${a} is wasted on ${esc(g)}</span>` : '').filter(Boolean);
-  const fitLbl = pe.adj >= 0.4 ? '<b class="gold">Excellent</b>' : pe.adj >= 0 ? '<b class="good">Good</b>' : pe.adj >= -0.6 ? '<b>Weak</b>' : '<b class="bad">Poor</b>';
+  const warn = AREAS.map((a, i) => ins[i] && STATE.prio[i] < REQ[ins[i]] ? `<span class="bad">${a} needs ${REQ[ins[i]]}</span>` : ins[i] === 'L' && STATE.prio[i] > 1 ? `<span class="bad">${a} points wasted</span>` : '').filter(Boolean);
+  const fitLbl = pe.short ? (pe.short >= 3 ? '<b class="bad">Poor</b>' : '<b>Weak</b>') : pe.extra - pe.wasted >= 2 ? '<b class="gold">Excellent</b>' : '<b class="good">Good</b>';
+  const anyFit = allP.some(x => x.fav.includes(g));
+  const expectN = Math.min(1.2, (STATE.rank - 1) * 0.08);
   const lovers = STATE.team.filter(m => m.favG === g).map(m => esc(m.name));
   const vets = STATE.team.filter(m => (m.gx[g] || 0) > 0).map(m => `${esc(m.name)}×${m.gx[g]}`);
   $('dev-preview').innerHTML =
     `Combo: ${known ? `<b style="color:${COMBO_COLOR[STATE.combos[key]]}">${COMBO_LABEL[STATE.combos[key]]}</b>` : '<span class="muted">??? (untested)</span>'}<br>` +
     `Cost: <b class="gold">${money(cost)}</b>${adv ? ` · Advance <b class="good">+${money(adv)}</b>` : ''} · Stamina: ${drainTxt}<br>` +
-    `Platform fit: ${fit ? '<b class="good">★ favourite genre</b>' : '<span class="muted">neutral</span>'} · Market ${marketNow(plat).toFixed(1)}${plat.own ? ' · <span class="gold">your platform</span>' : ''}<br>` +
-    `Genre insights ${nIns}/6${nIns === 6 ? ` · priority fit ${fitLbl}` : ''}${warn.length ? '<br>' + warn.join(' · ') : ''}<br>` +
+    `Platform fit: ${fit ? '<b class="good">★ favourite genre</b>' : anyFit ? '<span class="good">favourite on a port</span>' : '<span class="muted">neutral</span>'} · Market ${platShares(allP).reduce((a, b) => a + b, 0).toFixed(1)}${allP.length > 1 ? ` across ${allP.length} platforms` : ''}${plat.own && allP.length === 1 ? ' · <span class="gold">console exclusive</span>' : ''}<br>` +
+    (allP.length > 1 ? `<span class="muted">Each extra platform adds 15% to development time, a port fee, and more players (with overlap).</span><br>` : '') +
+    `Genre needs known ${nIns}/6${nIns === 6 ? ` · design fit ${fitLbl}` : ''}${warn.length ? '<br>' + warn.join(' · ') : ''}<br>` +
+    `Critic expectations: ${expectN >= 0.9 ? '<b class="bad">very high</b>' : expectN >= 0.5 ? '<b>high</b>' : expectN > 0.1 ? 'rising' : '<span class="good">low</span>'} for ${an(studioTier())}<br>` +
     (lovers.length || vets.length ? `Team: ${lovers.length ? '♥ ' + lovers.join(', ') : ''}${lovers.length && vets.length ? ' · ' : ''}${vets.length ? 'veterans ' + vets.join(', ') : ''}<br>` : '') +
     `<span class="muted">${BUDGETS[bi].n}: ${BUDGETS[bi].desc}. ${MONET[mi].n}: ${MONET[mi].desc}.</span><br>` +
     (pb.adv ? `${esc(pb.n)}: downloads ×${pb.boost}, takes ${Math.round(pb.cut * 100)}%, expects ${pb.target}+/40<br>` : '') +
@@ -3455,7 +3805,7 @@ function updateDevPanel() {
     $('dev-stats').innerHTML = '';
     return;
   }
-  $('dev-info').innerHTML = `<b>${esc(d.phaseName)}</b> · ${esc(d.genre)} × ${esc(d.theme)} · ${esc(d.platform)}${d.hook ? ' · ' + esc(d.hook) : ''}<br>Bugs found: <span class="${d.bugs > 6 ? 'bad' : ''}">${d.bugs}</span> · Hype ${Math.round(d.hype || 0)}${d.lead && findStaff(d.lead) ? ' · Director ' + esc(findStaff(d.lead).name) : ''}${d.phase === 3 && !d.boostUsed ? ' · <span class="gold">Boost ready!</span>' : ''}`;
+  $('dev-info').innerHTML = `<b>${esc(d.phaseName)}</b> · ${esc(d.genre)} × ${esc(d.theme)} · ${platsOf(d).map(x => esc(x.n)).join(' + ')}${d.hook ? ' · ' + esc(d.hook) : ''}<br>Bugs found: <span class="${d.bugs > 6 ? 'bad' : ''}">${d.bugs}</span> · Hype ${Math.round(d.hype || 0)}${d.lead && findStaff(d.lead) ? ' · Director ' + esc(findStaff(d.lead).name) : ''}${d.phase === 3 && !d.boostUsed ? ' · <span class="gold">Boost ready!</span>' : ''}`;
   const max = Math.max(60, ...d.stats);
   let html = STATS.map((s, i) => {
     const owner = d.assign ? findStaff(d.assign[i]) : null;
@@ -3481,7 +3831,7 @@ function renderLive() {
     const lk = hasTech('liveops') ? 0.7 : 1, evCost = Math.round((2000 + g.users * 0.3) * lk), upCost = Math.round((3000 + g.updates * 1500) * lk), adCost = Math.round(5000 * (1 + 0.2 * (STATE.rank - 1)));
     html += `<div class="card">
       <div class="row"><b>${esc(g.title)}</b><span class="gold">${money(weekly)}/wk</span></div>
-      <div class="muted">${esc(g.platform)} · Score ${g.score}/40 · ${g.weeks} wks live${g.cut ? ` · publisher takes ${Math.round(g.cut * 100)}%` : ''}${g.saleWeeks > 0 ? ' · <span class="gold">On sale</span>' : ''}</div>
+      <div class="muted">${(g.plats && g.plats.length > 1 ? g.plats : [g.platform]).map(esc).join(' + ')} · Score ${g.score}/40 · ${g.weeks} wks live${g.cut ? ` · publisher takes ${Math.round(g.cut * 100)}%` : ''}${g.saleWeeks > 0 ? ' · <span class="gold">On sale</span>' : ''}</div>
       <div class="muted">Players ${fmt(g.users)} (peak ${fmt(g.peak)}) · Retention ${(g.ret * 100).toFixed(1)}%${g.event > 0 ? ` · <span class="good">Event ${g.event}w</span>` : ''}</div>
       <div class="btns">
         <button class="btn-sm" ${g.event > 0 ? 'disabled' : ''} data-why="An event is already running in this game." onclick="liveEvent(${g.id})">${g.event > 0 ? 'Event running' : 'Event ' + money(evCost)}</button>
@@ -3577,7 +3927,7 @@ function renderLab() {
   const lockedT = THEMES.filter(t => !STATE.unlocked.t.includes(t.n));
   const row = (kind, it) => {
     const rankOk = STATE.rank >= it.rank;
-    return `<div class="row card" style="flex-direction:row;"><span>${esc(it.n)}<br><span class="muted">${rankOk ? it.rp + ' RP' : '🔒 Rank ' + it.rank}</span></span>
+    return `<div class="row card" style="flex-direction:row;"><span>${esc(it.n)}${kind === 't' && it.tags ? ` <span class="mini muted">${it.tags.join(' · ')}</span>` : ''}<br><span class="muted">${rankOk ? it.rp + ' RP' : '🔒 Rank ' + it.rank}</span></span>
       <button class="btn-sm btn-accent" ${!rankOk || STATE.rp < it.rp ? 'disabled' : ''} data-why="${!rankOk ? 'Unlocks at studio Rank ' + it.rank + '.' : 'Needs ' + it.rp + ' RP (you have ' + STATE.rp + ').'}" onclick="unlockItem('${kind}','${it.n}')">Unlock</button></div>`;
   };
   const techRows = TECH.map(t => {
@@ -3610,27 +3960,32 @@ function renderStudio() {
   const f = FLOORS[STATE.floor - 1], next = FLOORS[STATE.floor];
   const tierIdx = TIERS.findIndex(([r, n]) => n === studioTier()), nextTier = TIERS[tierIdx + 1];
   const msDone = MILESTONES.filter(m => STATE.milestones[m.id]).length;
-  const slots = DECOR_SLOTS[STATE.floor - 1];
+  const slots = DECOR_SLOTS[STATE.floor - 1], used = roomsUsed(), rslots = roomSlots();
+  const bd = costBreakdown(), office = bd['Rent'] + bd['Upkeep'];
   let html = `<div class="sec">${studioTier()}</div>
     <div class="note">Rank ${STATE.rank} (${Math.floor(STATE.rankExp / rankNeed() * 100)}% to next)${nextTier ? ` · becomes ${nextTier[1]} at Rank ${nextTier[0]}` : ''}<br>
     Milestones ${msDone}/${MILESTONES.length} · Game of the Year ×${STATE.awards.goty || 0} · Excellence ×${STATE.awards.excellence || 0}</div>
-    <div class="note mini">Finances, loans, executives and policies are in the 💼 Biz tab.</div>
-    <div class="sec">Office · Floor ${STATE.floor}</div>
-    <div class="note">${f.desks} desks · ${f.live} live slots · ${slots} decor spots · Rent ${money(f.rent)}/mo</div>`;
+    <div class="sec">Office · ${esc(f.n)}</div>
+    <div class="note">${f.desks} desks · ${f.live} live-game slots · ${rslots} room slots · ${slots} decor spots<br>Rent ${money(f.rent)}/mo · room upkeep ${money(bd['Upkeep'])}/mo · <b>${money(office)}/mo</b> in total</div>`;
   html += next
-    ? `<button ${STATE.rank < next.rank ? 'disabled' : ''} onclick="upgradeFloor()">Move to Floor ${STATE.floor + 1}: ${money(next.cost)} (Rank ${next.rank})<br><span class="muted">${next.desks} desks · ${next.live} live slots · ${DECOR_SLOTS[STATE.floor]} decor spots · rent ${money(next.rent)}</span></button>`
-    : '<div class="muted">Top floor reached!</div>';
+    ? `<button ${STATE.rank < next.rank || STATE.gold < next.cost ? 'disabled' : ''} data-why="${STATE.rank < next.rank ? 'The ' + next.n + ' needs studio Rank ' + next.rank + '.' : ''}" onclick="upgradeFloor()">Move to the ${next.n}: ${money(next.cost)} (Rank ${next.rank})<br><span class="muted">${next.desks} desks · ${next.live} live slots · ${next.rooms} room slots · ${next.decor} decor spots · rent ${money(next.rent)}</span></button>`
+    : '<div class="muted">You have the finest office in the industry.</div>';
+  html += `<div class="sec">Rooms (${used}/${rslots} slots)</div><div class="note mini">Rooms are where the studio's real strength comes from. Each takes a slot, costs upkeep every month, and can be upgraded to Lv3.</div>`;
+  const ids = Object.keys(ROOMS).sort((a, b) => (roomLv(b) > 0) - (roomLv(a) > 0));
+  ids.forEach(id => {
+    const R = ROOMS[id], lv = roomLv(id), nextLv = lv + 1, rk = nextLv <= 3 ? roomRank(id, nextLv) : 0;
+    const why = lv >= 3 ? '' : !lv && used >= rslots ? 'Every room slot is used. Move to a bigger office or close a room.' : STATE.rank < rk ? `Needs studio Rank ${rk}.` : STATE.gold < R.cost[lv] ? `Not enough money: this needs ${money(R.cost[lv])}.` : '';
+    const btn = lv >= 3 ? '<span class="good">Max level</span>' : `<button class="btn-sm btn-accent" ${why ? 'disabled' : ''} data-why="${esc(why)}" onclick="buildRoom('${id}')">${lv ? 'Upgrade' : 'Build'} ${money(R.cost[lv])}${STATE.rank < rk ? ' · Rank ' + rk : ''}</button>`;
+    html += `<div class="card" style="${lv ? '' : 'opacity:0.92;'}"><div class="row"><b>${R.ic} ${R.n}${lv ? ` <span class="lvpips">${'★'.repeat(lv)}${'☆'.repeat(3 - lv)}</span>` : ''}</b>${btn}</div>
+      <div class="muted mini">${lv ? 'Now: ' + R.d(lv) + ` · upkeep ${money(R.up[lv - 1])}/mo` : R.d(1) + ` · upkeep ${money(R.up[0])}/mo`}</div>
+      ${lv && lv < 3 ? `<div class="mini muted">Lv${nextLv}: ${R.d(nextLv)}</div>` : ''}
+      ${lv ? `<div style="text-align:right;"><button class="btn-sm" onclick="closeRoom('${id}')">Close room</button></div>` : ''}</div>`;
+  });
   html += `<div class="sec">Decor (${STATE.decor.length}/${slots} spots)</div>`;
   for (const k in DECOR) {
     const dc = DECOR[k], own = STATE.decor.includes(k);
     html += `<div class="row card" style="flex-direction:row;"><span><b>${dc.n}</b><br><span class="muted">${dc.d}</span></span>
-      ${own ? '<span class="good">Placed</span>' : `<button class="btn-sm btn-accent" ${STATE.decor.length >= slots || STATE.gold < dc.cost ? 'disabled' : ''} data-why="${STATE.decor.length >= slots ? 'Every decor spot on this floor is used. Move to a bigger floor for more.' : ''}" onclick="buyDecor('${k}')">${money(dc.cost)}</button>`}</div>`;
-  }
-  html += '<div class="sec">Facilities</div>';
-  for (const k in FACILITIES) {
-    const fa = FACILITIES[k], own = STATE.facilities[k];
-    html += `<div class="row card" style="flex-direction:row;"><span><b>${fa.n}</b><br><span class="muted">${fa.desc} Upkeep ${money(fa.upkeep)}/mo</span></span>
-      ${own ? '<span class="good">Owned</span>' : `<button class="btn-sm btn-accent" onclick="buyFacility('${k}')">${money(fa.cost)}</button>`}</div>`;
+      ${own ? '<span class="good">Placed</span>' : `<button class="btn-sm btn-accent" ${STATE.decor.length >= slots || STATE.gold < dc.cost ? 'disabled' : ''} data-why="${STATE.decor.length >= slots ? 'Every decor spot in this office is used. Move to a bigger office for more.' : ''}" onclick="buyDecor('${k}')">${money(dc.cost)}</button>`}</div>`;
   }
   html += `<div class="sec">Milestones (${msDone}/${MILESTONES.length})</div>` + MILESTONES.map(m => {
     const r = m.r, rw = [r.gold ? money(r.gold) : '', r.rp ? r.rp + ' RP' : '', r.fans ? fmt(r.fans) + ' fans' : ''].filter(Boolean).join(' + ');
@@ -3658,7 +4013,7 @@ function txt(s, x, y, color, size, align) {
   ctx.fillStyle = '#000'; ctx.fillText(s, x + 1, y + 1);
   ctx.fillStyle = color || '#fff'; ctx.fillText(s, x, y);
 }
-function deskPos(i) { return i < 5 ? { x: 36 + i * 62, y: 80 } : { x: 60 + (i - 5) * 67, y: 214 }; }
+function deskPos(i) { return i < 5 ? { x: 36 + i * 62, y: 80 } : STATE.floor >= 4 ? { x: 36 + (i - 5) * 62, y: 214 } : { x: 60 + (i - 5) * 67, y: 214 }; }
 
 const BUILDINGS = (() => {
   const out = []; let x = 0, seed = 7;
@@ -3723,6 +4078,15 @@ function drawOffice() {
     px('#2f3e46', 0, 42, 320, 4);
     px('#3d5a80', 0, 46, 320, 194);
     for (let y = 50, r = 0; y < 240; y += 8, r++) for (let x = (r % 2) * 8; x < 320; x += 16) px('#46658f', x, y, 2, 2);
+  } else if (fl >= 4) {
+    px('#1d2d44', 0, 0, 320, 44);
+    drawWindow(6, 3, 308, 36, t, '#0d1321');
+    for (let x = 6 + 44; x < 314; x += 44) px('#0d1321', x, 3, 2, 36);
+    px('#3e5c76', 0, 39, 320, 3); px('#0d1321', 0, 42, 320, 4);
+    px('#cfd8dc', 0, 46, 320, 194);
+    for (let y = 46; y < 240; y += 24) px('#b0bec5', 0, y, 320, 1);
+    for (let x = 0; x < 320; x += 40) px('#b0bec5', x, 46, 1, 194);
+    px('#00838f', 92, 112, 136, 70); px('#00acc1', 95, 115, 130, 64); px('#80deea', 95, 115, 130, 1); px('#80deea', 95, 178, 130, 1);
   } else {
     px('#e9ecef', 0, 0, 320, 44);
     drawWindow(62, 2, 196, 37, t, '#adb5bd');
@@ -3759,8 +4123,8 @@ const DECOR_DRAW = {
 };
 function drawDecor() {
   STATE.decor.forEach(id => { if (DECOR_DRAW[id]) DECOR_DRAW[id](); });
-  if (STATE.facilities.servers) for (let i = 0; i < 2; i++) { px('#212529', 6 + i * 9, 146, 8, 28); for (let k = 0; k < 5; k++) px((frameT + k * 7 + i * 13) % 30 < 15 ? '#06d6a0' : '#1b4332', 8 + i * 9, 149 + k * 5, 2, 1); }
-  if (STATE.facilities.coffee) { px('#495057', 298, 150, 14, 20); px('#212529', 300, 153, 10, 6); px('#e63946', 301, 154, 3, 2); px('#adb5bd', 303, 162, 6, 5); px('#f8f9fa', 304, 163, 4, 3); if (frameT % 60 < 30) px('rgba(255,255,255,0.6)', 305, 158, 1, 3); }
+  if (roomLv('servers')) for (let i = 0; i < 2; i++) { px('#212529', 6 + i * 9, 146, 8, 28); for (let k = 0; k < 5; k++) px((frameT + k * 7 + i * 13) % 30 < 15 ? '#06d6a0' : '#1b4332', 8 + i * 9, 149 + k * 5, 2, 1); }
+  if (roomLv('break')) { px('#495057', 298, 150, 14, 20); px('#212529', 300, 153, 10, 6); px('#e63946', 301, 154, 3, 2); px('#adb5bd', 303, 162, 6, 5); px('#f8f9fa', 304, 163, 4, 3); if (frameT % 60 < 30) px('rgba(255,255,255,0.6)', 305, 158, 1, 3); }
 }
 function drawHair(m, x, y) {
   const h = m.hair;
@@ -3798,7 +4162,7 @@ function drawStaff(m, x, y, working) {
   }
   drawDesk(x, y, m.id);
   px('#1b1b2f', x - 6, y - 5, 12, 7); px('#2b2d42', x - 5, y - 4, 10, 5); px('#1b1b2f', x - 1, y + 1, 2, 2);
-  if (STATE.facilities.pcs) { px('#1b1b2f', x + 7, y - 3, 6, 5); px('#2b2d42', x + 8, y - 2, 4, 3); }
+  if (roomLv('tech')) { px('#1b1b2f', x + 7, y - 3, 6, 5); px('#2b2d42', x + 8, y - 2, 4, 3); }
   if (m.rest > 0) txt('Zz', x + 10, y - 10 - (frameT % 40) / 8, '#ef476f', 8);
   else {
     px('#000', x - 8, y - 26, 16, 3);
@@ -3886,28 +4250,28 @@ function update() {
   if (STATE.tick >= TPW) { STATE.tick = 0; advanceWeek(); if (modalOpen) return; }
   const d = STATE.activeDev;
   const M = computeMods();
-  const regen = (STATE.facilities.coffee ? 1.6 : 1) * M.regen;
+  const regen = [1, 1.6, 2, 2.5][roomLv('break')] * M.regen;
   STATE.team.forEach((m, i) => { const p = deskPos(i); m.x = p.x; m.y = p.y; });
   const pace = d && d.kind === 'game' ? PACE[d.pace] : PACE[1];
   for (const m of STATE.team) {
     if (m.anim > 0) m.anim--;
     if (m.flash > 0) m.flash--;
     if (m.vac > 0) continue;
-    if (m.rest > 0) { m.rest--; m.stam = Math.min(m.maxStam, m.stam + 0.7 * regen); continue; }
+    if (m.rest > 0) { m.rest--; m.stam = Math.min(m.maxStam, m.stam + 0.54 * regen); continue; }
     if (d && !d.awaiting) {
-      m.stam = Math.min(m.maxStam, m.stam + 0.02 * regen);
-      let spd = (m.spd / 30) * (STATE.facilities.pcs ? 1.1 : 1) * (d.mods ? d.mods.speedMul : 1) * (d.lead === m.id ? 1.15 : 1) * pace.spd * (0.85 + m.morale * 0.003) * (M.spd || 1);
+      m.stam = Math.min(m.maxStam, m.stam + 0.015 * regen);
+      let spd = (m.spd / 30) * [1, 1.08, 1.14, 1.2][roomLv('tech')] * (d.mods ? d.mods.speedMul : 1) * (d.lead === m.id ? 1.15 : 1) * pace.spd * (0.85 + m.morale * 0.003) * (M.spd || 1);
       if (m.traits.includes('Slacker')) spd *= 0.85;
       if (m.traits.includes('Perfectionist')) spd *= 0.9;
       if (m.senior) spd *= 1.1;
       if (d.pace === 2 && m.traits.includes('Night Owl')) spd *= 1.3;
       m.cd += spd;
-      if (m.cd >= 72) { m.cd = 0; doHit(m); }
+      if (m.cd >= 94) { m.cd = 0; doHit(m); }
     } else {
-      m.stam = Math.min(m.maxStam, m.stam + 0.35 * regen);
+      m.stam = Math.min(m.maxStam, m.stam + 0.27 * regen);
     }
   }
-  if (d && d.kind === 'game' && !d.awaiting && d.phase <= 3 && d.eventsFired < 3 && Math.random() < 1 / (TPS * 25)) devEvent(d);
+  if (d && d.kind === 'game' && !d.awaiting && d.phase <= 3 && d.eventsFired < 3 && Math.random() < 1 / (TPS * 32)) devEvent(d);
   for (const p of projectiles) {
     p.x += (p.tx - p.x) * 0.22; p.y += (p.ty - p.y) * 0.22; p.t++;
     if (!p.done && (Math.hypot(p.tx - p.x, p.ty - p.y) < 4 || p.t > 40)) { p.done = true; onImpact(p); }

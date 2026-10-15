@@ -93,7 +93,7 @@
   .tab-pane.active { display: flex; }
   nav {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 5px;
     width: 100%;
     max-width: 480px;
@@ -118,7 +118,8 @@
   .btn-gold { color: var(--gold); border-color: var(--gold); }
   .btn-danger { color: var(--danger); border-color: var(--danger); }
   .btn-sm { padding: 4px 7px; font-size: 0.7rem; }
-  .nav-btn { font-size: 0.62rem; padding: 10px 1px; }
+  .nav-btn { font-size: 0.56rem; padding: 5px 0; line-height: 1.35; }
+  .nav-btn .ic { font-size: 0.95rem; display: block; }
   .nav-btn.active { background: var(--border); color: #000; }
   label { font-size: 0.72rem; color: var(--muted); margin-bottom: -4px; }
   .row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
@@ -172,6 +173,15 @@
   .chip-bad { border-color: var(--danger); color: var(--danger); }
   .chip-gold { border-color: var(--gold); color: var(--gold); }
   .ms-done { color: var(--good); }
+  .prio-row { display: grid; grid-template-columns: 1fr 34px 70px 34px; align-items: center; gap: 6px; font-size: 0.74rem; }
+  .pips { color: var(--accent); text-align: center; letter-spacing: 1px; }
+  .pl-chart { display: flex; gap: 3px; background: var(--panel-2); border-radius: 4px; padding: 6px; }
+  .pl-col { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+  .pl-up { height: 40px; width: 100%; display: flex; align-items: flex-end; }
+  .pl-dn { height: 40px; width: 100%; display: flex; align-items: flex-start; border-top: 1px solid rgba(69,162,158,0.5); }
+  .pl-col i { display: block; width: 100%; border-radius: 1px; }
+  .pl-col span { font-size: 0.55rem; color: var(--muted); }
+  .modal-card label { display: block; margin: 9px 0 4px; line-height: 1.2; }
 
 </style>
 </head>
@@ -195,7 +205,7 @@
       <button id="btn-boost" class="btn-sm btn-gold" disabled onclick="useBoost()">⚡ Assistant Boost</button>
     </div>
     <div id="dev-setup" style="display:flex; flex-direction:column; gap:7px;">
-      <input id="inp-title" maxlength="24" placeholder="Game title (optional)" autocomplete="off">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;"><input id="inp-title" maxlength="24" placeholder="" autocomplete="off"><button onclick="rollTitle()" title="Suggest a title">🎲</button></div>
       <label>Genre</label>
       <select id="sel-genre" onchange="updatePreview()"></select>
       <label>Theme</label>
@@ -206,14 +216,13 @@
       <select id="sel-pub" onchange="updatePreview()"></select>
       <div class="grid2">
         <div style="display:flex;flex-direction:column;gap:7px;"><label>Budget</label><select id="sel-budget" onchange="updatePreview()"></select></div>
-        <div style="display:flex;flex-direction:column;gap:7px;"><label>Focus</label><select id="sel-focus" onchange="updatePreview()"></select></div>
+        <div style="display:flex;flex-direction:column;gap:7px;"><label>Business model</label><select id="sel-monet" onchange="updatePreview()"></select></div>
       </div>
-      <label>Business model</label>
-      <select id="sel-monet" onchange="updatePreview()"></select>
       <div class="grid2">
         <div style="display:flex;flex-direction:column;gap:7px;"><label>Audience</label><select id="sel-aud" onchange="updatePreview()"></select></div>
         <div style="display:flex;flex-direction:column;gap:7px;"><label>Sequel to</label><select id="sel-seq" onchange="onSequelPick()"></select></div>
       </div>
+      <div id="prio-box" class="note" style="display:flex;flex-direction:column;gap:5px;"></div>
       <div id="dev-preview" class="note"></div>
       <div class="grid2">
         <button class="btn-accent" onclick="startDevelopment()">Begin Production</button>
@@ -236,6 +245,7 @@
 
   <!-- LAB -->
   <div id="tab-market" class="tab-pane"></div>
+  <div id="tab-biz" class="tab-pane"></div>
   <div id="tab-lab" class="tab-pane"></div>
 
   <!-- STUDIO -->
@@ -243,12 +253,13 @@
 </div>
 
 <nav>
-  <button class="nav-btn active" data-tab="dev" onclick="switchTab('dev')">Dev</button>
-  <button class="nav-btn" data-tab="live" onclick="switchTab('live')">Live</button>
-  <button class="nav-btn" data-tab="staff" onclick="switchTab('staff')">Staff</button>
-  <button class="nav-btn" data-tab="market" onclick="switchTab('market')">Market</button>
-  <button class="nav-btn" data-tab="lab" onclick="switchTab('lab')">Lab</button>
-  <button class="nav-btn" data-tab="studio" onclick="switchTab('studio')">Studio</button>
+  <button class="nav-btn active" data-tab="dev" onclick="switchTab('dev')"><span class="ic">🛠</span>Dev</button>
+  <button class="nav-btn" data-tab="live" onclick="switchTab('live')"><span class="ic">📡</span>Live</button>
+  <button class="nav-btn" data-tab="staff" onclick="switchTab('staff')"><span class="ic">👥</span>Staff</button>
+  <button class="nav-btn" data-tab="market" onclick="switchTab('market')"><span class="ic">🕹</span>Market</button>
+  <button class="nav-btn" data-tab="biz" onclick="switchTab('biz')"><span class="ic">💼</span>Biz</button>
+  <button class="nav-btn" data-tab="lab" onclick="switchTab('lab')"><span class="ic">🔬</span>Lab</button>
+  <button class="nav-btn" data-tab="studio" onclick="switchTab('studio')"><span class="ic">🏢</span>Studio</button>
 </nav>
 
 <div id="modal"><div class="modal-card"><div id="modal-body"></div><div id="modal-btns"></div></div></div>
@@ -265,6 +276,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const fmt = n => Math.round(n).toLocaleString();
 const money = n => (n < 0 ? '-$' : '$') + fmt(Math.abs(n));
+const an = w => (/^[AEIOU]/i.test(w) ? 'an ' : 'a ') + w;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = id => document.getElementById(id);
 function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -335,7 +347,23 @@ const GENRES = [
   { n: 'Racing',         w: [1.2, 1.2, 0.8, 0.9], cost: 3000, rp: 20, rank: 7 },
   { n: 'Strategy',       w: [1.1, 0.9, 1.2, 0.9], cost: 3000, rp: 22, rank: 8 },
   { n: 'RPG',            w: [1.0, 1.1, 1.2, 1.0], cost: 4000, rp: 26, rank: 10 },
-  { n: 'MMO',            w: [0.9, 1.1, 1.4, 1.0], cost: 8000, rp: 40, rank: 14 }
+  { n: 'MMO',            w: [0.9, 1.1, 1.4, 1.0], cost: 8000, rp: 40, rank: 14 },
+  { n: 'Text Adventure', w: [0.9, 1.2, 1.0, 0.9], cost: 500,  rp: 4,  rank: 1 },
+  { n: 'Pinball',        w: [1.2, 1.0, 0.9, 1.1], cost: 800,  rp: 6,  rank: 2 },
+  { n: 'Platformer',     w: [1.3, 1.0, 0.9, 1.0], cost: 1500, rp: 6,  rank: 2 },
+  { n: 'Idle Clicker',   w: [0.9, 0.9, 1.4, 1.0], cost: 600,  rp: 6,  rank: 2 },
+  { n: 'Tower Defense',  w: [1.1, 0.9, 1.2, 0.9], cost: 1200, rp: 8,  rank: 2 },
+  { n: 'Dating Sim',     w: [0.9, 1.2, 1.1, 1.1], cost: 1200, rp: 10, rank: 3 },
+  { n: 'Farming Sim',    w: [1.0, 1.0, 1.3, 0.9], cost: 1500, rp: 12, rank: 4 },
+  { n: 'Roguelike',      w: [1.2, 0.9, 1.3, 1.0], cost: 2000, rp: 14, rank: 4 },
+  { n: 'Shooter',        w: [1.3, 1.1, 0.8, 1.0], cost: 2000, rp: 14, rank: 5 },
+  { n: 'Fighting',       w: [1.3, 1.1, 0.9, 1.0], cost: 2500, rp: 16, rank: 5 },
+  { n: 'Stealth',        w: [1.2, 1.1, 0.9, 1.0], cost: 2500, rp: 16, rank: 6 },
+  { n: 'Survival',       w: [1.1, 1.0, 1.2, 1.0], cost: 3000, rp: 18, rank: 6 },
+  { n: 'City Builder',   w: [1.0, 1.0, 1.3, 0.9], cost: 3500, rp: 22, rank: 8 },
+  { n: 'Metroidvania',   w: [1.2, 1.1, 1.1, 0.9], cost: 3500, rp: 24, rank: 9 },
+  { n: 'Sandbox',        w: [1.1, 1.0, 1.2, 1.1], cost: 4000, rp: 26, rank: 10 },
+  { n: 'Battle Royale',  w: [1.1, 1.0, 1.1, 1.3], cost: 7000, rp: 36, rank: 12 }
 ];
 const THEMES = [
   { n: 'Detective', rp: 0, rank: 1 }, { n: 'Animal', rp: 0, rank: 1 }, { n: 'Apartment', rp: 0, rank: 1 },
@@ -344,7 +372,14 @@ const THEMES = [
   { n: 'Pirate', rp: 8, rank: 3 }, { n: 'Dinosaur', rp: 10, rank: 4 }, { n: 'Idol', rp: 12, rank: 5 },
   { n: 'Space', rp: 12, rank: 5 }, { n: 'Robot', rp: 14, rank: 6 }, { n: 'Horror', rp: 14, rank: 6 },
   { n: 'Samurai', rp: 16, rank: 7 }, { n: 'Fantasy', rp: 18, rank: 8 }, { n: 'Zombie', rp: 18, rank: 9 },
-  { n: 'Cyberpunk', rp: 24, rank: 11 }, { n: 'Time Travel', rp: 30, rank: 13 }
+  { n: 'Cyberpunk', rp: 24, rank: 11 }, { n: 'Time Travel', rp: 30, rank: 13 },
+  { n: 'Cats', rp: 0, rank: 1 }, { n: 'Farm', rp: 4, rank: 1 }, { n: 'Hospital', rp: 6, rank: 2 },
+  { n: 'Desert Island', rp: 6, rank: 2 }, { n: 'Wild West', rp: 8, rank: 3 }, { n: 'Fairy Tale', rp: 8, rank: 3 },
+  { n: 'Rock Band', rp: 10, rank: 4 }, { n: 'Underwater', rp: 10, rank: 4 }, { n: 'Haunted House', rp: 12, rank: 5 },
+  { n: 'Spy', rp: 12, rank: 5 }, { n: 'Superhero', rp: 14, rank: 6 }, { n: 'Wizards', rp: 14, rank: 6 },
+  { n: 'Aliens', rp: 16, rank: 7 }, { n: 'Vampires', rp: 16, rank: 7 }, { n: 'Steampunk', rp: 18, rank: 8 },
+  { n: 'Mythology', rp: 20, rank: 9 }, { n: 'Dragons', rp: 20, rank: 9 }, { n: 'Mecha', rp: 24, rank: 10 },
+  { n: 'Post-Apocalypse', rp: 26, rank: 11 }, { n: 'Kaiju', rp: 30, rank: 13 }
 ];
 const PLATFORMS = [
   { n: 'Feature Phone',  lic: 0,      fee: 1000,  peak: 0.8, year: -1, decline: 2,  end: 5,  arpu: 1.5, drain: 1.0, hp: 0.8, rank: 1,  fav: ['Quiz', 'Minigames', 'Puzzle'] },
@@ -527,12 +562,155 @@ const MILESTONES = [
   { id: 'top',     n: 'Industry Leader',   d: 'Overtake every rival in fans',     test: s => s.rivals.every(r => s.fans > r.fans), r: { gold: 250000 } }
 ];
 
+
+/* ---------- Genre profiles, extensions ---------- */
+const AREAS = ['Gameplay', 'Story', 'Visuals', 'Audio', 'Content', 'Social'];
+const AREA_AB = ['Gp', 'St', 'Vi', 'Au', 'Co', 'So'];
+const AREA_STAT = [[1, 0, 0, 0], [0, 0.5, 0.5, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 0, 0.5, 0.5]];
+const PRIO_BUDGET = 12, PRIO_MAX = 5;
+const LV = { H: 3, M: 2, L: 1 };
+const LV_NAME = { H: 'High', M: 'Medium', L: 'Low' };
+const PROF = {
+  'Adventure': 'MHMMML', 'Minigames': 'HLMMLH', 'Card Game': 'HLMLHM', 'Escape Game': 'HMMMLL', 'Management Sim': 'HLLLHM',
+  'Fitness': 'HLMHLM', 'Puzzle': 'HLMMML', 'Quiz': 'MLLMHH', 'Rhythm': 'HLMHML', 'Visual Novel': 'LHHMML', 'Board Game': 'HLMLMH',
+  'Action': 'HMHMML', 'Sports': 'HLHMMH', 'Racing': 'HLHHMM', 'Strategy': 'HMMLHM', 'RPG': 'MHMMHL', 'MMO': 'MMMMHH',
+  'Text Adventure': 'MHLLML', 'Pinball': 'HLHHLL', 'Platformer': 'HLHMML', 'Tower Defense': 'HLMLHM', 'Idle Clicker': 'MLMLHM',
+  'Dating Sim': 'LHHHML', 'Farming Sim': 'MMMHHM', 'Roguelike': 'HLMMHL', 'Fighting': 'HLHHLH', 'Stealth': 'HMHHML',
+  'Survival': 'HMMHHM', 'Shooter': 'HLHHMM', 'City Builder': 'HLMLHM', 'Metroidvania': 'HMHHHL', 'Sandbox': 'HLMLHH', 'Battle Royale': 'HLHMMH'
+};
+GENRES.forEach(g => { g.prof = PROF[g.n] || 'MMMMMM'; });
+(() => {
+  const PF = { 'Smartphone': ['Idle Clicker', 'Tower Defense'], 'PC': ['City Builder', 'Survival', 'Sandbox', 'Roguelike'], 'Pocket Console': ['Platformer', 'Metroidvania'],
+    'Cloud Console': ['Battle Royale', 'Fighting', 'Shooter'], 'Tablet': ['Farming Sim', 'Dating Sim'], 'Web Browser': ['Text Adventure', 'Idle Clicker'],
+    'Feature Phone': ['Pinball', 'Text Adventure'], 'Smart TV': ['Fighting'], 'VR Headset': ['Shooter', 'Survival'], 'Smart Glasses': ['Stealth'] };
+  PLATFORMS.forEach(p => { if (PF[p.n]) p.fav.push(...PF[p.n]); });
+  const AU = [[['Platformer', 'Idle Clicker', 'Pinball'], ['Survival', 'Stealth', 'Battle Royale', 'Dating Sim']],
+    [['Idle Clicker', 'Farming Sim', 'Tower Defense', 'Pinball'], ['Roguelike', 'Metroidvania', 'Fighting']], [[], []],
+    [['Roguelike', 'Fighting', 'Metroidvania', 'Survival', 'Stealth'], ['Idle Clicker', 'Pinball', 'Dating Sim']]];
+  AUDIENCES.forEach((a, i) => { a.good.push(...AU[i][0]); a.bad.push(...AU[i][1]); });
+  const HX = { 'Roguelike Runs': ['Roguelike', 'Tower Defense'], 'Open World': ['Survival', 'Sandbox', 'Stealth'], 'Branching Story': ['Dating Sim', 'Text Adventure'],
+    'Physics Sandbox': ['Sandbox', 'Pinball', 'Platformer'], 'Cozy Vibes': ['Farming Sim', 'City Builder', 'Idle Clicker'], 'Competitive Ranked': ['Fighting', 'Battle Royale', 'Shooter'],
+    'Time Loops': ['Roguelike', 'Metroidvania'], 'Cute Mascot': ['Platformer', 'Idle Clicker'], 'Procedural Worlds': ['Roguelike', 'Sandbox', 'Survival'],
+    'Hand-drawn Art': ['Metroidvania', 'Dating Sim', 'Platformer'], 'Party Multiplayer': ['Battle Royale', 'Fighting'], 'Speedrun Friendly': ['Platformer', 'Metroidvania', 'Shooter'],
+    'Motion Controls': ['Shooter'], 'Idle Progression': ['Idle Clicker', 'Farming Sim', 'City Builder', 'Tower Defense'] };
+  HOOKS.forEach(h => { if (HX[h.n]) h.good.push(...HX[h.n]); });
+  const PX = { 'Brightleaf Games': ['Idle Clicker', 'Pinball', 'Platformer'], 'Nimbus Interactive': ['Dating Sim', 'Text Adventure', 'Metroidvania'],
+    'Redwood Media': ['Fighting', 'Shooter'], 'Titan Arcade Group': ['Battle Royale', 'Survival', 'City Builder'] };
+  PUBLISHERS.forEach(pb => { if (PX[pb.n]) pb.fav.push(...PX[pb.n]); });
+})();
+TECH.push({ id: 'hwrd', n: 'Hardware R&D', rp: 35, rank: 8, d: 'Own platforms 20% cheaper to build, units 10% cheaper to make' });
+
+/* ---------- Title generator words ---------- */
+const GENRE_WORDS = {
+  'Adventure': ['Quest', 'Journey', 'Odyssey', 'Saga', 'Tales', 'Expedition'], 'Minigames': ['Party', 'Mania', 'Frenzy', 'Fiesta', 'Carnival'],
+  'Card Game': ['Cards', 'Deck', 'Duel', 'Gambit', 'Hand'], 'Escape Game': ['Escape', 'Lockdown', 'Exit', 'Breakout', 'Locked'],
+  'Management Sim': ['Tycoon', 'Manager', 'Empire', 'Inc.', 'Boss'], 'Fitness': ['Fit', 'Workout', 'Moves', 'Burn', 'Training'],
+  'Puzzle': ['Puzzle', 'Blocks', 'Match', 'Logic', 'Tiles'], 'Quiz': ['Quiz', 'Trivia', 'Brainstorm', 'Showdown', 'Know-It-All'],
+  'Rhythm': ['Beat', 'Groove', 'Rhythm', 'Jam', 'Tempo'], 'Visual Novel': ['Story', 'Memories', 'Diaries', 'Hearts', 'Days'],
+  'Board Game': ['Board', 'Dice', 'Tabletop', 'Moves', 'Roll'], 'Action': ['Strike', 'Fury', 'Rush', 'Assault', 'Blitz'],
+  'Sports': ['League', 'Cup', 'Champions', 'Slam', 'Pro'], 'Racing': ['Racer', 'Grand Prix', 'Drift', 'Rally', 'Speed'],
+  'Strategy': ['Tactics', 'Conquest', 'Command', 'Dominion', 'Wars'], 'RPG': ['Legends', 'Chronicles', 'Fantasia', 'Destiny', 'Saga'],
+  'MMO': ['Online', 'Worlds', 'Realms', 'Universe', 'Nexus'], 'Text Adventure': ['Words', 'Tale', 'Paths', 'Pages', 'Text'],
+  'Pinball': ['Pinball', 'Flippers', 'Bumper', 'Tilt', 'Ball'], 'Platformer': ['Jump', 'Run', 'Leap', 'Dash', 'Bounce'],
+  'Tower Defense': ['Defense', 'Towers', 'Siege', 'Bastion', 'Hold'], 'Idle Clicker': ['Clicker', 'Idle', 'Tapper', 'Factory', 'Billionaire'],
+  'Dating Sim': ['Love', 'Crush', 'Romance', 'Dates', 'Sweethearts'], 'Farming Sim': ['Harvest', 'Farm', 'Fields', 'Valley', 'Acres'],
+  'Roguelike': ['Dungeon', 'Depths', 'Descent', 'Rogue', 'Abyss'], 'Fighting': ['Fighters', 'Brawl', 'Knockout', 'Combat', 'Clash'],
+  'Stealth': ['Shadow', 'Silent', 'Infiltrator', 'Ghost', 'Sneak'], 'Survival': ['Survival', 'Outlast', 'Wilds', 'Stranded', 'Endure'],
+  'Shooter': ['Blaster', 'Shooter', 'Barrage', 'Gunner', 'Trigger'], 'City Builder': ['City', 'Metropolis', 'Builder', 'Skyline', 'Town'],
+  'Metroidvania': ['Labyrinth', 'Castle', 'Maze', 'Caverns', 'Ruins'], 'Sandbox': ['Craft', 'World', 'Builder', 'Sandbox', 'Blocks'],
+  'Battle Royale': ['Royale', 'Last Stand', 'Showdown', 'Arena', 'Survivors']
+};
+const THEME_WORDS = {
+  'Detective': ['Clue', 'Case', 'Noir', 'Sleuth', 'Alibi'], 'Animal': ['Critter', 'Paws', 'Zoo', 'Furry', 'Wild'],
+  'Apartment': ['Apartment', 'Room 404', 'Tenant', 'Flat', 'Landlord'], 'Office Worker': ['Office', 'Cubicle', '9-to-5', 'Overtime', 'Salaryman'],
+  'Tennis': ['Tennis', 'Ace', 'Court', 'Deuce', 'Racket'], 'Seaweed': ['Seaweed', 'Kelp', 'Nori', 'Tide', 'Algae'],
+  'Cooking': ['Kitchen', 'Chef', 'Recipe', 'Bistro', 'Flavor'], 'School': ['School', 'Academy', 'Class', 'Campus', 'Homeroom'],
+  'Ninja': ['Ninja', 'Shinobi', 'Shuriken', 'Kunai', 'Shadow'], 'Pirate': ['Pirate', 'Buccaneer', 'Treasure', 'Corsair', 'Plank'],
+  'Dinosaur': ['Dino', 'Jurassic', 'Raptor', 'Fossil', 'Rex'], 'Idol': ['Idol', 'Star', 'Spotlight', 'Stage', 'Debut'],
+  'Space': ['Space', 'Galaxy', 'Cosmic', 'Star', 'Orbit'], 'Robot': ['Robo', 'Android', 'Circuit', 'Bolt', 'Gizmo'],
+  'Horror': ['Dread', 'Nightmare', 'Fear', 'Haunt', 'Terror'], 'Samurai': ['Samurai', 'Ronin', 'Katana', 'Shogun', 'Bushido'],
+  'Fantasy': ['Kingdom', 'Mystic', 'Elven', 'Arcane', 'Realm'], 'Zombie': ['Zombie', 'Undead', 'Outbreak', 'Horde', 'Infected'],
+  'Cyberpunk': ['Neon', 'Cyber', 'Chrome', 'Grid', 'Synth'], 'Time Travel': ['Chrono', 'Paradox', 'Timeline', 'Epoch', 'Rewind'],
+  'Cats': ['Cat', 'Kitty', 'Meow', 'Whisker', 'Purr'], 'Wizards': ['Wizard', 'Spell', 'Hex', 'Arcana', 'Wand'],
+  'Vampires': ['Vampire', 'Fang', 'Crimson', 'Nocturne', 'Blood Moon'], 'Mecha': ['Mecha', 'Titan', 'Armor', 'Frame', 'Colossus'],
+  'Post-Apocalypse': ['Wasteland', 'Ashes', 'Aftermath', 'Ruin', 'Dust'], 'Underwater': ['Abyss', 'Deep', 'Coral', 'Reef', 'Tidal'],
+  'Wild West': ['Outlaw', 'Frontier', 'Dusty', 'Sheriff', 'Gunslinger'], 'Farm': ['Barnyard', 'Farm', 'Tractor', 'Meadow', 'Ranch'],
+  'Superhero': ['Hero', 'Cape', 'Justice', 'Super', 'Vigilante'], 'Mythology': ['Olympus', 'Myth', 'Titan', 'Valhalla', 'Legend'],
+  'Steampunk': ['Steam', 'Cog', 'Brass', 'Clockwork', 'Gear'], 'Spy': ['Agent', 'Spy', 'Covert', 'Codename', 'Intel'],
+  'Fairy Tale': ['Fairy', 'Enchanted', 'Storybook', 'Glass', 'Once Upon'], 'Aliens': ['Alien', 'UFO', 'Invader', 'Xeno', 'Martian'],
+  'Desert Island': ['Island', 'Castaway', 'Lagoon', 'Paradise', 'Coconut'], 'Hospital': ['Hospital', 'Clinic', 'Doctor', 'Nurse', 'ER'],
+  'Rock Band': ['Rock', 'Amp', 'Riff', 'Encore', 'Backstage'], 'Kaiju': ['Kaiju', 'Monster', 'Stomp', 'Behemoth', 'Titan'],
+  'Dragons': ['Dragon', 'Wyrm', 'Drake', 'Ember', 'Scale'], 'Haunted House': ['Haunted', 'Manor', 'Spooky', 'Creaky', 'Phantom']
+};
+const NAME_ADJ = ['Tiny', 'Mega', 'Cozy', 'Hyper', 'Pocket', 'Neon', 'Brave', 'Lucky', 'Little', 'Crazy', 'Midnight', 'Golden', 'Turbo', 'Secret', 'Wild'];
+const NAME_SUB = ['Origins', 'Reloaded', 'Unleashed', 'Legends', 'Forever', 'Rising', 'Deluxe', 'Chronicles', 'Remix', 'Mania', 'Frenzy', 'Revolution', 'Zero', 'Ultra'];
+const NAME_TAG = ['DX', 'HD', 'X', 'Plus', 'Go!', '64', 'Turbo', 'Ultra'];
+
+/* ---------- Staff posts ---------- */
+const SECTIONS = [{ n: 'Programming', s: 0 }, { n: 'Art', s: 1 }, { n: 'Systems', s: 2 }, { n: 'Audio', s: 3 }];
+const GRADE_COLOR = { S: '#ffd166', A: '#06d6a0', B: '#66fcf1', C: '#9aa5b1', D: '#ef476f' };
+
+/* ---------- Hardware ---------- */
+const HW_RANK = 8;
+const HW_FORMS = [
+  { n: 'Handheld',     cost: 80000,  unit: 80,  appeal: 1.0,  fav: ['Puzzle', 'Platformer', 'RPG'] },
+  { n: 'Home Console', cost: 150000, unit: 150, appeal: 1.15, fav: ['Action', 'Sports', 'Racing'] },
+  { n: 'Hybrid',       cost: 220000, unit: 200, appeal: 1.3,  fav: ['Adventure', 'Minigames', 'Fighting'] },
+  { n: 'VR Rig',       cost: 260000, unit: 260, appeal: 1.1,  fav: ['Fitness', 'Shooter', 'Rhythm'] }
+];
+const HW_CPU = [{ n: 'Standard CPU', cost: 0, unit: 0, pow: 0 }, { n: 'Fast CPU', cost: 50000, unit: 35, pow: 1 }, { n: 'Cutting-edge CPU', cost: 120000, unit: 80, pow: 2 }];
+const HW_GPU = [{ n: 'Basic GPU', cost: 0, unit: 0, pow: 0 }, { n: 'Strong GPU', cost: 50000, unit: 35, pow: 1 }, { n: 'Ultra GPU', cost: 120000, unit: 80, pow: 2 }];
+const HW_INPUT = [
+  { n: 'Classic gamepad', cost: 0, unit: 0, appeal: 1.0 }, { n: 'Motion controls', cost: 30000, unit: 20, appeal: 1.1, fav: 'Fitness' },
+  { n: 'Touchscreen', cost: 25000, unit: 25, appeal: 1.08, fav: 'Puzzle' }, { n: 'Dual screens', cost: 45000, unit: 40, appeal: 1.15, fav: 'Adventure' }
+];
+const HW_STORE = [{ n: 'Cartridges', cost: 0, unit: 20, appeal: 1.0 }, { n: 'Discs', cost: 10000, unit: 8, appeal: 1.0 }, { n: 'Digital only', cost: 0, unit: 0, appeal: 0.92 }];
+const HW_STYLE = [{ n: 'Retro', appeal: 1.05 }, { n: 'Sleek', appeal: 1.08 }, { n: 'Colourful', appeal: 1.05 }];
+const HW_PRICES = [149, 199, 249, 299, 349, 399, 499, 599];
+const HW_PRE = ['Nova', 'Pixel', 'Hyper', 'Astro', 'Zen', 'Turbo', 'Echo', 'Lumen', 'Orbit', 'Quantum', 'Nimbus', 'Kite', 'Mega', 'Vivid', 'Comet'];
+const HW_SUF = ['Box', 'Station', 'Play', 'Cube', 'Deck', 'Wave', 'Go', 'Core', 'Drive', 'Arc', 'Boy', 'Pad', 'Link'];
+
+/* ---------- Business ---------- */
+const EXECS = {
+  cfo:      { n: 'CFO',                sal: 3000, rank: 2, d: 'Tax rate 15% to 8%, loan interest 10% to 7%' },
+  hrm:      { n: 'HR Manager',         sal: 2500, rank: 2, d: '+6 morale, poaching attempts halved, signing fees -25%' },
+  cmo:      { n: 'Marketing Director', sal: 3500, rank: 3, d: '+10 hype per project, marketing and ads 25% cheaper' },
+  cm:       { n: 'Community Manager',  sal: 3000, rank: 3, d: 'Live games keep 0.8% more players weekly, +50% fans from live games' },
+  producer: { n: 'Producer',           sal: 4000, rank: 4, d: '15% fewer bugs, phases 10% shorter, hardware built 20% faster' },
+  bizdev:   { n: 'Business Developer', sal: 3500, rank: 5, d: 'Publisher advances +20%, contracts pay +30%, merch +25%' }
+};
+const POLICIES = {
+  hours: [{ n: 'Standard', d: 'Normal working week.' }, { n: '4-day week', spd: 0.9, morale: 8, regen: 1.2, d: 'Work 10% slower, +8 morale, faster stamina recovery.' },
+    { n: 'Overtime', spd: 1.12, morale: -8, drain: 1.15, d: 'Work 12% faster, -8 morale, 15% more stamina used.' }],
+  benefits: [{ n: 'Basic', cost: 0, morale: -4, d: 'No extra cost, -4 morale.' }, { n: 'Standard', cost: 150, morale: 0, d: '$150 per staff per month.' },
+    { n: 'Premium', cost: 450, morale: 7, d: '$450 per staff per month, +7 morale, poaching halved.' }],
+  bonus: [{ n: 'None', d: 'No bonus scheme.' }, { n: 'Release', d: '5% of each launch revenue paid out; big morale boost on hits.' },
+    { n: 'Profit share', d: '5% of monthly operating profit paid out; +4 morale.' }]
+};
+const POLICY_LABEL = { hours: 'Working hours', benefits: 'Staff benefits', bonus: 'Bonus scheme' };
+const LOAN_SIZES = [{ n: 'Small', amt: 20000 }, { n: 'Medium', amt: 60000 }, { n: 'Large', amt: 150000 }];
+const FIN_CATS = new Set(['Loans in', 'Loan repayments', 'Investment']);
+
+MILESTONES.push(
+  { id: 'hardware', n: 'Platform Holder', d: 'Launch your own platform', test: s => s.ownPlats.length >= 1, r: { fans: 3000 } },
+  { id: 'units1m', n: 'Hardware Hit', d: 'Sell 1,000,000 units of your hardware', test: s => s.ownPlats.reduce((a, x) => a + x.installed, 0) >= 1e6, r: { gold: 500000 } },
+  { id: 'cabinet', n: 'Boardroom', d: 'Hire 3 executives', test: s => Object.keys(s.execs).length >= 3, r: { rp: 15 } },
+  { id: 'merch', n: 'Merch Mogul', d: 'License merchandise for a game', test: s => s.history.some(h => h.merch), r: { fans: 400 } },
+  { id: 'value10m', n: 'Unicorn Dreams', d: 'Reach a company value of $10,000,000', test: () => companyValue() >= 1e7, r: { rp: 30 } },
+  { id: 'guru', n: 'Genre Guru', d: 'Fully learn 5 genre profiles', test: s => Object.values(s.insights).filter(o => Object.keys(o).length >= 6).length >= 5, r: { rp: 20 } }
+);
 const AMAZING = new Set([
   'Adventure|Detective', 'Minigames|Animal', 'Card Game|Animal', 'Escape Game|Apartment',
   'Management Sim|Office Worker', 'Fitness|Tennis', 'Puzzle|Cooking', 'Quiz|Dinosaur',
   'Rhythm|Idol', 'Visual Novel|School', 'Board Game|Pirate', 'Action|Ninja', 'Sports|Tennis',
   'Racing|Robot', 'Strategy|Samurai', 'RPG|Fantasy', 'MMO|Fantasy', 'Escape Game|Horror',
-  'Action|Zombie', 'Adventure|Time Travel', 'Racing|Cyberpunk'
+  'Action|Zombie', 'Adventure|Time Travel', 'Racing|Cyberpunk',
+  'Platformer|Cats', 'Tower Defense|Aliens', 'Idle Clicker|Space', 'Dating Sim|Vampires', 'Farming Sim|Farm',
+  'Roguelike|Wizards', 'Fighting|Kaiju', 'Stealth|Spy', 'Survival|Post-Apocalypse', 'Shooter|Aliens',
+  'City Builder|Steampunk', 'Metroidvania|Vampires', 'Sandbox|Desert Island', 'Battle Royale|Superhero',
+  'Text Adventure|Haunted House', 'Pinball|Rock Band', 'Rhythm|Rock Band', 'Management Sim|Hospital',
+  'RPG|Dragons', 'Adventure|Mythology', 'Action|Superhero', 'Strategy|Mecha', 'Escape Game|Underwater',
+  'Visual Novel|Fairy Tale', 'Card Game|Wizards', 'Survival|Desert Island', 'Puzzle|Cats', 'Racing|Wild West'
 ]);
 const COMBO_LABEL = ['Poor', 'Fair', 'Good', 'Great!', 'Amazing!'];
 const COMBO_COLOR = ['#ef476f', '#9aa5b1', '#66fcf1', '#06d6a0', '#ffd166'];
@@ -593,6 +771,8 @@ function normStaff(m) {
   if (!Array.isArray(m.perks)) m.perks = [];
   const defs = { morale: 70, senior: false, shipped: 0, hits: 0, mvps: 0, vac: 0, raiseCd: 0 };
   for (const k in defs) if (m[k] === undefined) m[k] = defs[k];
+  if (!m.favG) m.favG = pick(GENRES).n;
+  if (!m.gx || typeof m.gx !== 'object') m.gx = {};
   if (!m.skin) m.skin = SKINS[(m.id || ri(0, 5)) % SKINS.length];
   if (m.hs === undefined) m.hs = (m.id || ri(0, 3)) % 4;
   return m;
@@ -614,7 +794,7 @@ function newGame() {
   ];
   team.forEach((m, i) => { m.id = i + 1; m.skin = SKINS[i]; m.hs = i % 4; });
   return {
-    v: 3, gold: 20000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
+    v: 4, gold: 20000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
     cal: { y: 1, m: 1, w: 1 }, tick: 0, speed: 1,
     settings: { sound: true },
     team, nextId: 6,
@@ -629,6 +809,8 @@ function newGame() {
     pubRep: Object.fromEntries(PUBLISHERS.map(p => [p.n, 50])), hypeBank: 0, pubBonus: null,
     decor: [], tech: {}, milestones: {}, hookNotes: {}, releasedCount: 0, bestScore: 0,
     awards: { goty: 0, excellence: 0 }, platformsUsed: [], investor: null, platDeal: null,
+    prio: [2, 2, 2, 2, 2, 2], insights: {}, ownPlats: [], hwProj: null, execs: {}, policy: { hours: 0, benefits: 1, bonus: 0 },
+    loans: [], merch: [], book: {}, plHist: [], taxPaid: 0,
     rivals: RIVAL_DEFS.map(r => ({ n: r.n, fans: r.fans, growth: r.growth, skill: r.skill, best: 0, yearBest: 0 }))
   };
 }
@@ -653,20 +835,32 @@ function migrate(s) {
   if (!s.awards) s.awards = { goty: 0, excellence: 0 };
   if (!Array.isArray(s.platformsUsed)) s.platformsUsed = [];
   if (!Array.isArray(s.rivals) || !s.rivals.length) s.rivals = RIVAL_DEFS.map(r => ({ n: r.n, fans: Math.round(r.fans * (1 + 0.3 * (s.cal.y - 1))), growth: r.growth, skill: r.skill + 0.4 * (s.cal.y - 1), best: 0, yearBest: 0 }));
+  if (!Array.isArray(s.prio) || s.prio.length !== 6) s.prio = [2, 2, 2, 2, 2, 2];
+  if (!s.insights) s.insights = {};
+  if (!Array.isArray(s.ownPlats)) s.ownPlats = [];
+  if (s.hwProj === undefined) s.hwProj = null;
+  if (!s.execs) s.execs = {};
+  if (!s.policy) s.policy = { hours: 0, benefits: 1, bonus: 0 };
+  if (!Array.isArray(s.loans)) s.loans = [];
+  if (!Array.isArray(s.merch)) s.merch = [];
+  if (!s.book) s.book = {};
+  if (!Array.isArray(s.plHist)) s.plHist = [];
+  if (!s.taxPaid) s.taxPaid = 0;
   s.team.forEach(normStaff);
   if (s.activeDev) normDev(s.activeDev);
-  s.v = 3;
+  s.v = 4;
   return s;
 }
 function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) { const s = JSON.parse(raw); if (s && (s.v === 1 || s.v === 2 || s.v === 3)) return migrate(Object.assign(newGame(), s)); }
+    if (raw) { const s = JSON.parse(raw); if (s && s.v >= 1 && s.v <= 4) return migrate(Object.assign(newGame(), s)); }
   } catch (e) {}
   return null;
 }
 
 let STATE = load() || newGame();
+rebuildPlatforms();
 let projectiles = [], particles = [], ticker = [];
 let acc = 0, lastT = performance.now(), frameT = 0, lastHitSound = 0, simTick = 0;
 let currentTab = 'dev';
@@ -676,8 +870,8 @@ let currentTab = 'dev';
    ========================================================= */
 let modalOpen = false;
 const modalQueue = [];
-function showModal(html, buttons) {
-  modalQueue.push({ html, buttons: buttons || [{ label: 'OK', cls: 'btn-accent' }] });
+function showModal(html, buttons, onShow) {
+  modalQueue.push({ html, buttons: buttons || [{ label: 'OK', cls: 'btn-accent' }], onShow });
   if (!modalOpen) closeModal();
 }
 function closeModal() {
@@ -695,16 +889,20 @@ function closeModal() {
     box.appendChild(el);
   });
   $('modal').classList.add('show');
+  if (m.onShow) { try { m.onShow(); } catch (e) {} }
 }
 
 /* =========================================================
    ECONOMY HELPERS
    ========================================================= */
-function spend(n) {
+function bookAdd(cat, n) { const k = cat || 'Other'; STATE.book[k] = (STATE.book[k] || 0) + n; }
+function charge(n, cat) { STATE.gold -= n; STATE.ledger.exp += n; bookAdd(cat, -n); }
+function spend(n, cat) {
   if (STATE.gold < n) { playSound('error'); news('Not enough money!', '#ef476f'); return false; }
-  STATE.gold -= n; STATE.ledger.exp += n; updateHeader(); return true;
+  charge(n, cat); updateHeader(); return true;
 }
-function earn(n) { STATE.gold += n; STATE.ledger.inc += n; STATE.totalRevenue += n; }
+function earn(n, cat) { STATE.gold += n; STATE.ledger.inc += n; if (!FIN_CATS.has(cat)) STATE.totalRevenue += n; bookAdd(cat, n); }
+function opProfit(e) { return Object.entries(e.cats || {}).reduce((a, [k, v]) => FIN_CATS.has(k) ? a : a + v, 0); }
 function rankNeed() { return 40 + STATE.rank * 30; }
 function addRankExp(n) {
   STATE.rankExp += n;
@@ -724,15 +922,20 @@ function addRankExp(n) {
 function targetSkill(rank) { return 50 + 5 * (rank - 1); }
 function lvlOf(kind, n) { return Math.min(10, STATE.levels[kind][n] || 0); }
 function yearFrac() { return STATE.cal.y + (STATE.cal.m - 1) / 12; }
-function platLive(p) { const t = yearFrac(); return t >= p.year && !(p.end && t >= p.end); }
+function platLive(p) { if (p.own) return !p.disc; const t = yearFrac(); return t >= p.year && !(p.end && t >= p.end); }
 function marketNow(p) {
+  if (p.own) return p.disc ? 0 : clamp(0.3 + p.installed / 30000, 0.3, 4);
   if (!platLive(p)) return 0;
   const t = yearFrac();
   let f = Math.min(1, 0.45 + 0.55 * (t - p.year) / 2);
   if (p.decline && t > p.decline) f *= Math.max(0.15, 1 - 0.85 * (t - p.decline) / (p.end - p.decline));
   return p.peak * f;
 }
-function licensed(p) { return STATE.licences.includes(p.n); }
+function licensed(p) { return !!p.own || STATE.licences.includes(p.n); }
+function rebuildPlatforms() {
+  for (let i = PLATFORMS.length - 1; i >= 0; i--) if (PLATFORMS[i].own) { delete P[PLATFORMS[i].n]; PLATFORMS.splice(i, 1); }
+  (STATE.ownPlats || []).forEach(op => { op.own = true; PLATFORMS.push(op); P[op.n] = op; });
+}
 function platformOpen(p) { return platLive(p) && licensed(p) && STATE.rank >= p.rank; }
 function pubRep(pb) { const r = STATE.pubRep[pb.n]; return r === undefined ? 50 : r; }
 function pubAvailable(pb) { return !pb.adv || (STATE.rank >= pb.rank && pubRep(pb) >= 25); }
@@ -740,6 +943,7 @@ function pubAdvance(pb, genre) {
   if (!pb.adv) return 0;
   let a = pb.adv * (0.6 + pubRep(pb) / 100) * (pb.fav.includes(genre) ? 1.2 : 1);
   if (STATE.pubBonus === pb.n) a *= 1.5;
+  if (hasExec('bizdev')) a *= 1.2;
   return Math.round(a / 500) * 500;
 }
 function rankK() { return 1 + 0.25 * (STATE.rank - 1); }
@@ -753,14 +957,16 @@ function normDev(d) {
   if (!d.mods.statMul) d.mods.statMul = [1, 1, 1, 1];
   ['bugMul', 'speedMul', 'drainMul', 'hpMul'].forEach(k => { if (d.mods[k] === undefined) d.mods[k] = 1; });
   const defs = { budget: 1, focus: -1, monet: 1, pub: 'Self-publish', adv: 0, hype: 0, reviewBonus: 0, lead: 0, polished: false,
-    eventsFired: 0, awaiting: false, pace: 1, hook: '', audience: 2, sequelOf: '', discount: false };
+    eventsFired: 0, awaiting: false, pace: 1, hook: '', audience: 2, sequelOf: '', discount: false, prio: [2, 2, 2, 2, 2, 2] };
   for (const k in defs) if (d[k] === undefined) d[k] = defs[k];
   if (!d.decisions) d.decisions = [];
   if (!d.contrib) d.contrib = {};
+  if (!Array.isArray(d.prioMul)) d.prioMul = [1, 1, 1, 1];
   if (!Array.isArray(d.mkt)) d.mkt = [false, false, false];
   return d;
 }
 function hasTech(id) { return !!(STATE.tech && STATE.tech[id]); }
+function hasExec(k) { return !!(STATE.execs && STATE.execs[k]); }
 function computeMods() {
   const m = { stat: [1, 1, 1, 1], morale: 0, regen: 1, exp: 1, fans: 1, hype: 0, team: 1 };
   for (const id of STATE.decor) {
@@ -771,6 +977,12 @@ function computeMods() {
   const eng = (hasTech('engine1') ? 0.05 : 0) + (hasTech('engine2') ? 0.05 : 0) + (hasTech('engine3') ? 0.07 : 0);
   m.stat = m.stat.map(v => v + eng);
   if (hasTech('hr')) m.morale += 8;
+  const pol = STATE.policy || { hours: 0, benefits: 1, bonus: 0 };
+  const PH = POLICIES.hours[pol.hours] || POLICIES.hours[0], PB = POLICIES.benefits[pol.benefits] || POLICIES.benefits[1];
+  m.morale += (PH.morale || 0) + (PB.morale || 0) + (pol.bonus === 2 ? 4 : 0) + (hasExec('hrm') ? 6 : 0);
+  m.spd = PH.spd || 1; m.drain = PH.drain || 1; m.regen *= PH.regen || 1;
+  if (hasExec('cmo')) m.hype += 10;
+  m.bug = hasExec('producer') ? 0.85 : 1;
   if (hasTech('mkt1')) m.hype += 10;
   STATE.team.forEach(x => { if (x.traits.includes('Team Player')) m.team += 0.03; if (x.senior) m.team += 0.03; if (x.perks.includes('legend')) m.team += 0.05; });
   m.mentor = STATE.team.some(x => x.perks.includes('ment'));
@@ -828,7 +1040,7 @@ function checkMilestones() {
     if (!ok) return;
     STATE.milestones[ms.id] = true;
     const r = ms.r, parts = [];
-    if (r.gold) { earn(r.gold); parts.push(money(r.gold)); }
+    if (r.gold) { earn(r.gold, 'Awards'); parts.push(money(r.gold)); }
     if (r.rp) { STATE.rp += r.rp; parts.push(r.rp + ' RP'); }
     if (r.fans) { STATE.fans += r.fans; parts.push(fmt(r.fans) + ' fans'); }
     playSound('fanfare');
@@ -848,10 +1060,19 @@ function rivalsTick() {
 }
 function deskCount() { return FLOORS[STATE.floor - 1].desks; }
 function liveSlots() { return FLOORS[STATE.floor - 1].live; }
+function costBreakdown() {
+  const pol = POLICIES.benefits[STATE.policy.benefits] || POLICIES.benefits[1];
+  return {
+    'Salaries': STATE.team.reduce((a, m) => a + m.salary, 0),
+    'Rent': FLOORS[STATE.floor - 1].rent,
+    'Upkeep': Object.keys(FACILITIES).reduce((a, k) => a + (STATE.facilities[k] ? FACILITIES[k].upkeep : 0), 0),
+    'Executives': Object.values(STATE.execs).reduce((a, v) => a + v, 0),
+    'Benefits': (pol.cost || 0) * STATE.team.length
+  };
+}
 function monthlyCost() {
-  let c = STATE.team.reduce((a, m) => a + m.salary, 0) + FLOORS[STATE.floor - 1].rent;
-  for (const k in FACILITIES) if (STATE.facilities[k]) c += FACILITIES[k].upkeep;
-  return c;
+  const bd = costBreakdown();
+  return Object.values(bd).reduce((a, b) => a + b, 0) + STATE.loans.reduce((a, l) => a + Math.min(l.pay, l.left), 0);
 }
 function news(msg, color) { ticker.push({ msg, color: color || '#fff', life: 170 }); if (ticker.length > 6) ticker.shift(); }
 
@@ -890,54 +1111,48 @@ function startDevelopment() {
   const plat = P[platform];
   if (!platformOpen(plat)) { playSound('error'); news('Get a licence for that platform in Market first.', '#ef476f'); return; }
   if (!STATE.team.some(m => m.vac <= 0)) { news('Everyone is away! Wait for someone to come back.', '#ef476f'); return; }
-  const budget = +$('sel-budget').value || 0, focus = +$('sel-focus').value, monet = +$('sel-monet').value || 0;
+  const budget = +$('sel-budget').value || 0, monet = +$('sel-monet').value || 0;
   const audience = isNaN(+$('sel-aud').value) ? 2 : +$('sel-aud').value;
   const pb = PUB[$('sel-pub').value] || PUBLISHERS[0];
   if (!pubAvailable(pb)) { playSound('error'); return; }
   const cost = plat.fee + devCost(genre, budget);
-  if (!spend(cost)) return;
+  if (!spend(cost, 'Development')) return;
   const adv = pubAdvance(pb, genre);
   if (adv) {
-    earn(adv); news(`${pb.n} paid a ${money(adv)} advance`, '#ffd166');
+    earn(adv, 'Publisher'); news(`${pb.n} paid a ${money(adv)} advance`, '#ffd166');
     if (STATE.pubBonus === pb.n) STATE.pubBonus = null;
   }
   let base = ($('inp-title').value || '').trim();
-  if (!base && seq) { const mm = seq.title.match(/^(.*?)(?:\s(\d+))?$/); base = `${mm[1]} ${mm[2] ? +mm[2] + 1 : 2}`; }
-  if (!base) base = `${theme} ${genre}`;
+  if (!base && seq) base = sequelTitle(seq);
+  if (!base) base = ($('inp-title').placeholder || '').trim() || suggestTitle(genre, theme);
   const n = STATE.history.filter(h => h.title === base || h.title.startsWith(base + ' ')).length;
   const title = n && !seq ? `${base} ${n + 1}` : base;
   const M = computeMods();
   const mult = (1 + 0.03 * lvlOf('g', genre)) * (1 + 0.03 * lvlOf('t', theme)) * BUDGETS[budget].q;
+  const pr = STATE.prio.slice(), pe = prioEval(genre, pr);
   const d = normDev({
     kind: 'game', id: STATE.nextDevId++, title, genre, theme, platform, rank: STATE.rank,
     phase: 1, phaseName: '', mult, bugs: 0, hits: 0, gainSum: 0, boostUsed: false,
-    stats: [0, 0, 0, 0], budget, focus: isNaN(focus) ? -1 : focus, monet, pub: pb.n, adv, audience,
+    stats: [0, 0, 0, 0], budget, focus: -1, monet, pub: pb.n, adv, audience, prio: pr, prioMul: pe.statMul,
     hype: STATE.hypeBank + M.hype, sequelOf: seq ? seq.title : '',
     balloon: { x: 160, y: 146, r: 20, hp: 1, maxHp: 1, color: '#4cc9f0' }
   });
+  if (hasExec('producer')) d.mods.hpMul *= 0.9;
   STATE.hypeBank = 0;
-  d.decisions.push(`${BUDGETS[budget].n} budget`, d.focus < 0 ? 'Balanced focus' : `${STATS[d.focus]} focus`, MONET[monet].n, `${AUDIENCES[audience].n} audience`);
+  d.decisions.push(`${BUDGETS[budget].n} budget`, `Priorities ${AREA_AB.map((a, i) => a + pr[i]).join(' ')}`, MONET[monet].n, `${AUDIENCES[audience].n} audience`);
   if (seq) d.decisions.push(`Sequel to ${seq.title}`);
   if (pb.adv) d.decisions.push(`Signed with ${pb.n}`);
+  if (plat.own) d.decisions.push(`On our ${plat.n}`);
   STATE.activeDev = d;
   setupPhase(d);
   $('inp-title').value = ''; $('sel-seq').value = '';
   playSound('click');
   news(`Production started: ${title}`, '#66fcf1');
   renderDevMode();
-  leadModal(d);
+  assignModal(d);
 }
 /* ---------- Player decisions during development ---------- */
-function leadModal(d) {
-  const w = G[d.genre].w;
-  const best = STATS.filter((s, i) => w[i] >= 1.15).join(', ') || 'a balanced team';
-  const rows = STATE.team.filter(m => m.vac <= 0).map(m => {
-    const mi = ROLES[m.role].main;
-    return `<button class="opt" onclick="pickLead(${m.id})"><b>${esc(m.name)}</b> · ${staffTitle(m)} Lv${m.lv}<br><span class="muted">${STATS[mi]} ${m.s[mi]} · Morale ${Math.round(m.morale)} · ${m.traits.join(', ')}</span></button>`;
-  }).join('');
-  showModal(`<h3>Pick a Project Lead</h3><div class="note">The lead works 15% faster and their main stat counts 30% more, but they tire faster. ${esc(d.genre)} rewards <b>${best}</b>.</div>${rows}`,
-    [{ label: 'No lead', action: () => hookModal(d) }]);
-}
+function leadModal(d) { assignModal(d); }
 function pickLead(id) {
   const d = STATE.activeDev, m = findStaff(id);
   if (d && d.kind === 'game' && m) { d.lead = id; d.decisions.push(`Lead: ${m.name}`); news(`${m.name} is leading ${d.title}`, '#ffd166'); hookModal(d); }
@@ -967,11 +1182,11 @@ function setPace(i) {
   if (d.pace !== i) { d.pace = i; if (i === 2 && !d.decisions.includes('Crunched')) d.decisions.push('Crunched'); news(`Work pace: ${PACE[i].n}`, i === 2 ? '#ef476f' : '#66fcf1'); }
   playSound('click'); renderDevControls();
 }
-function mktCost(mk) { return Math.round(mk.cost * rankK() * (hasTech('mkt2') ? 0.5 : 1) / 100) * 100; }
+function mktCost(mk) { return Math.round(mk.cost * rankK() * (hasTech('mkt2') ? 0.5 : 1) * (hasExec('cmo') ? 0.75 : 1) / 100) * 100; }
 function buyMarketing(i) {
   const d = STATE.activeDev, mk = MARKETING[i];
   if (!d || d.kind !== 'game' || !mk || d.mkt[i]) return;
-  if (!spend(mktCost(mk))) return;
+  if (!spend(mktCost(mk), 'Marketing')) return;
   d.mkt[i] = true;
   const h = mk.hype + (hasTech('mkt2') ? 5 : 0);
   d.hype += h; d.decisions.push(mk.n);
@@ -982,6 +1197,7 @@ function onSequelPick() {
   const h = STATE.history.find(x => x.title === $('sel-seq').value);
   if (h) { $('sel-genre').value = h.genre; $('sel-theme').value = h.theme; }
   updatePreview();
+  if (h) $('inp-title').placeholder = sequelTitle(h); else refreshTitleHint();
 }
 function cardCost(c) { return Math.round(c.cost * rankK() / 100) * 100; }
 function designModal(d) {
@@ -1101,7 +1317,7 @@ function devEvent(d) {
   showModal(`<h3>${ev.t}</h3><div class="note">${esc(ev.txt(d, m, m2))}</div>`, btns);
 }
 function genContracts() {
-  const k = 1 + 0.3 * (STATE.rank - 1), out = [], names = CONTRACTS.slice().sort(() => Math.random() - 0.5);
+  const k = (1 + 0.3 * (STATE.rank - 1)) * (hasExec('bizdev') ? 1.3 : 1), out = [], names = CONTRACTS.slice().sort(() => Math.random() - 0.5);
   for (let i = 0; i < 3; i++) {
     const pay = Math.round((1800 + Math.random() * 2600) * k / 100) * 100;
     out.push({ title: names[i], pay, hp: Math.round(pay / 11) });
@@ -1149,8 +1365,10 @@ function doHit(m) {
   const M = MODS || computeMods();
   const b = d.balloon, R = ROLES[m.role], tr = m.traits, pk = m.perks;
   const isLead = d.lead === m.id;
-  const r = Math.random();
-  const idx = r < 0.55 ? R.main : r < 0.8 ? R.sub : Math.floor(Math.random() * 4);
+  const posts = d.kind === 'game' ? postsOf(d, m.id) : [];
+  let idx;
+  if (posts.length && Math.random() < 0.6) idx = pick(posts);
+  else { const r = Math.random(); idx = r < 0.55 ? R.main : r < 0.8 ? R.sub : Math.floor(Math.random() * 4); }
   const skill = m.s[idx];
   let critCh = 0.06 + m.lv * 0.004;
   if (tr.includes('Visionary')) critCh *= 2;
@@ -1161,19 +1379,22 @@ function doHit(m) {
   let label;
   if (d.kind === 'game') {
     const aud = AUDIENCES[d.audience] || AUDIENCES[2], hook = HOOK[d.hook];
-    const focusMul = d.focus < 0 ? 1 : (idx === d.focus ? 1.25 : 0.92);
     let personal = 1;
     if (isLead && idx === R.main) personal *= 1.3;
     if (pk.includes('spec') && idx === R.main) personal *= 1.15;
     if (pk.includes('allr')) personal *= 1.08;
     if (m.senior && idx === R.main) personal *= 1.2;
+    if (posts.includes(idx)) personal *= 1.3 * (posts.length > 1 ? 0.9 : 1);
+    if (d.assign && !d.assign[idx]) personal *= 0.9;
+    personal *= 1 + 0.05 * Math.min(5, m.gx[d.genre] || 0);
+    if (m.favG === d.genre) personal *= 1.12;
     const polishMul = d.phase === 5 ? 1.25 : 1;
-    const gain = skill / 12 * G[d.genre].w[idx] * aud.w[idx] * (hook ? hook.m[idx] : 1) * d.mult * d.mods.statMul[idx] *
-      M.stat[idx] * M.team * focusMul * personal * polishMul * rnd(0.85, 1.15) * (crit ? critMul : 1);
+    const gain = skill / 12 * G[d.genre].w[idx] * aud.w[idx] * (hook ? hook.m[idx] : 1) * d.mult * d.mods.statMul[idx] * d.prioMul[idx] *
+      M.stat[idx] * M.team * personal * polishMul * rnd(0.85, 1.15) * (crit ? critMul : 1);
     d.stats[idx] += gain; d.gainSum += gain; d.hits++;
     d.contrib[m.id] = (d.contrib[m.id] || 0) + gain;
     if (d.phase === 2 || d.phase === 3) {
-      let bc = (0.08 - Math.min(0.05, m.s[0] / 1500)) * d.mods.bugMul * PACE[d.pace].bug;
+      let bc = (0.08 - Math.min(0.05, m.s[0] / 1500)) * d.mods.bugMul * PACE[d.pace].bug * (M.bug || 1);
       if (tr.includes('Perfectionist')) bc *= 0.6;
       if (tr.includes('Bug Magnet')) bc *= 1.5;
       if (M.hunter) bc *= 0.8;
@@ -1188,7 +1409,7 @@ function doHit(m) {
     dmg: Math.round(dmg), label: crit ? label + '!' : label, crit, devId: d.id, t: 0 });
   if (crit) for (let i = 0; i < 4; i++) particles.push({ spark: true, x: m.x + rnd(-7, 7), y: m.y - 22 + rnd(-4, 4), color: '#ffd166', life: 18, vy: -0.5 });
   m.anim = 8;
-  let drain = staminaDrain(d) * (isLead ? 1.25 : 1);
+  let drain = staminaDrain(d) * (isLead ? 1.25 : 1) * (M.drain || 1);
   if (tr.includes('Workaholic')) drain *= 0.75;
   if (pk.includes('iron')) drain *= 0.7;
   m.stam -= drain;
@@ -1231,7 +1452,7 @@ function checkPhase() {
 function finishContract() {
   const d = STATE.activeDev;
   STATE.activeDev = null; projectiles = [];
-  earn(d.pay); STATE.rp += 1; addRankExp(5);
+  earn(d.pay, 'Contracts'); STATE.rp += 1; addRankExp(5);
   playSound('coin');
   news(`Contract done: +${money(d.pay)}`, '#ffd166');
   renderDevMode(); renderAll(); save();
@@ -1250,29 +1471,44 @@ function completeProject() {
   STATE.combos[key] = combo;
   const trend = STATE.trend && (STATE.trend.n === d.genre || STATE.trend.n === d.theme);
   const fit = plat.fav.includes(d.genre);
-  const top = w.indexOf(Math.max(...w)), low = w.indexOf(Math.min(...w));
-  const focusAdj = d.focus < 0 ? 0 : d.focus === top ? 0.4 : d.focus === low ? -0.3 : 0;
   const repeats = d.sequelOf ? 0 : STATE.history.slice(0, 3).filter(h => h.genre === d.genre && h.theme === d.theme).length;
   const audAdj = aud.good.includes(d.genre) ? 0.3 : aud.bad.includes(d.genre) ? -0.4 : 0;
   const lootKids = d.audience === 0 && d.monet === 3 ? -1.0 : 0;
   let hookAdj = 0, hc = -1;
   if (hook) { hc = hookCompat(d.hook, d.genre); hookAdj = HOOK_REVIEW[hc]; STATE.hookNotes[d.hook + '|' + d.genre] = hc; }
   const orig = d.sequelOf ? STATE.history.find(h => h.title === d.sequelOf) : null;
+  const seqN = orig ? (orig.seqN || 1) + 1 : 1;
+  const tooSoon = orig && orig.t && (STATE.cal.y * 12 + STATE.cal.m - orig.t) < 12;
+  const seqAdj = !orig ? 0 : (seqN === 2 ? 0.3 : -0.5 * (seqN - 2)) - (tooSoon ? 0.5 : 0);
+  const pe = prioEval(d.genre, d.prio);
+  // section grades
+  const tgt = targetSkill(d.rank), wsum = w.reduce((a, b) => a + b, 0);
+  const crew = STATE.team.filter(m => d.contrib[m.id]);
+  const avgSkill = k => crew.length ? crew.reduce((a, m) => a + m.s[k], 0) / crew.length : 40;
+  const grades = SECTIONS.map((sc, k) => {
+    const m = d.assign ? findStaff(d.assign[k]) : null;
+    const sk = m ? staffSkill(m, k, d.genre) * (postsOf(d, m.id).length > 1 ? 0.9 : 1) : avgSkill(k) * (d.assign ? 0.75 : 0.95);
+    const r = sk / tgt;
+    return { k, m, r, g: gradeOf(r) };
+  });
+  const secAdj = grades.reduce((a, x) => a + clamp((x.r - 1) * 1.2, -0.6, 0.5) * w[x.k], 0) / wsum;
+  const dir = findStaff(d.lead);
+  const dirAdj = dir ? (dir.role === 'Planner' ? 0.2 : 0.05) + (dir.senior ? 0.15 : 0) + (dir.perks.includes('legend') ? 0.1 : 0) : -0.2;
   const base = 8.5 * (1 - Math.exp(-0.9 * q)) - 1.2 + COMBO_REVIEW[combo] + (trend ? 0.5 : 0) + (fit ? 0.4 : 0) + mo.rev + aud.rev + audAdj + lootKids +
-    hookAdj + (orig ? 0.3 : 0) + d.reviewBonus + focusAdj - repeats * 0.8;
+    hookAdj + seqAdj + d.reviewBonus + pe.adj + secAdj + dirAdj - repeats * 0.8;
   const scores = REVIEWERS.map(() => clamp(Math.round(base + rnd(-1.1, 1.1)), 1, 10));
   const total = scores.reduce((a, b) => a + b, 0);
   const hof = total >= 32;
 
   let hype = d.hype;
   STATE.team.forEach(m => { if (!d.contrib[m.id]) return; if (m.traits.includes('Rockstar')) hype += 5; if (m.perks.includes('legend')) hype += 10; });
-  if (orig) hype += 15 + orig.total / 2;
+  if (orig) hype += (15 + orig.total / 2) / (seqN - 1) * (tooSoon ? 0.5 : 1);
   const hypeMul = 1 + Math.min(hype, 100) / 125;
   const deal = STATE.platDeal === d.platform;
   if (deal) STATE.platDeal = null;
   const mkt = Math.max(0.2, marketNow(plat));
   const dl = Math.round((400 + 25 * Math.pow(STATE.fans, 0.6)) * Math.pow(total / 20, 2) * mkt * COMBO_DL[combo] *
-    (trend ? 1.3 : 1) * (fit ? 1.2 : 1) * pb.boost * mo.dl * aud.dl * hypeMul * (orig ? 1.15 : 1) * (deal ? 1.4 : 1) *
+    (trend ? 1.3 : 1) * (fit ? 1.2 : 1) * pb.boost * mo.dl * aud.dl * hypeMul * (orig ? 1 + 0.15 / (seqN - 1) : 1) * (deal ? 1.4 : 1) *
     (d.discount ? 1.25 : 1) * rnd(0.85, 1.15));
   const gross = Math.round(dl * plat.arpu * 1.5 * mo.launch * (d.discount ? 0.6 : 1));
   const pubTake = Math.round(gross * pb.cut);
@@ -1280,15 +1516,16 @@ function completeProject() {
   const rev = gross - pubTake - invTake;
   const fansGain = Math.round(dl * (hof ? 0.08 : 0.04) * mo.fans * aud.fans * M.fans * (d.discount ? 1.2 : 1));
   const rpGain = 2 + Math.round(total / 6);
-  earn(rev);
+  earn(rev, 'Game sales');
   STATE.fans += fansGain; STATE.rp += rpGain; STATE.totalDownloads += dl;
   addRankExp(10 + total + (d.genre === 'Adventure' ? 10 : 0));
   STATE.levels.g[d.genre] = (STATE.levels.g[d.genre] || 0) + 1;
   STATE.levels.t[d.theme] = (STATE.levels.t[d.theme] || 0) + 1;
-  if (hof) earn(10000);
+  if (hof) earn(10000, 'Awards');
   STATE.releasedCount++;
   STATE.bestScore = Math.max(STATE.bestScore, total);
   if (!STATE.platformsUsed.includes(d.platform)) STATE.platformsUsed.push(d.platform);
+  if (plat.own) { plat.exBoost += total / 40 * 0.6; plat.games = (plat.games || 0) + 1; }
 
   // publisher relationship
   let pubLine = '';
@@ -1298,7 +1535,7 @@ function completeProject() {
       pubLine = `${pb.n} is delighted (target ${pb.target}+). Relationship up.`;
     } else if (total < pb.target - 5) {
       const claw = Math.round(d.adv * 0.3);
-      STATE.gold -= claw; STATE.ledger.exp += claw;
+      charge(claw, 'Publisher');
       STATE.pubRep[pb.n] = Math.max(0, pubRep(pb) - 15);
       pubLine = `<span class="bad">${pb.n} expected ${pb.target}+ and clawed back ${money(claw)} of the advance.</span>`;
     } else {
@@ -1308,17 +1545,38 @@ function completeProject() {
   }
 
   // staff results
+  const totalC = Object.values(d.contrib).reduce((a, b) => a + b, 0) || 1;
   const mvpId = Object.keys(d.contrib).sort((a, b) => d.contrib[b] - d.contrib[a])[0];
   const mvp = mvpId ? findStaff(+mvpId) : null;
-  const mood = total >= 32 ? 10 : total >= 24 ? 4 : total < 16 ? -8 : 0;
+  let mood = total >= 32 ? 10 : total >= 24 ? 4 : total < 16 ? -8 : 0;
+  let bonusLine = '';
+  if (STATE.policy.bonus === 1 && rev > 0) {
+    const bonus = Math.round(rev * 0.05); charge(bonus, 'Bonuses'); mood += total >= 28 ? 8 : 3;
+    bonusLine = ` · ${money(bonus)} paid in release bonuses`;
+  }
   STATE.team.forEach(m => {
-    if (d.contrib[m.id]) { m.shipped++; if (hof) m.hits++; }
+    if (d.contrib[m.id]) {
+      m.shipped++; if (hof) m.hits++;
+      m.gx[d.genre] = (m.gx[d.genre] || 0) + 1;
+      if (!m.bestS || total > m.bestS) { m.bestS = total; m.bestT = d.title; }
+    }
     m.morale = clamp(m.morale + mood * (m.traits.includes('Hothead') ? 2 : 1), 0, 100);
   });
   if (mvp) { mvp.mvps++; mvp.morale = Math.min(100, mvp.morale + 5); gainExp(mvp, 15); }
 
+  // genre insights
+  const ins = STATE.insights[d.genre] = STATE.insights[d.genre] || {};
+  const worst = pe.diff.map(Math.abs).indexOf(Math.max(...pe.diff.map(Math.abs)));
+  const learned = [];
+  if (!ins[worst]) { ins[worst] = pe.prof[worst]; learned.push(worst); }
+  const unknown = AREAS.map((a, i) => i).filter(i => !ins[i]);
+  if (unknown.length) { const u = pick(unknown); ins[u] = pe.prof[u]; learned.push(u); }
+  let prioLine = '';
+  if (Math.abs(pe.diff[worst]) > 0.06) prioLine = pe.diff[worst] > 0 ? `Critics felt too much went into <b>${AREAS[worst]}</b> for ${an(esc(d.genre))}.` : `Critics wanted more <b>${AREAS[worst]}</b> from ${an(esc(d.genre))}.`;
+  else prioLine = `Critics loved how well the priorities suited ${an(esc(d.genre))}.`;
+
   const entry = { title: d.title, genre: d.genre, theme: d.theme, platform: d.platform, total, dl, y: STATE.cal.y,
-    t: STATE.cal.y * 12 + STATE.cal.m, pub: pb.n, hook: d.hook, audience: aud.n, sequelOf: d.sequelOf };
+    t: STATE.cal.y * 12 + STATE.cal.m, pub: pb.n, hook: d.hook, audience: aud.n, sequelOf: d.sequelOf, seqN };
   STATE.history.unshift(entry);
   if (STATE.history.length > 40) STATE.history.length = 40;
   if (!STATE.yearBest || total > STATE.yearBest.total) STATE.yearBest = entry;
@@ -1341,26 +1599,37 @@ function completeProject() {
 
   const starN = Math.max(1, Math.round(total / 8));
   const stars = '★'.repeat(starN) + '☆'.repeat(5 - starN);
-  const revRows = scores.map((s, i) => `<div class="rev"><span>${REVIEWERS[i]}: “${QUOTES[s]}”</span><b>${s}</b></div>`).join('');
-  const notes = [];
+  const revRows = scores.map((sc, i) => `<div class="rev"><span>${REVIEWERS[i]}: “${QUOTES[sc]}”</span><b>${sc}</b></div>`).join('');
+  const notes = [prioLine];
+  const weak = grades.filter(x => x.g === 'D' || x.g === 'C').map(x => SECTIONS[x.k].n);
+  if (weak.length) notes.push(`<span class="bad">Weak areas: ${weak.join(', ')}.</span>`);
   if (hook) notes.push(`Hook ${esc(d.hook)}: <b style="color:${HOOK_COLOR[hc]}">${HOOK_LABEL[hc]}</b>`);
   if (audAdj) notes.push(`${aud.n} audience ${audAdj > 0 ? '<span class="good">loves</span>' : '<span class="bad">is wrong for</span>'} ${esc(d.genre)}`);
   if (lootKids) notes.push('<span class="bad">Parents were furious about loot boxes in a kids’ game.</span>');
   if (mo.rev < 0 && !lootKids) notes.push(`<span class="bad">Critics marked it down for its ${esc(mo.n.toLowerCase())} model.</span>`);
-  if (orig) notes.push(total >= orig.total ? `Critics say it surpasses ${esc(orig.title)}.` : `Critics found it a step down from ${esc(orig.title)}.`);
+  if (orig) notes.push((total >= orig.total ? `Critics say it surpasses ${esc(orig.title)}.` : `Critics found it a step down from ${esc(orig.title)}.`) + (seqN >= 3 ? ' <span class="bad">Franchise fatigue is setting in.</span>' : '') + (tooSoon ? ' <span class="bad">It came out too soon after the last one.</span>' : ''));
   if (deal) notes.push(`<span class="good">${esc(d.platform)} featured it on their storefront.</span>`);
+  if (plat.own) notes.push(`<span class="good">Sales of the ${esc(plat.n)} got a boost.</span>`);
+  if (!dir) notes.push('<span class="bad">Nobody directed it. The vision felt muddled.</span>');
+  learned.forEach(i => notes.push(`📓 Learned: ${esc(d.genre)} needs <b>${LV_NAME[pe.prof[i]]}</b> ${AREAS[i]}`));
+  if (total >= 28) notes.push('<span class="gold">Merchandise licensing is now available in Biz.</span>');
+  const credits = crew.slice().sort((a, b) => d.contrib[b.id] - d.contrib[a.id]).map(m => {
+    const posts = postsOf(d, m.id).map(k => SECTIONS[k].n); if (d.lead === m.id) posts.unshift('Director');
+    return `<div class="row mini"><span>${mvp && m.id === mvp.id ? '⭐ ' : ''}<b>${esc(m.name)}</b> <span class="muted">${posts.join(', ') || 'Support'}${m.favG === d.genre ? ' ♥' : ''}</span></span><span>${Math.round(d.contrib[m.id] / totalC * 100)}%</span></div>`;
+  }).join('');
+  const gradeLine = grades.map(x => `${SECTIONS[x.k].n} <b style="color:${GRADE_COLOR[x.g]}">${x.g}</b>`).join(' · ');
   const html = `
     <h3>${esc(d.title)}</h3>
     <div class="muted" style="text-align:center;">${esc(d.genre)} × ${esc(d.theme)} · ${esc(d.platform)}</div>
     <div style="text-align:center;">Combo: <b style="color:${COMBO_COLOR[combo]}">${COMBO_LABEL[combo]}</b>${newCombo ? ' <span class="gold">(new!)</span>' : ''}${trend ? ' · <span class="good">Trending!</span>' : ''}${fit ? ' · <span class="good">Platform favourite</span>' : ''}</div>
     ${repeats ? `<div class="note bad">Critics feel it's a rerun of your recent work (-${(repeats * 0.8).toFixed(1)} per review). Mix up your combos!</div>` : ''}
-    ${notes.length ? `<div class="note mini">${notes.join('<br>')}</div>` : ''}
     ${revRows}
     <div class="big">${total} / 40</div>
     <div style="text-align:center; color:var(--gold);">${stars}</div>
     ${hof ? '<div style="text-align:center;" class="gold">🏆 HALL OF FAME! +$10,000</div>' : ''}
+    <div class="note mini">${notes.join('<br>')}</div>
     <div class="note">Downloads: <b>${fmt(dl)}</b>${hype ? ` (hype ${Math.round(hype)})` : ''}<br>Launch revenue: <b class="gold">${money(rev)}</b>${pubTake ? ` after ${esc(pb.n)}'s ${Math.round(pb.cut * 100)}% cut` : ''}${invTake ? ` and ${money(invTake)} to your investor` : ''}<br>New fans: +${fmt(fansGain)} · Research: +${rpGain} RP<br>${liveNote}${pubLine ? '<br>' + pubLine : ''}</div>
-    ${mvp ? `<div class="note mini">⭐ MVP: <b>${esc(mvp.name)}</b> (${staffTitle(mvp)}) · team morale ${mood >= 0 ? '+' : ''}${mood}</div>` : ''}
+    <div class="sec">Credits</div><div class="note mini">${gradeLine}<br>${credits}<div class="muted" style="margin-top:3px;">Team morale ${mood >= 0 ? '+' : ''}${mood}${bonusLine}</div></div>
     <div class="note mini muted">Decisions: ${d.decisions.map(esc).join(' · ')}</div>`;
   playSound(hof ? 'fanfare' : 'coin');
   showModal(html, [{ label: 'Release! 🚀', cls: 'btn-accent' }]);
@@ -1375,14 +1644,14 @@ function advanceWeek() {
   for (const g of STATE.live) {
     let weekly = weeklyRev(g);
     weekly -= investorCut(weekly);
-    earn(weekly); g.revTotal += weekly;
+    earn(weekly, 'Live ops'); g.revTotal += weekly;
     const p = P[g.platform];
-    const ret = g.ret + (STATE.facilities.servers ? 0.012 : 0) + (hasTech('ana') ? 0.01 : 0) - (p && !platLive(p) ? 0.08 : 0);
+    const ret = g.ret + (STATE.facilities.servers ? 0.012 : 0) + (hasTech('ana') ? 0.01 : 0) + (hasExec('cm') ? 0.008 : 0) - (p && !platLive(p) ? 0.08 : 0);
     const growth = 0.07 * (g.score / 40) * Math.max(0, 1 - g.weeks / 16) + (g.event > 0 ? 0.03 : 0);
     g.users = Math.round(g.users * Math.min(1.03, ret + growth));
     if (g.monet === 3 && Math.random() < 0.03) { g.users = Math.round(g.users * 0.85); news(`Players revolt over loot boxes in ${g.title}!`, '#ef476f'); }
     g.peak = Math.max(g.peak, g.users);
-    STATE.fans += Math.round(Math.min(g.users * 0.0005, 50 * STATE.rank));
+    STATE.fans += Math.round(Math.min(g.users * 0.0005, 50 * STATE.rank) * (hasExec('cm') ? 1.5 : 1));
     g.weeks++; if (g.event > 0) g.event--; if (g.saleWeeks > 0) g.saleWeeks--;
   }
   const ended = STATE.live.filter(g => g.users < 50);
@@ -1394,7 +1663,10 @@ function advanceWeek() {
   STATE.team.forEach(m => {
     if (m.vac > 0) { m.vac--; if (m.vac === 0) { m.stam = m.maxStam; news(`${m.name} is back from vacation, refreshed!`, '#06d6a0'); } }
     m.morale += (eq - m.morale) * 0.08;
-    if (d && d.kind === 'game' && m.vac <= 0) m.morale += PACE[d.pace].morale * (m.traits.includes('Hothead') ? 2 : 1);
+    if (d && d.kind === 'game' && m.vac <= 0) {
+      m.morale += PACE[d.pace].morale * (m.traits.includes('Hothead') ? 2 : 1);
+      if (m.favG === d.genre) m.morale += 1.5;
+    }
     if (M.muse) m.morale = Math.max(50, m.morale);
     m.morale = clamp(m.morale, 0, 100);
     if (m.raiseCd > 0) m.raiseCd--;
@@ -1405,6 +1677,7 @@ function advanceWeek() {
     STATE.investor.weeks--;
     if (!STATE.investor.weeks) news(`The investor deal has ended. They took ${money(STATE.investor.paid || 0)} in total.`, '#9aa5b1');
   }
+  hardwareWeek();
 
   if (Math.random() < 0.12) randomEvent();
 
@@ -1427,6 +1700,7 @@ function randomEvent() {
   for (const e of pool) { r -= e.w; if (r <= 0) { e.f(); return; } }
 }
 function evPoach() {
+  if ((hasExec('hrm') || STATE.policy.benefits === 2) && Math.random() < 0.5) return;
   const cands = STATE.team.filter(m => !m.traits.includes('Loyal') && m.lv >= 2 && m.vac <= 0);
   if (!cands.length || STATE.team.length < 2) return;
   const m = pick(cands), rival = pick(STATE.rivals).n;
@@ -1445,7 +1719,7 @@ function evInterview() {
 function evInvestor() {
   const amt = Math.round(20000 * rankK() / 1000) * 1000;
   showModal(`<h3>Angel Investor</h3><div class="note">An investor offers <b class="gold">${money(amt)}</b> now in exchange for 15% of all game income for the next 48 weeks.</div>`, [
-    { label: 'Take the money', cls: 'btn-accent', action: () => { earn(amt); STATE.investor = { weeks: 48, cut: 0.15, paid: 0 }; news(`Investment secured: +${money(amt)}`, '#ffd166'); } },
+    { label: 'Take the money', cls: 'btn-accent', action: () => { earn(amt, 'Investment'); STATE.investor = { weeks: 48, cut: 0.15, paid: 0 }; news(`Investment secured: +${money(amt)}`, '#ffd166'); } },
     { label: 'Stay independent', action: () => { STATE.team.forEach(m => { m.morale = Math.min(100, m.morale + 3); }); news('The team respects staying independent.', '#66fcf1'); } }]);
 }
 function discoverTip() {
@@ -1492,7 +1766,7 @@ function evFanArt() {
     { label: `Run it (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => { if (!spend(cost)) return; g.users = Math.round(g.users * 1.12); g.ret = Math.min(0.985, g.ret + 0.005); STATE.fans += 100 + Math.round(STATE.fans * 0.02); news(`The contest was a hit! ${g.title} players +12%`, '#06d6a0'); } },
     { label: 'Just share their work', action: () => { STATE.fans += 40; news('Fans appreciated the shout-out.', '#66fcf1'); } }]);
 }
-const ESPORT_GENRES = ['Action', 'Sports', 'Strategy', 'MMO', 'Card Game', 'Racing'];
+const ESPORT_GENRES = ['Action', 'Sports', 'Strategy', 'MMO', 'Card Game', 'Racing', 'Fighting', 'Shooter', 'Battle Royale'];
 function evEsports() {
   const g = pick(STATE.live.filter(x => ESPORT_GENRES.includes(x.genre))); if (!g) return;
   const cost = Math.round(10000 * rankK() / 1000) * 1000;
@@ -1558,17 +1832,27 @@ const STUDIO_EVENTS = [
   { w: 1, c: () => STATE.history.length >= 3, f: evRivalFeud }
 ];
 function monthEnd() {
-  const cost = monthlyCost();
-  STATE.gold -= cost; STATE.ledger.exp += cost;
+  const bd = costBreakdown();
+  let total = 0;
+  for (const k in bd) if (bd[k]) { charge(bd[k], k); total += bd[k]; }
+  STATE.loans.forEach(l => { const pay = Math.min(l.pay, l.left); charge(pay, 'Loan repayments'); total += pay; l.left -= pay; });
+  if (STATE.loans.some(l => l.left <= 0)) news('A loan has been fully repaid!', '#06d6a0');
+  STATE.loans = STATE.loans.filter(l => l.left > 0);
+  STATE.merch.forEach(mc => { earn(Math.round(mc.amt), 'Merch'); mc.amt *= 0.9; mc.months--; });
+  STATE.merch = STATE.merch.filter(mc => mc.months > 0 && mc.amt >= 50);
+  const prof = opProfit({ cats: STATE.book });
+  if (STATE.policy.bonus === 2 && prof > 0) charge(Math.round(prof * 0.05), 'Bonuses');
+  const pm = STATE.cal.m === 1 ? 12 : STATE.cal.m - 1, py = STATE.cal.m === 1 ? STATE.cal.y - 1 : STATE.cal.y;
+  STATE.plHist.push({ y: py, m: pm, inc: STATE.ledger.inc, exp: STATE.ledger.exp, cats: STATE.book });
+  if (STATE.plHist.length > 36) STATE.plHist.shift();
   STATE.ledger.lastInc = STATE.ledger.inc; STATE.ledger.lastExp = STATE.ledger.exp;
-  STATE.ledger.inc = 0; STATE.ledger.exp = 0;
-  news(`Payday: -${money(cost)} (salaries, rent, upkeep)`, '#ef476f');
-  // new trend
+  STATE.ledger.inc = 0; STATE.ledger.exp = 0; STATE.book = {};
+  news(`Payday: -${money(total)} (salaries, rent, upkeep${STATE.loans.length ? ', loans' : ''})`, '#ef476f');
   const pool = STATE.unlocked.g.map(n => ({ type: 'genre', n })).concat(STATE.unlocked.t.map(n => ({ type: 'theme', n })));
   STATE.trend = pick(pool);
   news(`Trend this month: ${STATE.trend.n}!`, '#ffd166');
-  // new platforms by year
   PLATFORMS.forEach(p => {
+    if (p.own) return;
     if (STATE.cal.m === 1 && p.year === STATE.cal.y) news(`New platform launched: ${p.n}! Licences in Market.`, '#66fcf1');
     if (STATE.cal.m === 1 && p.end === STATE.cal.y) news(`${p.n} has been discontinued.`, '#9aa5b1');
   });
@@ -1579,12 +1863,19 @@ function monthEnd() {
   if (STATE.gold < 0) {
     STATE.debtMonths++;
     if (STATE.debtMonths >= 3) return gameOver();
-    showModal(`<h3>⚠ In the Red</h3><div class="note">You ended the month at <b class="bad">${money(STATE.gold)}</b>. Get back above $0 within ${3 - STATE.debtMonths} month(s) or the studio goes bankrupt. Contract work is a quick fix.</div>`);
+    showModal(`<h3>⚠ In the Red</h3><div class="note">You ended the month at <b class="bad">${money(STATE.gold)}</b>. Get back above $0 within ${3 - STATE.debtMonths} month(s) or the studio goes bankrupt. Contract work or a bank loan (Biz tab) can bridge the gap.</div>`);
   } else STATE.debtMonths = 0;
   refreshDevOptions(); updatePreview();
   save();
 }
 function yearEnd() {
+  const ty = STATE.cal.y - 1;
+  const tprof = STATE.plHist.filter(e => e.y === ty).reduce((a, e) => a + opProfit(e), 0);
+  const tax = tprof > 0 ? Math.round(tprof * taxRate()) : 0;
+  if (tax > 0) {
+    charge(tax, 'Tax'); STATE.taxPaid = (STATE.taxPaid || 0) + tax;
+    showModal(`<h3>🧾 Year ${ty} Tax Bill</h3><div class="note">Operating profit for Year ${ty}: <b class="good">${money(tprof)}</b><br>Corporate tax at ${Math.round(taxRate() * 100)}%: <b class="bad">${money(tax)}</b><br>${hasExec('cfo') ? 'Your CFO kept the rate low.' : 'A CFO (Biz tab) would cut the rate to 8%.'}</div>`);
+  }
   const best = STATE.yearBest; STATE.yearBest = null;
   const rTop = STATE.rivals.reduce((a, r) => (r.yearBest || 0) > (a ? a.yearBest : 0) ? r : a, null);
   const rScore = rTop ? rTop.yearBest || 0 : 0;
@@ -1596,7 +1887,7 @@ function yearEnd() {
   else if (best && yr === 1) award = { n: 'Best Newcomer', cash: 5000, fans: 200 };
   if (rTop && rScore >= 34 && (!best || rScore > best.total)) rivalLine = `<br><span class="muted">${esc(rTop.n)} took Game of the Year with a ${rScore}/40 release.</span>`;
   if (!award) { news(`Awards night: no trophy for Year ${yr}.${rivalLine ? ' ' + rTop.n + ' won GOTY.' : ''}`, '#9aa5b1'); return; }
-  earn(award.cash); STATE.fans += award.fans; addRankExp(30);
+  earn(award.cash, 'Awards'); STATE.fans += award.fans; addRankExp(30);
   if (award.key) STATE.awards[award.key] = (STATE.awards[award.key] || 0) + 1;
   STATE.team.forEach(m => { m.morale = Math.min(100, m.morale + 8); });
   playSound('fanfare');
@@ -1610,6 +1901,361 @@ function gameOver() {
   try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
   showModal(`<h3>Bankrupt</h3><div class="note">Three months in the red and the bank has called in the loan. Your studio released ${STATE.history.length} game(s) with ${fmt(STATE.totalDownloads)} total downloads.</div>`,
     [{ label: 'Start a New Studio', cls: 'btn-accent', action: () => { STATE = newGame(); afterReset(); } }]);
+}
+
+
+/* ---------- Title generator ---------- */
+function suggestTitle(g, t) {
+  const gw = GENRE_WORDS[g] || [g], tw = THEME_WORDS[t] || [t];
+  for (let i = 0; i < 14; i++) {
+    const Gw = pick(gw), Tw = pick(tw);
+    const single = /^[A-Za-z]+$/.test(Gw) && /^[A-Za-z]+$/.test(Tw);
+    const forms = [
+      () => `${Tw} ${Gw}`, () => `${Tw} ${Gw}`, () => `Super ${Tw} ${Gw}`, () => `${pick(NAME_ADJ)} ${Tw} ${Gw}`,
+      () => `${Tw} ${Gw}: ${pick(NAME_SUB)}`, () => single ? `${Tw}${Gw.toLowerCase()}` : `${Tw} ${Gw}`, () => `${pick(NAME_ADJ)} ${Tw}`,
+      () => `${Tw} ${Gw} ${pick(NAME_TAG)}`, () => `The ${Tw} ${Gw}`, () => `${Tw}: ${pick(NAME_SUB)}`, () => `${Gw} of ${Tw}`
+    ];
+    const n = pick(forms)();
+    if (n.length <= 24 && !STATE.history.some(h => h.title === n)) return n;
+  }
+  return `${t} ${g}`.slice(0, 24);
+}
+function rollTitle() {
+  const g = $('sel-genre').value, t = $('sel-theme').value;
+  if (g && t) { $('inp-title').value = suggestTitle(g, t); playSound('click'); }
+}
+function refreshTitleHint() {
+  const g = $('sel-genre').value, t = $('sel-theme').value;
+  if (g && t && !$('sel-seq').value) $('inp-title').placeholder = suggestTitle(g, t);
+}
+function sequelTitle(h) { const mm = h.title.match(/^(.*?)(?:\s(\d+))?$/); return `${mm[1]} ${mm[2] ? +mm[2] + 1 : 2}`.slice(0, 24); }
+
+/* ---------- Development priorities ---------- */
+function prioEval(genre, pr) {
+  const prof = (G[genre] && G[genre].prof) || 'MMMMMM';
+  const v = prof.split('').map(c => LV[c]);
+  const p = pr && pr.some(x => x > 0) ? pr : [1, 1, 1, 1, 1, 1];
+  const dot = v.reduce((a, x, i) => a + x * p[i], 0);
+  const fit = dot / (Math.hypot(...v) * Math.hypot(...p));
+  const adj = clamp((fit - 0.95) * 14, -1.5, 0.75);
+  const e = [0, 1, 2, 3].map(st => p.reduce((a, x, i) => a + x * AREA_STAT[i][st], 0));
+  const mean = e.reduce((a, b) => a + b, 0) / 4 || 1;
+  const statMul = e.map(x => 0.8 + 0.2 * x / mean);
+  const sv = v.reduce((a, b) => a + b, 0), sp = p.reduce((a, b) => a + b, 0);
+  const diff = v.map((x, i) => p[i] / sp - x / sv);
+  return { fit, adj, statMul, diff, prof };
+}
+function prioUsed() { return STATE.prio.reduce((a, b) => a + b, 0); }
+function prioAdj(i, dlt) {
+  const v = STATE.prio[i] + dlt;
+  if (v < 0 || v > PRIO_MAX) return;
+  if (dlt > 0 && prioUsed() >= PRIO_BUDGET) { playSound('error'); return; }
+  STATE.prio[i] = v; playSound('click'); renderPrio(); updatePreview();
+}
+function prioRecommend() {
+  const g = $('sel-genre').value, ins = STATE.insights[g] || {};
+  const raw = AREAS.map((a, i) => LV[ins[i]] || 2);
+  const sum = raw.reduce((a, b) => a + b, 0);
+  const pr = raw.map(x => Math.min(PRIO_MAX, Math.round(x * PRIO_BUDGET / sum)));
+  while (pr.reduce((a, b) => a + b, 0) > PRIO_BUDGET) pr[pr.indexOf(Math.max(...pr))]--;
+  STATE.prio = pr; playSound('click'); renderPrio(); updatePreview();
+}
+function prioReset() { STATE.prio = [2, 2, 2, 2, 2, 2]; renderPrio(); updatePreview(); }
+function renderPrio() {
+  const g = $('sel-genre').value, ins = STATE.insights[g] || {}, left = PRIO_BUDGET - prioUsed();
+  $('prio-box').innerHTML = `<div class="row"><b class="hl">Development priorities</b><span class="mini ${left ? 'gold' : 'muted'}">${left} pts left</span></div>` +
+    AREAS.map((a, i) => `<div class="prio-row"><span>${a}${ins[i] ? ` <span class="chip ${ins[i] === 'H' ? 'chip-gold' : ins[i] === 'L' ? 'chip-bad' : ''}">${ins[i]}</span>` : ''}</span>` +
+      `<button class="btn-sm" onclick="prioAdj(${i},-1)">−</button><span class="pips">${'●'.repeat(STATE.prio[i])}${'○'.repeat(PRIO_MAX - STATE.prio[i])}</span>` +
+      `<button class="btn-sm" onclick="prioAdj(${i},1)">+</button></div>`).join('') +
+    `<div class="mini muted">Each genre wants a different mix. Reviews teach you what ${esc(g || 'each genre')} needs (H/M/L).</div>` +
+    `<div class="grid2"><button class="btn-sm" onclick="prioRecommend()">Use genre insights</button><button class="btn-sm" onclick="prioReset()">Reset</button></div>`;
+}
+function insightsHtml() {
+  const head = `<div class="row mini muted"><span>Genre</span><span style="font-family:monospace;white-space:pre">${AREA_AB.join(' ')}</span></div>`;
+  const rows = STATE.unlocked.g.map(g => {
+    const ins = STATE.insights[g] || {};
+    return `<div class="row mini"><span>${esc(g)}</span><span style="font-family:monospace;white-space:pre">${AREAS.map((a, i) => ins[i]
+      ? `<b style="color:${ins[i] === 'H' ? 'var(--gold)' : ins[i] === 'L' ? 'var(--danger)' : 'var(--accent)'}"> ${ins[i]}</b>` : '<span class="muted"> ?</span>').join(' ')}</span></div>`;
+  }).join('');
+  return `<div class="sec">Genre Insights</div><div class="note mini">How much each genre needs: ${AREAS.map((a, i) => AREA_AB[i] + ' ' + a).join(', ')}. H high, M medium, L low. Learned from critics after each release.</div>${head}${rows}`;
+}
+
+/* ---------- Staff posts ---------- */
+function gradeOf(r) { return r >= 1.4 ? 'S' : r >= 1.15 ? 'A' : r >= 0.95 ? 'B' : r >= 0.75 ? 'C' : 'D'; }
+function staffSkill(m, k, genre) { return m.s[k] * (1 + 0.04 * Math.min(5, (m.gx && m.gx[genre]) || 0)) * (m.favG === genre ? 1.08 : 1); }
+function postsOf(d, id) { return d && d.assign ? [0, 1, 2, 3].filter(k => d.assign[k] === id) : []; }
+function autoAssign(d) {
+  const avail = STATE.team.filter(m => m.vac <= 0);
+  const order = [0, 1, 2, 3].sort((a, b) => G[d.genre].w[b] - G[d.genre].w[a]);
+  const used = new Set(), as = [0, 0, 0, 0];
+  order.forEach(k => {
+    let pool = avail.filter(m => !used.has(m.id));
+    if (!pool.length) pool = avail;
+    const best = pool.slice().sort((a, b) => staffSkill(b, k, d.genre) - staffSkill(a, k, d.genre))[0];
+    if (best) { as[k] = best.id; used.add(best.id); }
+  });
+  const lead = avail.slice().sort((a, b) => ((b.role === 'Planner') - (a.role === 'Planner')) || (b.senior - a.senior) || (b.lv - a.lv))[0];
+  return { as, lead: lead ? lead.id : 0 };
+}
+function assignModal(d) {
+  const avail = STATE.team.filter(m => m.vac <= 0), auto = autoAssign(d);
+  const opt = (k, sel) => '<option value="0">— nobody —</option>' + avail.map(m => `<option value="${m.id}" ${m.id === sel ? 'selected' : ''}>${esc(m.name)} · ${k < 0 ? staffTitle(m) : STATS[k] + ' ' + Math.round(staffSkill(m, k, d.genre))}${m.favG === d.genre ? ' ♥' : ''}</option>`).join('');
+  showModal(`<h3>Staff the Project</h3><div class="note mini">Post owners do most of the work on their area, with a 30% bonus. Their skill sets that area's grade, and critics punish weak areas. ♥ means they love ${esc(d.genre)}. Staff get better at genres they have shipped before. The director is best as a Planner.</div>
+    <label>Director</label><select id="as-dir" onchange="assignPreview()">${opt(-1, auto.lead)}</select>
+    ${SECTIONS.map((sc, k) => `<label>${sc.n} · <span style="color:${STAT_COLORS[k]}">${STATS[k]}</span></label><select id="as-${k}" onchange="assignPreview()">${opt(k, auto.as[k])}</select>`).join('')}
+    <div id="as-prev" class="note mini"></div>`,
+    [{ label: 'Confirm team', cls: 'btn-accent', action: confirmAssign }], assignPreview);
+}
+function assignPreview() {
+  const d = STATE.activeDev; if (!d || !$('as-0')) return;
+  const ids = [0, 1, 2, 3].map(k => +$('as-' + k).value);
+  const counts = {}; ids.forEach(id => { if (id) counts[id] = (counts[id] || 0) + 1; });
+  const tgt = targetSkill(STATE.rank);
+  $('as-prev').innerHTML = 'Expected grades: ' + SECTIONS.map((sc, k) => {
+    const m = findStaff(ids[k]);
+    if (!m) return `${sc.n} <b class="bad">none</b>`;
+    const g = gradeOf(staffSkill(m, k, d.genre) / tgt);
+    return `${sc.n} <b style="color:${GRADE_COLOR[g]}">${g}</b>${counts[m.id] > 1 ? ' <span class="bad">(stretched)</span>' : ''}`;
+  }).join(' · ');
+}
+function confirmAssign() {
+  const d = STATE.activeDev; if (!d || !$('as-0')) return;
+  d.assign = [0, 1, 2, 3].map(k => +$('as-' + k).value || 0);
+  const lead = +$('as-dir').value || 0, m = findStaff(lead);
+  d.lead = m ? lead : 0;
+  if (m) { d.decisions.push(`Director: ${m.name}`); news(`${m.name} is directing ${d.title}`, '#ffd166'); }
+  hookModal(d);
+}
+function gxText(m) {
+  const e = Object.entries(m.gx || {}).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  return e.length ? ' · Exp: ' + e.map(([g, n]) => `${esc(g)}×${n}`).join(', ') : '';
+}
+
+/* ---------- Hardware ---------- */
+function hwName() {
+  for (let i = 0; i < 20; i++) {
+    const n = pick(HW_PRE) + pick(HW_SUF) + (Math.random() < 0.35 ? ' ' + pick(['X', 'Pro', 'Mini', '64', 'One', 'Zero', 'Neo']) : '');
+    if (!P[n]) return n;
+  }
+  return 'Studio Console ' + (STATE.ownPlats.length + 1);
+}
+function hwSpec(c) {
+  const f = HW_FORMS[c.form], cpu = HW_CPU[c.cpu], gpu = HW_GPU[c.gpu], inp = HW_INPUT[c.inp], st = HW_STORE[c.st], sty = HW_STYLE[c.sty];
+  const k = hasTech('hwrd') ? 0.8 : 1;
+  return {
+    cost: Math.round((f.cost + cpu.cost + gpu.cost + inp.cost + st.cost) * k / 1000) * 1000,
+    unit: Math.round((f.unit + cpu.unit + gpu.unit + inp.unit + st.unit) * (hasTech('hwrd') ? 0.9 : 1)),
+    pow: cpu.pow + gpu.pow,
+    appeal: f.appeal * inp.appeal * st.appeal * sty.appeal,
+    weeks: Math.round((16 + 4 * (cpu.pow + gpu.pow)) * (hasExec('producer') ? 0.8 : 1))
+  };
+}
+function hwCfgFromForm() {
+  return { form: +$('hw-form').value, cpu: +$('hw-cpu').value, gpu: +$('hw-gpu').value, inp: +$('hw-in').value, st: +$('hw-st').value, sty: +$('hw-sty').value,
+    name: ($('hw-name').value || '').trim() || $('hw-name').placeholder, fav: [$('hw-f1').value, $('hw-f2').value, $('hw-f3').value] };
+}
+function hwModal() {
+  if (STATE.rank < HW_RANK || STATE.hwProj) return;
+  const sel = (id, arr, f) => `<select id="${id}" onchange="hwPreview()">${arr.map((x, i) => `<option value="${i}">${f(x)}</option>`).join('')}</select>`;
+  const ug = STATE.unlocked.g;
+  const gsel = (id, def) => `<select id="${id}" onchange="hwPreview()">${ug.map(n => `<option value="${esc(n)}" ${n === def ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
+  const col = (l, h) => `<div style="display:flex;flex-direction:column;gap:7px;"><label>${l}</label>${h}</div>`;
+  showModal(`<h3>🕹 Design a Platform</h3><div class="note mini">You earn on every unit sold (price minus build cost) and a royalty every week from every console in players' homes. Your own games on it pay no fees, and every hit you release there sells more units.</div>
+    <label>Name</label><div style="display:grid;grid-template-columns:1fr auto;gap:6px;"><input id="hw-name" maxlength="20" placeholder="${esc(hwName())}"><button class="btn-sm" onclick="$('hw-name').value=hwName()">🎲</button></div>
+    <label>Form factor</label>${sel('hw-form', HW_FORMS, x => `${x.n} · ${money(x.cost)}`)}
+    <div class="grid2">${col('Processor', sel('hw-cpu', HW_CPU, x => x.n))}${col('Graphics', sel('hw-gpu', HW_GPU, x => x.n))}</div>
+    <div class="grid2">${col('Input', sel('hw-in', HW_INPUT, x => x.n))}${col('Media', sel('hw-st', HW_STORE, x => x.n))}</div>
+    <label>Style</label>${sel('hw-sty', HW_STYLE, x => x.n)}
+    <label>Genres to court (favourites)</label>${gsel('hw-f1', ug[0])}${gsel('hw-f2', ug[1])}${gsel('hw-f3', ug[2])}
+    <div id="hw-prev" class="note mini"></div>`,
+    [{ label: 'Start building', cls: 'btn-accent', action: () => hwStart(hwCfgFromForm()) }, { label: 'Cancel' }], hwPreview);
+}
+function hwPreview() {
+  if (!$('hw-form')) return;
+  const c = hwCfgFromForm(), sp = hwSpec(c);
+  const favs = [...new Set([...c.fav, ...HW_FORMS[c.form].fav, HW_INPUT[c.inp].fav].filter(Boolean))];
+  $('hw-prev').innerHTML = `Build cost <b class="${STATE.gold >= sp.cost ? 'gold' : 'bad'}">${money(sp.cost)}</b> · ${sp.weeks} weeks<br>Power <b>${sp.pow}/4</b> · Appeal <b>${sp.appeal.toFixed(2)}</b> · Units cost ${money(sp.unit)} each to make<br>Favourite genres: ${favs.map(esc).join(', ')}${c.st === 2 ? '<br>Digital only: +30% royalties, slightly lower appeal.' : ''}`;
+}
+function hwStart(cfg) {
+  if (STATE.hwProj || STATE.rank < HW_RANK) return;
+  const sp = hwSpec(cfg);
+  if (!spend(sp.cost, 'Hardware')) return;
+  let name = String(cfg.name || hwName()).replace(/[^A-Za-z0-9 \-!.]/g, '').trim().slice(0, 20) || hwName();
+  while (P[name]) name += '+';
+  STATE.hwProj = { cfg, name, weeks: 0, total: sp.weeks, cost: sp.cost, ready: false };
+  playSound('fanfare'); news(`Hardware team started building the ${name}!`, '#ffd166');
+  renderMarket(); save();
+}
+function hwLaunchModal() {
+  const pr = STATE.hwProj; if (!pr) return;
+  const sp = hwSpec(pr.cfg);
+  showModal(`<h3>🕹 The ${esc(pr.name)} is ready!</h3><div class="note">Power ${sp.pow}/4 · Appeal ${sp.appeal.toFixed(2)} · Each unit costs ${money(sp.unit)} to make (falling over time).<br><br>Pick a launch price. Cheaper consoles sell far more units and build a bigger audience for your games, but earn less on each sale. You can change the price later in Market.</div>`,
+    HW_PRICES.map(pz => ({ label: `$${pz} · ${pz - sp.unit >= 0 ? '+' : ''}${money(pz - sp.unit)} per unit`, cls: pz === 249 ? 'btn-accent' : '', action: () => hwLaunch(pz) })));
+}
+function hwLaunch(price) {
+  const pr = STATE.hwProj; if (!pr) return;
+  const c = pr.cfg, sp = hwSpec(c);
+  const favs = [...new Set([...c.fav, ...HW_FORMS[c.form].fav, HW_INPUT[c.inp].fav].filter(Boolean))].slice(0, 6);
+  const op = { n: pr.name, own: true, lic: 0, fee: 0, peak: 0, year: yearFrac(), decline: 0, end: 0, arpu: +(3.5 + 0.8 * sp.pow).toFixed(1),
+    drain: 1.1, hp: +(1 + 0.15 * sp.pow).toFixed(2), rank: 1, fav: favs, cfg: c, pow: sp.pow, appeal: sp.appeal, unit: sp.unit, price,
+    installed: 0, weeks: 0, exBoost: 0.3, games: 0, revTotal: 0, lastUnits: 0, lastRoy: 0, digital: c.st === 2, disc: false, launchM: STATE.cal.y * 12 + STATE.cal.m };
+  STATE.ownPlats.push(op); rebuildPlatforms();
+  STATE.hwProj = null;
+  STATE.fans += 500; addRankExp(40);
+  playSound('fanfare');
+  for (let i = 0; i < 80; i++) particles.push({ conf: true, x: rnd(0, 320), y: rnd(-60, 0), vx: rnd(-0.4, 0.4), vy: rnd(0.3, 1.2), color: pick(['#ffd166', '#ef476f', '#06d6a0', '#4cc9f0']), life: 200 });
+  news(`The ${op.n} has launched at $${price}!`, '#ffd166');
+  refreshDevOptions(); updatePreview(); checkMilestones(); renderAll(); save();
+}
+function hwUnitCost(op) { const mo = STATE.cal.y * 12 + STATE.cal.m - op.launchM; return Math.round(op.unit * Math.max(0.6, 1 - 0.015 * mo)); }
+function hwUnits(op) {
+  const life = op.weeks < 12 ? 0.5 + op.weeks / 24 : op.weeks < 156 ? 1 : Math.max(0, 1 - (op.weeks - 156) / 104);
+  const newer = STATE.ownPlats.some(o => o !== op && !o.disc && o.launchM > op.launchM) ? 0.5 : 1;
+  const fanF = clamp(Math.pow(Math.max(1, STATE.fans) / 20000, 0.3), 0.5, 2.5);
+  return Math.round(500 * op.appeal * (1 + 0.3 * op.pow) * Math.pow(249 / op.price, 1.4) * life * newer * (1 + op.exBoost) * fanF * rnd(0.9, 1.1));
+}
+function hardwareWeek() {
+  const pr = STATE.hwProj;
+  if (pr && !pr.ready) { pr.weeks++; if (pr.weeks >= pr.total) { pr.ready = true; hwLaunchModal(); } }
+  STATE.ownPlats.forEach(op => {
+    if (op.disc) return;
+    op.weeks++;
+    const units = hwUnits(op), uc = hwUnitCost(op);
+    op.installed += units; op.lastUnits = units;
+    const margin = units * (op.price - uc);
+    if (margin >= 0) earn(margin, 'Hardware'); else charge(-margin, 'Hardware');
+    const roy = Math.round(op.installed * 0.15 * (op.digital ? 1.3 : 1));
+    earn(roy, 'Royalties'); op.lastRoy = roy;
+    op.revTotal += margin + roy; op.exBoost *= 0.97;
+    if (op.weeks > 260) { op.disc = true; news(`The ${op.n} reached the end of its life and was retired.`, '#9aa5b1'); refreshDevOptions(); }
+  });
+}
+function hwPrice(n, dlt) {
+  const op = STATE.ownPlats.find(x => x.n === n); if (!op || op.disc) return;
+  op.price = clamp(op.price + dlt, 99, 699);
+  playSound('click'); news(`${op.n} price is now $${op.price}`, '#66fcf1'); renderMarket(); save();
+}
+function hwDiscontinue(n) {
+  const op = STATE.ownPlats.find(x => x.n === n); if (!op || op.disc) return;
+  showModal(`<h3>Discontinue the ${esc(op.n)}?</h3><div class="note">Production stops and royalties end. Live games on it will start losing players.</div>`,
+    [{ label: 'Discontinue', cls: 'btn-danger', action: () => { op.disc = true; refreshDevOptions(); renderMarket(); save(); } }, { label: 'Keep selling' }]);
+}
+
+/* ---------- Business ---------- */
+function execHireSal(k) { return Math.round(EXECS[k].sal * Math.sqrt(rankK()) / 50) * 50; }
+function hireExec(k) {
+  const e = EXECS[k]; if (!e || hasExec(k) || STATE.rank < e.rank) return;
+  const sal = execHireSal(k);
+  if (!spend(sal * 2, 'Staff')) return;
+  STATE.execs[k] = sal; computeMods();
+  playSound('fanfare'); news(`New ${e.n} hired!`, '#06d6a0');
+  renderBiz(); checkMilestones(); save();
+}
+function fireExec(k) {
+  if (!hasExec(k)) return;
+  showModal(`<h3>Let your ${EXECS[k].n} go?</h3><div class="note">Saves ${money(STATE.execs[k])} per month, but you lose their bonus.</div>`,
+    [{ label: 'Let go', cls: 'btn-danger', action: () => { delete STATE.execs[k]; computeMods(); renderBiz(); save(); } }, { label: 'Cancel' }]);
+}
+function setPolicy(k, i) {
+  if (!POLICIES[k] || !POLICIES[k][i]) return;
+  STATE.policy[k] = i; computeMods(); playSound('click'); renderBiz(); save();
+}
+function taxRate() { return hasExec('cfo') ? 0.08 : 0.15; }
+function loanRate() { return hasExec('cfo') ? 0.07 : 0.1; }
+function creditLimit() { return 40000 * STATE.rank; }
+function loanOwed() { return STATE.loans.reduce((a, l) => a + l.left, 0); }
+function loanAmt(i) { return Math.round(LOAN_SIZES[i].amt * rankK() / 1000) * 1000; }
+function takeLoan(i) {
+  const amt = loanAmt(i), total = Math.round(amt * (1 + loanRate()));
+  if (loanOwed() + total > creditLimit()) { playSound('error'); news('The bank says no: that would go over your credit limit.', '#ef476f'); return; }
+  STATE.loans.push({ amt, left: total, pay: Math.ceil(total / 12) });
+  earn(amt, 'Loans in'); playSound('coin'); news(`Loan approved: +${money(amt)}`, '#ffd166');
+  renderBiz(); updateHeader(); save();
+}
+function repayLoan(i) {
+  const l = STATE.loans[i]; if (!l) return;
+  if (!spend(Math.round(l.left * 0.95), 'Loan repayments')) return;
+  STATE.loans.splice(i, 1); playSound('coin'); news('Loan repaid early.', '#06d6a0'); renderBiz(); save();
+}
+function merchCost() { return Math.round(6000 * rankK() / 500) * 500; }
+function licenseMerch(title) {
+  const h = STATE.history.find(x => x.title === title && !x.merch && x.total >= 28); if (!h) return;
+  if (!spend(merchCost(), 'Merch')) return;
+  h.merch = true;
+  STATE.merch.push({ title, amt: Math.round(h.dl * 0.03 * (h.total / 40) * (hasExec('bizdev') ? 1.25 : 1) + 1500), months: 24 });
+  playSound('fanfare'); news(`${title} merch is on shelves!`, '#ffd166');
+  renderBiz(); checkMilestones(); save();
+}
+function companyValue() {
+  const recent = STATE.plHist.slice(-6), avg = recent.length ? recent.reduce((a, e) => a + opProfit(e), 0) / recent.length : 0;
+  return Math.max(0, Math.round(STATE.gold - loanOwed() + Math.max(0, avg) * 36 + STATE.fans * 2 +
+    STATE.ownPlats.reduce((a, op) => a + (op.disc ? 0 : op.installed * 30), 0) + STATE.live.reduce((a, g) => a + weeklyRev(g) * 20, 0)));
+}
+function evAcquire() {
+  const g = pick(STATE.live.filter(x => x.weeks > 8)); if (!g) return;
+  const r = pick(STATE.rivals), offer = Math.round(weeklyRev(g) * rnd(7, 13) / 1000) * 1000 + 5000;
+  showModal(`<h3>Acquisition Offer</h3><div class="note">${esc(r.n)} offers <b class="gold">${money(offer)}</b> to buy the rights to ${esc(g.title)} (${fmt(g.users)} players, earning ${money(weeklyRev(g))}/week).</div>`, [
+    { label: `Sell for ${money(offer)}`, cls: 'btn-accent', action: () => { STATE.live = STATE.live.filter(x => x !== g); earn(offer, 'Other'); news(`Sold ${g.title} to ${r.n}.`, '#ffd166'); renderLive(); } },
+    { label: 'Not for sale' }]);
+}
+function evAudit() {
+  const fine = Math.round(Math.max(2000, STATE.gold * 0.02) / 100) * 100;
+  showModal(`<h3>Tax Audit</h3><div class="note">Auditors found sloppy bookkeeping and propose a ${money(fine)} settlement. A CFO would have caught this.</div>`, [
+    { label: `Settle (${money(fine)})`, cls: 'btn-accent', action: () => { charge(fine, 'Tax'); news('Audit settled.', '#9aa5b1'); } },
+    { label: 'Fight it in court', action: () => { if (Math.random() < 0.5) news('You won the dispute. No fine!', '#06d6a0'); else { charge(fine * 2, 'Tax'); news(`You lost the dispute: -${money(fine * 2)}`, '#ef476f'); } } }]);
+}
+function evHwPress() {
+  const op = pick(STATE.ownPlats.filter(x => !x.disc)); if (!op) return;
+  const good = Math.random() < 0.4 + op.appeal * 0.25;
+  if (good) { op.exBoost += 0.4; news(`Tech press raves about the ${op.n}! Sales are surging.`, '#06d6a0'); }
+  else { op.exBoost = Math.max(0, op.exBoost - 0.2); news(`A teardown video mocked the ${op.n}'s build quality.`, '#ef476f'); }
+}
+function evBulkOrder() {
+  const op = pick(STATE.ownPlats.filter(x => !x.disc)); if (!op) return;
+  const units = Math.round(op.lastUnits * rnd(2, 4)), price = Math.round(op.price * 0.8);
+  showModal(`<h3>Bulk Order</h3><div class="note">A retail chain wants ${fmt(units)} ${esc(op.n)} units at a 20% discount ($${price} each).</div>`, [
+    { label: 'Accept', cls: 'btn-accent', action: () => { op.installed += units; earn(units * (price - hwUnitCost(op)), 'Hardware'); news(`Shipped ${fmt(units)} units to retail.`, '#06d6a0'); } },
+    { label: 'Decline' }]);
+}
+STUDIO_EVENTS.push(
+  { w: 2, c: () => STATE.live.some(x => x.weeks > 8), f: evAcquire },
+  { w: 1, c: () => !hasExec('cfo') && STATE.plHist.length > 6, f: evAudit },
+  { w: 2, c: () => STATE.ownPlats.some(x => !x.disc), f: evHwPress },
+  { w: 1, c: () => STATE.ownPlats.some(x => !x.disc && x.lastUnits), f: evBulkOrder }
+);
+function renderBiz() {
+  const hist = STATE.plHist.slice(-12), profits = hist.map(opProfit), maxAbs = Math.max(1, ...profits.map(Math.abs));
+  const last = STATE.plHist[STATE.plHist.length - 1];
+  const yr = STATE.cal.y, ytd = STATE.plHist.filter(e => e.y === yr).reduce((a, e) => a + opProfit(e), 0);
+  let html = `<div class="sec">Company</div><div class="note">Cash <b class="gold">${money(STATE.gold)}</b> · Company value <b class="hl">${money(companyValue())}</b><br>
+    Operating profit this year: <b class="${ytd >= 0 ? 'good' : 'bad'}">${money(ytd)}</b> · tax ${Math.round(taxRate() * 100)}% (est. ${money(Math.max(0, Math.round(ytd * taxRate())))})<br>
+    Next payday: <b class="bad">${money(monthlyCost())}</b>${STATE.investor && STATE.investor.weeks > 0 ? `<br>Investor takes 15% of game income for ${STATE.investor.weeks} more weeks` : ''}${STATE.taxPaid ? `<br>Tax paid to date: ${money(STATE.taxPaid)}` : ''}</div>`;
+  html += `<div class="sec">Monthly operating profit</div>` + (hist.length ? `<div class="pl-chart">${hist.map((e, i) => {
+    const v = profits[i], h = Math.max(1, Math.round(Math.abs(v) / maxAbs * 40));
+    return `<div class="pl-col"><div class="pl-up">${v >= 0 ? `<i style="height:${h}px;background:var(--good)"></i>` : ''}</div><div class="pl-dn">${v < 0 ? `<i style="height:${h}px;background:var(--danger)"></i>` : ''}</div><span>${e.m}</span></div>`;
+  }).join('')}</div>` : '<div class="muted mini">No completed months yet.</div>');
+  const catRows = cats => Object.entries(cats).filter(([k, v]) => Math.round(v)).sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => `<div class="row mini"><span>${esc(k)}${FIN_CATS.has(k) ? ' <span class="muted">(financing)</span>' : ''}</span><span class="${v >= 0 ? 'good' : 'bad'}">${v >= 0 ? '+' : ''}${money(v)}</span></div>`).join('');
+  if (last) html += `<div class="sec">Last month (Y${last.y} M${last.m}) · ${money(opProfit(last))}</div>` + catRows(last.cats);
+  html += `<div class="sec">This month so far</div>` + (catRows(STATE.book) || '<div class="muted mini">Nothing yet.</div>');
+  html += `<div class="sec">Executive Team</div><div class="note mini">Executives don't use desks. They draw a monthly salary (signing fee: 2 months' pay) and boost the whole company.</div>` +
+    Object.entries(EXECS).map(([k, e]) => {
+      const hired = hasExec(k);
+      const btn = STATE.rank < e.rank ? `<span class="muted">🔒 Rank ${e.rank}</span>` : hired ? `<button class="btn-sm btn-danger" onclick="fireExec('${k}')">Let go</button>`
+        : `<button class="btn-sm btn-accent" ${STATE.gold < execHireSal(k) * 2 ? 'disabled' : ''} onclick="hireExec('${k}')">Hire ${money(execHireSal(k) * 2)}</button>`;
+      return `<div class="row card" style="flex-direction:row;"><span><b>${e.n}</b>${hired ? ` · <span class="good">${money(STATE.execs[k])}/mo</span>` : ` · ${money(execHireSal(k))}/mo`}<br><span class="muted">${e.d}</span></span>${btn}</div>`;
+    }).join('');
+  html += `<div class="sec">Company Policies</div>` + Object.entries(POLICIES).map(([k, arr]) => `<div class="mini muted">${POLICY_LABEL[k]}</div>
+    <div class="grid3">${arr.map((po, i) => `<button class="btn-sm ${STATE.policy[k] === i ? 'btn-accent' : ''}" onclick="setPolicy('${k}',${i})">${po.n}</button>`).join('')}</div>
+    <div class="mini muted">${arr[STATE.policy[k]].d}</div>`).join('');
+  html += `<div class="sec">Bank Loans</div><div class="note mini">Credit limit ${money(creditLimit())} · owed ${money(loanOwed())} · ${Math.round(loanRate() * 100)}% interest, repaid monthly over a year.</div>` +
+    STATE.loans.map((l, i) => `<div class="row card" style="flex-direction:row;"><span>Loan of ${money(l.amt)}<br><span class="muted">${money(l.pay)}/mo · ${money(l.left)} left</span></span><button class="btn-sm" onclick="repayLoan(${i})">Repay ${money(Math.round(l.left * 0.95))}</button></div>`).join('') +
+    `<div class="grid3">${LOAN_SIZES.map((L, i) => { const a = loanAmt(i); return `<button class="btn-sm" ${loanOwed() + a * (1 + loanRate()) > creditLimit() ? 'disabled' : ''} onclick="takeLoan(${i})">${L.n}<br>${money(a)}</button>`; }).join('')}</div>`;
+  const elig = STATE.history.filter(h => h.total >= 28 && !h.merch);
+  html += `<div class="sec">Merchandise</div><div class="note mini">Games scoring 28+ can be licensed for toys, shirts and plushies. Pay once, then earn monthly royalties for two years (fading over time).</div>` +
+    STATE.merch.map(mc => `<div class="row mini"><span>${esc(mc.title)}</span><span class="good">+${money(mc.amt)}/mo · ${mc.months} mo left</span></div>`).join('') +
+    (elig.map(h => `<div class="row card" style="flex-direction:row;"><span><b>${esc(h.title)}</b><br><span class="muted">${h.total}/40 · ${fmt(h.dl)} downloads</span></span><button class="btn-sm btn-accent" ${STATE.gold < merchCost() ? 'disabled' : ''} onclick="licenseMerch(this.dataset.t)" data-t="${esc(h.title)}">License ${money(merchCost())}</button></div>`).join('') || '<div class="muted mini">No eligible games right now.</div>');
+  $('tab-biz').innerHTML = html;
 }
 
 /* ---------- Calendar events ---------- */
@@ -1633,7 +2279,7 @@ function gameCon() {
       .concat([{ label: 'Skip this year' }]));
 }
 function attendCon(b) {
-  if (!spend(b.cost)) return;
+  if (!spend(b.cost, 'Events')) return;
   const fans = Math.round(STATE.fans * b.fanPct + b.fanBase);
   STATE.fans += fans;
   const d = STATE.activeDev, forGame = d && d.kind === 'game';
@@ -1660,11 +2306,11 @@ function showcase() {
     [{ label: `Enter ${elig.title}`, cls: 'btn-accent', disabled: STATE.gold < 1000, action: () => enterShowcase(elig) }, { label: 'Skip' }]);
 }
 function enterShowcase(h) {
-  if (!spend(1000)) return;
+  if (!spend(1000, 'Events')) return;
   const j = h.total + rnd(-4, 4);
   let res;
-  if (j >= 31) { earn(20000); STATE.fans += 800; addRankExp(15); res = '🏆 Grand Prize! +$20,000 and +800 fans'; playSound('fanfare'); }
-  else if (j >= 24) { earn(5000); STATE.fans += 300; res = 'Honourable mention: +$5,000 and +300 fans'; playSound('coin'); }
+  if (j >= 31) { earn(20000, 'Awards'); STATE.fans += 800; addRankExp(15); res = '🏆 Grand Prize! +$20,000 and +800 fans'; playSound('fanfare'); }
+  else if (j >= 24) { earn(5000, 'Awards'); STATE.fans += 300; res = 'Honourable mention: +$5,000 and +300 fans'; playSound('coin'); }
   else res = 'No award this time. The judges wanted more polish.';
   showModal(`<h3>Showcase Results</h3><div class="note" style="text-align:center;">${res}</div>`);
 }
@@ -1684,7 +2330,7 @@ function runSale(u, r) {
 function buyLicence(n) {
   const p = P[n];
   if (!p || licensed(p) || !platLive(p) || STATE.rank < p.rank) return;
-  if (p.lic && !spend(p.lic)) return;
+  if (p.lic && !spend(p.lic, 'Licences')) return;
   STATE.licences.push(n);
   playSound('fanfare'); news(`Licence acquired: ${n}`, '#06d6a0');
   refreshDevOptions(); updatePreview(); renderMarket(); save();
@@ -1697,22 +2343,22 @@ function findLive(id) { return STATE.live.find(g => g.id === id); }
 function liveEvent(id) {
   const g = findLive(id); if (!g || g.event > 0) return;
   const cost = Math.round((2000 + g.users * 0.3) * (hasTech('liveops') ? 0.7 : 1));
-  if (!spend(cost)) return;
+  if (!spend(cost, 'Live ops')) return;
   g.event = 4; playSound('coin'); news(`Event started in ${g.title}!`, '#06d6a0'); renderLive();
 }
 function liveUpdate(id) {
   const g = findLive(id); if (!g) return;
   const cost = Math.round((3000 + g.updates * 1500) * (hasTech('liveops') ? 0.7 : 1));
   if (g.ret >= 0.985) { news('This game is already as sticky as it gets.', '#9aa5b1'); return; }
-  if (!spend(cost)) return;
+  if (!spend(cost, 'Live ops')) return;
   g.ret = Math.min(0.985, g.ret + 0.012); g.updates++;
   g.users = Math.round(g.users * 1.05);
   playSound('coin'); news(`${g.title} content update shipped!`, '#66fcf1'); renderLive();
 }
 function liveAds(id) {
   const g = findLive(id); if (!g) return;
-  const cost = 5000 * (1 + 0.2 * (STATE.rank - 1));
-  if (!spend(Math.round(cost))) return;
+  const cost = 5000 * (1 + 0.2 * (STATE.rank - 1)) * (hasExec('cmo') ? 0.75 : 1);
+  if (!spend(Math.round(cost), 'Marketing')) return;
   const add = Math.round((STATE.fans * 0.6 + 300) * Math.max(0.3, marketNow(P[g.platform])));
   g.users += add; g.peak = Math.max(g.peak, g.users);
   playSound('coin'); news(`Ad campaign: +${fmt(add)} players`, '#06d6a0'); renderLive();
@@ -1739,7 +2385,7 @@ function openTraining(id) {
 function doTrain(id, k) {
   const m = findStaff(id); if (!m || m.vac > 0) return;
   if (m.rest > 0 || m.stam < 20) { playSound('error'); news(`${m.name} is too tired to train.`, '#ef476f'); return; }
-  if (!spend(trainCost(m, k))) return;
+  if (!spend(trainCost(m, k), 'Staff')) return;
   const plus = 5 + (hasTech('academy') ? 2 : 0);
   if (k === 4) m.spd += 3; else { m.s[k] += plus; if (Math.random() < 0.5) m.s[ri(0, 3)] += 1; }
   m.stam -= 20;
@@ -1772,7 +2418,7 @@ function promoteStaff(id) {
   const cost = m.salary * 6;
   showModal(`<h3>Promote ${esc(m.name)}?</h3><div class="note">${esc(m.name)} becomes <b>${SENIOR_TITLES[m.role]}</b>: main-stat ideas +20%, works 10% faster, and the whole team's ideas +3%. Salary rises 40%.</div>`,
     [{ label: `Promote (${money(cost)})`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => {
-        if (!spend(cost)) return;
+        if (!spend(cost, 'Staff')) return;
         m.senior = true; m.salary = Math.round(m.salary * 1.4 / 50) * 50; m.morale = Math.min(100, m.morale + 15);
         computeMods(); playSound('fanfare'); news(`${m.name} is now ${SENIOR_TITLES[m.role]}!`, '#ffd166');
         renderStaff(); checkMilestones(); save();
@@ -1800,13 +2446,13 @@ function postAd(tier) {
   STATE.candidates = [randomStaff(tier), randomStaff(tier), randomStaff(third)];
   openCandidates();
 }
-function signFee(c) { return Math.round(c.salary * 2 * (hasTech('hr') ? 0.5 : 1) / 50) * 50; }
+function signFee(c) { return Math.round(c.salary * 2 * (hasTech('hr') ? 0.5 : 1) * (hasExec('hrm') ? 0.75 : 1) / 50) * 50; }
 function openCandidates() {
   const full = STATE.team.length >= deskCount();
   const rows = STATE.candidates.map((c, i) => `<div class="card">
       <div class="row"><b>${esc(c.name)} · ${c.role}</b><span class="muted">${money(c.salary)}/mo</span></div>
       <div class="muted">${STATS.map((s, j) => s + ' ' + c.s[j]).join(' · ')} · SPD ${c.spd}</div>
-      <div>${c.traits.map(t => `<span class="chip ${TRAITS[t].bad ? 'chip-bad' : ''}">${t}</span>`).join('')}</div>
+      <div>${c.traits.map(t => `<span class="chip ${TRAITS[t].bad ? 'chip-bad' : ''}">${t}</span>`).join('')}<span class="chip chip-gold">♥ ${esc(c.favG)}</span></div>
       <div class="mini muted">${c.traits.map(t => `${t}: ${TRAITS[t].d}`).join(' · ')}</div>
       <div class="row"><span class="gold">Signing fee ${money(signFee(c))}</span>
       <button class="btn-sm btn-accent" ${full ? 'disabled' : ''} onclick="hireCandidate(${i})">Hire</button></div></div>`).join('');
@@ -1815,7 +2461,7 @@ function openCandidates() {
 function hireCandidate(i) {
   const c = STATE.candidates[i];
   if (!c || STATE.team.length >= deskCount()) return;
-  if (!spend(signFee(c))) return;
+  if (!spend(signFee(c), 'Staff')) return;
   c.id = STATE.nextId++;
   normStaff(c);
   STATE.team.push(c);
@@ -1825,13 +2471,13 @@ function hireCandidate(i) {
   openCandidates(); closeModal(); renderStaff(); checkMilestones(); save();
 }
 function snackBundle() {
-  if (!spend(1000)) return;
+  if (!spend(1000, 'Staff')) return;
   STATE.team.forEach(m => { m.stam = Math.min(m.maxStam, m.stam + 50); m.morale = Math.min(100, m.morale + 2); if (m.rest) { m.rest = 0; m.stam = Math.max(m.stam, 40); } });
   playSound('coin'); news('Snacks delivered! Everyone perks up.', '#06d6a0'); renderStaff();
 }
 function teamRetreat() {
   const cost = 6000 + STATE.team.length * 800;
-  if (!spend(cost)) return;
+  if (!spend(cost, 'Staff')) return;
   STATE.team.forEach(m => { m.s = m.s.map(v => v + 2); m.stam = m.maxStam; m.rest = 0; m.morale = Math.min(100, m.morale + 10); });
   playSound('fanfare'); news('Team retreat: everyone +2 all stats and +10 morale!', '#ffd166'); renderStaff(); save();
 }
@@ -1850,7 +2496,7 @@ function unlockItem(kind, n) {
 function upgradeFloor() {
   const next = FLOORS[STATE.floor];
   if (!next || STATE.rank < next.rank) { playSound('error'); return; }
-  if (!spend(next.cost)) return;
+  if (!spend(next.cost, 'Office')) return;
   STATE.floor++;
   STATE.team.forEach(m => { m.morale = Math.min(100, m.morale + 15); });
   playSound('fanfare'); news(`Moved up to Floor ${STATE.floor}! The team loves the new space.`, '#ffd166');
@@ -1859,7 +2505,7 @@ function upgradeFloor() {
 function buyDecor(id) {
   const dc = DECOR[id]; if (!dc || STATE.decor.includes(id)) return;
   if (STATE.decor.length >= DECOR_SLOTS[STATE.floor - 1]) { news('No room! Move to a bigger floor.', '#ef476f'); playSound('error'); return; }
-  if (!spend(dc.cost)) return;
+  if (!spend(dc.cost, 'Office')) return;
   STATE.decor.push(id); computeMods();
   playSound('fanfare'); news(`${dc.n} added to the office!`, '#06d6a0');
   renderStudio(); checkMilestones(); save();
@@ -1874,7 +2520,7 @@ function unlockTech(id) {
 }
 function buyFacility(k) {
   const f = FACILITIES[k]; if (!f || STATE.facilities[k]) return;
-  if (!spend(f.cost)) return;
+  if (!spend(f.cost, 'Office')) return;
   STATE.facilities[k] = true; computeMods(); playSound('fanfare'); news(`${f.n} installed!`, '#06d6a0'); renderStudio(); save();
 }
 function toggleSound() { STATE.settings.sound = !STATE.settings.sound; renderStudio(); save(); }
@@ -1882,7 +2528,7 @@ function resetGame() {
   showModal('<h3>Reset Save?</h3><div class="note">This wipes your studio and starts from Year 1.</div>',
     [{ label: 'Wipe and Restart', cls: 'btn-danger', action: () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} STATE = newGame(); afterReset(); } }, { label: 'Cancel' }]);
 }
-function afterReset() { projectiles = []; particles = []; ticker = []; refreshDevOptions(); renderDevMode(); renderAll(); save(); }
+function afterReset() { rebuildPlatforms(); computeMods(); projectiles = []; particles = []; ticker = []; refreshDevOptions(); renderDevMode(); renderAll(); save(); }
 function cycleSpeed() {
   const order = [1, 2, 4, 0];
   STATE.speed = order[(order.indexOf(STATE.speed) + 1) % order.length];
@@ -1903,11 +2549,11 @@ function renderActiveTab() {
   if (currentTab === 'live') renderLive();
   else if (currentTab === 'staff') renderStaff();
   else if (currentTab === 'market') renderMarket();
+  else if (currentTab === 'biz') renderBiz();
   else if (currentTab === 'lab') renderLab();
   else if (currentTab === 'studio') renderStudio();
 }
-function renderAll() { updateHeader(); renderLive(); renderStaff(); renderMarket(); renderLab(); renderStudio(); }
-
+function renderAll() { updateHeader(); renderLive(); renderStaff(); renderMarket(); renderBiz(); renderLab(); renderStudio(); }
 function updateHeader() {
   const c = STATE.cal;
   $('cal-text').textContent = `Y${c.y} M${c.m} W${c.w}`;
@@ -1925,7 +2571,7 @@ function refreshDevOptions() {
   $('sel-genre').innerHTML = STATE.unlocked.g.map(n => `<option value="${esc(n)}">${esc(n)} · Lv${lvlOf('g', n)}</option>`).join('');
   $('sel-theme').innerHTML = STATE.unlocked.t.map(n => `<option value="${esc(n)}">${esc(n)} · Lv${lvlOf('t', n)}</option>`).join('');
   $('sel-platform').innerHTML = PLATFORMS.filter(platLive).map(p => platformOpen(p)
-    ? `<option value="${p.n}">${p.n} · ${money(p.fee)} fee</option>`
+    ? `<option value="${p.n}">${p.n} · ${p.own ? '★ your platform' : money(p.fee) + ' fee'}</option>`
     : `<option value="${p.n}" disabled>🔒 ${p.n} (${STATE.rank < p.rank ? 'Rank ' + p.rank : 'needs licence'})</option>`).join('');
   $('sel-pub').innerHTML = PUBLISHERS.map(pb => pubAvailable(pb)
     ? `<option value="${pb.n}">${pb.n}${pb.adv ? ` · takes ${Math.round(pb.cut * 100)}%` : ''}${STATE.pubBonus === pb.n ? ' · bonus!' : ''}</option>`
@@ -1940,11 +2586,12 @@ function refreshDevOptions() {
   $('sel-seq').innerHTML = '<option value="">None (new game)</option>' + seqs.map(h => `<option value="${esc(h.title)}">${esc(h.title)} (${h.total})</option>`).join('');
   $('sel-seq').value = seqs.some(h => h.title === keepSeq) ? keepSeq : '';
 }
+let lastGT = '';
 function updatePreview() {
   const g = $('sel-genre').value, t = $('sel-theme').value, p = $('sel-platform').value;
+  if (g + '|' + t !== lastGT) { lastGT = g + '|' + t; refreshTitleHint(); renderPrio(); }
   if (!g || !t || !P[p]) { $('dev-preview').innerHTML = 'Pick a platform you hold a licence for (see the Market tab).'; return; }
   const bi = isNaN(+$('sel-budget').value) ? 1 : +$('sel-budget').value;
-  const fi = isNaN(+$('sel-focus').value) ? -1 : +$('sel-focus').value;
   const mi = isNaN(+$('sel-monet').value) ? 1 : +$('sel-monet').value;
   const pb = PUB[$('sel-pub').value] || PUBLISHERS[0];
   const ai = isNaN(+$('sel-aud').value) ? 2 : +$('sel-aud').value, aud = AUDIENCES[ai];
@@ -1955,16 +2602,22 @@ function updatePreview() {
   const drainTxt = drain === 0 ? '<span class="good">None</span>' : drain <= 0.8 ? '<span class="good">Low</span>' : drain <= 1.2 ? 'Normal' : '<span class="bad">High</span>';
   const trend = STATE.trend ? `Trending: <b class="gold">${esc(STATE.trend.n)}</b>` : 'Trending: none yet';
   const cost = plat.fee + devCost(g, bi), adv = pubAdvance(pb, g);
-  const w = G[g].w, top = w.indexOf(Math.max(...w));
+  const ins = STATE.insights[g] || {}, nIns = Object.keys(ins).length, pe = prioEval(g, STATE.prio);
+  const warn = AREAS.map((a, i) => ins[i] === 'H' && STATE.prio[i] <= 1 ? `<span class="bad">${a} matters for ${esc(g)}</span>` : ins[i] === 'L' && STATE.prio[i] >= 4 ? `<span class="bad">${a} is wasted on ${esc(g)}</span>` : '').filter(Boolean);
+  const fitLbl = pe.adj >= 0.4 ? '<b class="gold">Excellent</b>' : pe.adj >= 0 ? '<b class="good">Good</b>' : pe.adj >= -0.6 ? '<b>Weak</b>' : '<b class="bad">Poor</b>';
+  const lovers = STATE.team.filter(m => m.favG === g).map(m => esc(m.name));
+  const vets = STATE.team.filter(m => (m.gx[g] || 0) > 0).map(m => `${esc(m.name)}×${m.gx[g]}`);
   $('dev-preview').innerHTML =
     `Combo: ${known ? `<b style="color:${COMBO_COLOR[STATE.combos[key]]}">${COMBO_LABEL[STATE.combos[key]]}</b>` : '<span class="muted">??? (untested)</span>'}<br>` +
     `Cost: <b class="gold">${money(cost)}</b>${adv ? ` · Advance <b class="good">+${money(adv)}</b>` : ''} · Stamina: ${drainTxt}<br>` +
-    `Platform fit: ${fit ? '<b class="good">★ favourite genre</b>' : '<span class="muted">neutral</span>'} · Market ${marketNow(plat).toFixed(1)}<br>` +
-    `${esc(g)} rewards <b style="color:${STAT_COLORS[top]}">${STATS[top]}</b>${fi === top ? ' · <span class="good">focus matches</span>' : ''}<br>` +
+    `Platform fit: ${fit ? '<b class="good">★ favourite genre</b>' : '<span class="muted">neutral</span>'} · Market ${marketNow(plat).toFixed(1)}${plat.own ? ' · <span class="gold">your platform</span>' : ''}<br>` +
+    `Genre insights ${nIns}/6${nIns === 6 ? ` · priority fit ${fitLbl}` : ''}${warn.length ? '<br>' + warn.join(' · ') : ''}<br>` +
+    (lovers.length || vets.length ? `Team: ${lovers.length ? '♥ ' + lovers.join(', ') : ''}${lovers.length && vets.length ? ' · ' : ''}${vets.length ? 'veterans ' + vets.join(', ') : ''}<br>` : '') +
     `<span class="muted">${BUDGETS[bi].n}: ${BUDGETS[bi].desc}. ${MONET[mi].n}: ${MONET[mi].desc}.</span><br>` +
     (pb.adv ? `${esc(pb.n)}: downloads ×${pb.boost}, takes ${Math.round(pb.cut * 100)}%, expects ${pb.target}+/40<br>` : '') +
     `${aud.n} audience: ${aud.desc}${aud.good.includes(g) ? ' · <span class="good">loves ' + esc(g) + '</span>' : aud.bad.includes(g) ? ' · <span class="bad">dislikes ' + esc(g) + '</span>' : ''}${ai === 0 && mi === 3 ? ' · <span class="bad">loot boxes for kids will be slammed</span>' : ''}<br>` +
-    (seq ? `<span class="gold">Sequel to ${esc(seq)}: extra hype and downloads, no rerun penalty.</span><br>` : '') +
+    (seq ? (() => { const h = STATE.history.find(x => x.title === seq), n = h ? (h.seqN || 1) + 1 : 2, soon = h && h.t && (STATE.cal.y * 12 + STATE.cal.m - h.t) < 12;
+      return `<span class="gold">Sequel #${n} to ${esc(seq)}: extra hype and downloads, no rerun penalty.</span>${n >= 3 ? ' <span class="bad">Franchise fatigue: critics expect something new.</span>' : ''}${soon ? ' <span class="bad">Too soon: wait 12 months after the original.</span>' : ''}<br>`; })() : '') +
     `${trend}${STATE.hypeBank ? ` · Banked hype <b class="gold">${STATE.hypeBank}</b>` : ''}`;
 }
 function renderDevMode() {
@@ -1997,11 +2650,23 @@ function updateDevPanel() {
     $('dev-stats').innerHTML = '';
     return;
   }
-  $('dev-info').innerHTML = `<b>${esc(d.phaseName)}</b> · ${esc(d.genre)} × ${esc(d.theme)} · ${esc(d.platform)}${d.hook ? ' · ' + esc(d.hook) : ''}<br>Bugs found: <span class="${d.bugs > 6 ? 'bad' : ''}">${d.bugs}</span> · Hype ${Math.round(d.hype || 0)}${d.lead && findStaff(d.lead) ? ' · Lead ' + esc(findStaff(d.lead).name) : ''}${d.phase === 3 && !d.boostUsed ? ' · <span class="gold">Boost ready!</span>' : ''}`;
+  $('dev-info').innerHTML = `<b>${esc(d.phaseName)}</b> · ${esc(d.genre)} × ${esc(d.theme)} · ${esc(d.platform)}${d.hook ? ' · ' + esc(d.hook) : ''}<br>Bugs found: <span class="${d.bugs > 6 ? 'bad' : ''}">${d.bugs}</span> · Hype ${Math.round(d.hype || 0)}${d.lead && findStaff(d.lead) ? ' · Director ' + esc(findStaff(d.lead).name) : ''}${d.phase === 3 && !d.boostUsed ? ' · <span class="gold">Boost ready!</span>' : ''}`;
   const max = Math.max(60, ...d.stats);
-  $('dev-stats').innerHTML = STATS.map((s, i) => `<div class="statrow"><span style="color:${STAT_COLORS[i]}">${s}</span><div class="bar"><div style="background:${STAT_COLORS[i]};width:${d.stats[i] / max * 100}%"></div></div><span>${Math.round(d.stats[i])}</span></div>`).join('');
+  let html = STATS.map((s, i) => {
+    const owner = d.assign ? findStaff(d.assign[i]) : null;
+    return `<div class="statrow"><span style="color:${STAT_COLORS[i]}">${s}</span><div class="bar"><div style="background:${STAT_COLORS[i]};width:${d.stats[i] / max * 100}%"></div></div><span>${Math.round(d.stats[i])}</span></div>` +
+      (owner ? '' : '');
+  }).join('');
+  if (d.assign) {
+    const totalC = Object.values(d.contrib).reduce((a, x) => a + x, 0) || 1;
+    html += '<div class="mini muted" style="margin-top:4px;">Team contribution</div>' + STATE.team.filter(m => m.vac <= 0).map(m => {
+      const posts = postsOf(d, m.id), share = (d.contrib[m.id] || 0) / totalC;
+      const tag = (d.lead === m.id ? '👑' : '') + posts.map(k => `<span style="color:${STAT_COLORS[k]}">■</span>`).join('');
+      return `<div class="statrow"><span>${esc(m.name)} <span class="muted">${tag}</span></span><div class="bar"><div style="background:${posts.length ? STAT_COLORS[posts[0]] : '#9aa5b1'};width:${share * 100}%"></div></div><span>${Math.round(share * 100)}%</span></div>`;
+    }).join('');
+  }
+  $('dev-stats').innerHTML = html;
 }
-
 function renderLive() {
   const slots = liveSlots();
   let html = `<div class="row"><span class="sec">Live Operations</span><span class="muted">${STATE.live.length}/${slots} slots</span></div>
@@ -2036,6 +2701,7 @@ function renderStaff() {
     html += `<div class="card">
       <div class="row"><b><span style="color:${ROLES[m.role].color}">■</span> ${esc(m.name)}${m.senior ? ' ★' : ''}</b><span>Lv${m.lv}</span></div>
       <div class="mini">${staffTitle(m)}${m.vac > 0 ? ` · <span class="gold">On vacation (${m.vac}w)</span>` : ''} · Shipped ${m.shipped} · MVP ${m.mvps}${m.hits ? ' · 🏆' + m.hits : ''}</div>
+      <div class="mini muted">♥ Loves ${esc(m.favG)}${gxText(m)}${m.bestT ? ' · Best: ' + esc(m.bestT) + ' (' + m.bestS + ')' : ''}</div>
       <div>${m.traits.map(t => `<span class="chip ${TRAITS[t].bad ? 'chip-bad' : ''}">${t}</span>`).join('')}${m.perks.map(pid => `<span class="chip chip-gold">${PERK_INFO[pid].n}</span>`).join('')}</div>
       <div class="mini muted">${m.traits.map(t => TRAITS[t].d).concat(m.perks.map(pid => PERK_INFO[pid].d)).join(' · ')}</div>
       <div class="muted">${STATS.map((s, i) => `<span style="color:${STAT_COLORS[i]}">${s[0]}</span>${m.s[i]}`).join(' ')} · SPD ${m.spd} · ${money(m.salary)}/mo</div>
@@ -2064,8 +2730,25 @@ function renderMarket() {
   const board = STATE.rivals.map(r => ({ n: r.n, fans: r.fans, best: r.yearBest || 0, me: false })).concat([{ n: 'Your studio', fans: STATE.fans, best: STATE.yearBest ? STATE.yearBest.total : 0, me: true }]).sort((a, b) => b.fans - a.fans);
   let html = `<div class="sec">Industry Ranking</div>` + board.map((r, i) => `<div class="row mini" style="${r.me ? 'color:var(--gold);font-weight:bold;' : ''}"><span>#${i + 1} ${esc(r.n)}</span><span>${fmt(r.fans)} fans · best this year ${r.best || '-'}</span></div>`).join('') +
     `<div class="sec">Industry Calendar</div><div class="note">Month 4: Indie Showcase · Month 8: GameCon · Month 12: Holiday Sale · Year end: Awards${STATE.hypeBank ? `<br>Banked hype for your next project: <b class="gold">${STATE.hypeBank}</b>` : ''}${STATE.pubBonus ? `<br>🤝 Bonus advance waiting with ${esc(STATE.pubBonus)}` : ''}</div>`;
+  html += '<div class="sec">Hardware Division</div>';
+  if (STATE.rank < HW_RANK) html += `<div class="note mini">Reach Rank ${HW_RANK} to open a hardware division and build your own platform.</div>`;
+  else if (STATE.hwProj) {
+    const pr = STATE.hwProj, pc = Math.min(100, pr.weeks / pr.total * 100);
+    html += `<div class="card"><div class="row"><b>Building: ${esc(pr.name)}</b><span>${pr.weeks}/${pr.total} wks</span></div><div class="statrow"><span>Progress</span><div class="bar"><div style="background:var(--gold);width:${pc}%"></div></div><span>${Math.round(pc)}%</span></div>${pr.ready ? '<button class="btn-accent" onclick="hwLaunchModal()">Launch!</button>' : ''}</div>`;
+  } else html += `<button class="btn-accent" onclick="hwModal()">🕹 Design a new platform</button>`;
+  STATE.ownPlats.forEach(op => {
+    const uc = hwUnitCost(op), mg = op.price - uc;
+    html += `<div class="card"><div class="row"><b>★ ${esc(op.n)}</b>${op.disc ? '<span class="muted">Retired</span>' : `<span class="gold">$${op.price}</span>`}</div>
+      <div class="muted">${HW_FORMS[op.cfg.form].n} · power ${op.pow}/4 · ${fmt(op.installed)} sold · ${op.games || 0} of your games</div>
+      ${op.disc ? '' : `<div class="muted">Last week ${fmt(op.lastUnits)} units · ${mg >= 0 ? '+' : ''}${money(mg)}/unit · royalties ${money(op.lastRoy || 0)}/wk</div>
+      <div class="statrow"><span>Market</span><div class="bar"><div style="background:var(--gold);width:${Math.min(100, marketNow(op) / 4 * 100)}%"></div></div><span>${marketNow(op).toFixed(1)}</span></div>
+      <div class="muted mini">Favours: ${op.fav.map(esc).join(', ')}</div>
+      <div class="btns"><button class="btn-sm" onclick="hwPrice('${op.n}',-50)">Price −$50</button><button class="btn-sm" onclick="hwPrice('${op.n}',50)">Price +$50</button><button class="btn-sm btn-danger" onclick="hwDiscontinue('${op.n}')">Discontinue</button></div>`}
+      <div class="muted mini">Lifetime hardware profit ${money(op.revTotal || 0)}</div></div>`;
+  });
   html += '<div class="sec">Platforms</div>';
   PLATFORMS.forEach(p => {
+    if (p.own) return;
     const live = platLive(p), up = t < p.year, gone = p.end && t >= p.end;
     if (gone) { html += `<div class="row muted mini" style="opacity:0.6;"><span>${p.n}</span><span>Discontinued</span></div>`; return; }
     if (up && p.year - t > 3) return;
@@ -2122,6 +2805,7 @@ function renderLab() {
   html += hooks.length
     ? hooks.map(([k, v]) => `<div class="row" style="font-size:0.74rem;"><span>${esc(k.replace('|', ' in '))}</span><b style="color:${HOOK_COLOR[v]}">${HOOK_LABEL[v]}</b></div>`).join('')
     : '<div class="muted">Release games with a hook to learn which hooks suit which genres.</div>';
+  html += insightsHtml();
   $('tab-lab').innerHTML = html;
 }
 function renderStudio() {
@@ -2132,10 +2816,7 @@ function renderStudio() {
   let html = `<div class="sec">${studioTier()}</div>
     <div class="note">Rank ${STATE.rank} (${Math.floor(STATE.rankExp / rankNeed() * 100)}% to next)${nextTier ? ` · becomes ${nextTier[1]} at Rank ${nextTier[0]}` : ''}<br>
     Milestones ${msDone}/${MILESTONES.length} · Game of the Year ×${STATE.awards.goty || 0} · Excellence ×${STATE.awards.excellence || 0}</div>
-    <div class="sec">Finances</div>
-    <div class="note">Last month: income <b class="good">${money(STATE.ledger.lastInc)}</b> · spending <b class="bad">${money(STATE.ledger.lastExp)}</b><br>
-    This month so far: +${money(STATE.ledger.inc)} / -${money(STATE.ledger.exp)}<br>
-    Next payday (end of month): <b class="bad">${money(monthlyCost())}</b>${STATE.investor && STATE.investor.weeks > 0 ? `<br>Investor takes 15% of game income for ${STATE.investor.weeks} more weeks` : ''}</div>
+    <div class="note mini">Finances, loans, executives and policies are in the 💼 Biz tab.</div>
     <div class="sec">Office · Floor ${STATE.floor}</div>
     <div class="note">${f.desks} desks · ${f.live} live slots · ${slots} decor spots · Rent ${money(f.rent)}/mo</div>`;
   html += next
@@ -2365,6 +3046,7 @@ function render() {
     const p = deskPos(i), m = STATE.team[i];
     if (m && m.vac <= 0) {
       m.x = p.x; m.y = p.y; drawStaff(m, p.x, p.y, working && m.rest <= 0);
+      if (dv && dv.assign) postsOf(dv, m.id).forEach((k, j) => { px('#111', p.x + 8 + j * 6, p.y - 34, 6, 6); px(STAT_COLORS[k], p.x + 9 + j * 6, p.y - 33, 4, 4); });
       if (dv && dv.lead === m.id && m.rest <= 0) { px('#ffd166', p.x - 4, p.y - 31, 9, 3); px('#ffd166', p.x - 4, p.y - 34, 2, 3); px('#ffd166', p.x - 1, p.y - 35, 3, 4); px('#ffd166', p.x + 3, p.y - 34, 2, 3); }
     } else if (m) {
       m.x = p.x; m.y = p.y;
@@ -2414,7 +3096,7 @@ function update() {
     if (m.rest > 0) { m.rest--; m.stam = Math.min(m.maxStam, m.stam + 0.7 * regen); continue; }
     if (d && !d.awaiting) {
       m.stam = Math.min(m.maxStam, m.stam + 0.02 * regen);
-      let spd = (m.spd / 30) * (STATE.facilities.pcs ? 1.1 : 1) * (d.mods ? d.mods.speedMul : 1) * (d.lead === m.id ? 1.15 : 1) * pace.spd * (0.85 + m.morale * 0.003);
+      let spd = (m.spd / 30) * (STATE.facilities.pcs ? 1.1 : 1) * (d.mods ? d.mods.speedMul : 1) * (d.lead === m.id ? 1.15 : 1) * pace.spd * (0.85 + m.morale * 0.003) * (M.spd || 1);
       if (m.traits.includes('Slacker')) spd *= 0.85;
       if (m.traits.includes('Perfectionist')) spd *= 0.9;
       if (m.senior) spd *= 1.1;
@@ -2455,20 +3137,21 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 window.addEventListener('pagehide', save);
 $('sel-budget').innerHTML = BUDGETS.map((b, i) => `<option value="${i}">${b.n}</option>`).join('');
 $('sel-budget').value = '1';
-$('sel-focus').innerHTML = '<option value="-1">Balanced</option>' + STATS.map((s, i) => `<option value="${i}">${s}</option>`).join('');
 $('sel-monet').innerHTML = MONET.map((m, i) => `<option value="${i}">${m.n}</option>`).join('');
 $('sel-monet').value = '1';
 $('sel-aud').innerHTML = AUDIENCES.map((a, i) => `<option value="${i}">${a.n}</option>`).join('');
 $('sel-aud').value = '2';
 computeMods();
 refreshDevOptions();
+renderPrio();
+refreshTitleHint();
 $('sel-genre').value = 'Adventure'; $('sel-theme').value = 'Detective';
 renderDevMode();
 renderAll();
 if (!STATE.trend) STATE.trend = { type: 'genre', n: pick(STATE.unlocked.g) };
 updatePreview();
 if (!STATE.history.length && !STATE.activeDev && STATE.cal.y === 1 && STATE.cal.m === 1 && STATE.cal.w === 1 && STATE.tick === 0) {
-  showModal(`<h3>Welcome, President!</h3><div class="note">Plan each game (genre, theme, platform, publisher, budget, audience and business model), then guide your team through Concept, Alpha, Beta and Debug. You'll pick a lead and a hook, run design meetings, react to playtests, set the work pace, market the game and decide when to ship.<br><br>Every staff member has traits, morale and perks to unlock. Decorate the office, research studio tech and chase milestones to grow from a garage studio into a legend.<br><br>
+  showModal(`<h3>Welcome, President!</h3><div class="note">Plan each game (genre, theme, platform, publisher, budget, audience and business model), then guide your team through Concept, Alpha, Beta and Debug. You'll staff each area of the game, set development priorities, pick a hook, run design meetings, react to playtests, set the work pace, market the game and decide when to ship.<br><br>Every staff member has traits, morale and perks to unlock. Decorate the office, research studio tech, manage the business (executives, loans, policies) and eventually build your own console.<br><br>
     Matching genres and themes make great combos, and each platform has favourite genres. Buy new platform licences and check publishers in the Market tab. GameCon arrives every August.<br><br>
     Released games keep earning in Live Ops. Contract work pays the bills between releases.<br><br>
     Payday is at the end of every month. Three months in the red and it's game over. Good luck!</div>`, [{ label: "Let's go!", cls: 'btn-accent' }]);
@@ -2476,6 +3159,7 @@ if (!STATE.history.length && !STATE.activeDev && STATE.cal.y === 1 && STATE.cal.
 if (STATE.activeDev && STATE.activeDev.kind === 'game' && STATE.activeDev.balloon.hp <= 0) { STATE.activeDev.awaiting = false; checkPhase(); }
 STATE.team.forEach(m => { if (perkPending(m) >= 0) perkModal(m); });
 checkMilestones();
+if (STATE.hwProj && STATE.hwProj.ready) hwLaunchModal();
 requestAnimationFrame(frame);
 </script>
 </body>

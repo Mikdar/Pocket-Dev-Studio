@@ -7,190 +7,269 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DevStudio">
-<meta name="theme-color" content="#0b0c10">
+<meta name="theme-color" content="#17122c">
 <title>Pocket Dev Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-dark: #0b0c10;
-    --panel-bg: #1f2833;
-    --panel-2: #111820;
-    --border: #45a29e;
-    --accent: #66fcf1;
-    --gold: #ffd166;
-    --danger: #ef476f;
-    --good: #06d6a0;
-    --muted: #9aa5b1;
-    --font: 'Courier New', Courier, monospace;
+    --ink: #17122c;
+    --win: #28214a;
+    --well: #1e1839;
+    --edge: #322a5e;
+    --hi: #50478c;
+    --lo: #0c0919;
+    --sun: #ffcf4a;
+    --sun-hi: #fff1b8;
+    --sun-lo: #b07d0c;
+    --sun-ink: #2b1d00;
+    --mint: #5ee6b0;
+    --coral: #ff6b7d;
+    --sky: #7cc8ff;
+    --text: #f2eefc;
+    --dim: #a69ecb;
+    --gold: var(--sun); --good: var(--mint); --danger: var(--coral); --accent: var(--sky); --muted: var(--dim);
+    --px: 'Pixelify Sans', ui-rounded, system-ui, sans-serif;
+    --ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
   input { -webkit-user-select: text; user-select: text; }
   html, body { height: 100%; }
   body {
-    background-color: var(--bg-dark);
-    color: #fff;
-    font-family: var(--font);
+    background-color: var(--ink);
+    background-image: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1.2px);
+    background-size: 8px 8px;
+    color: var(--text);
+    font-family: var(--ui);
     display: flex;
     flex-direction: column;
     align-items: center;
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
-    padding: calc(env(safe-area-inset-top) + 4px) 8px calc(env(safe-area-inset-bottom) + 4px) 8px;
-    gap: 6px;
+    padding: calc(env(safe-area-inset-top) + 6px) 10px calc(env(safe-area-inset-bottom) + 6px) 10px;
+    gap: 8px;
   }
+  /* ---------- HUD ---------- */
   #header {
     width: 100%;
     max-width: 480px;
-    background: var(--panel-bg);
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    padding: 5px 8px;
+    background: var(--win);
+    border: 2px solid;
+    border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+    border-radius: 12px;
+    padding: 7px 8px 0 10px;
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 2px 8px;
-    font-size: 0.78rem;
-    font-weight: bold;
-    color: var(--accent);
+    gap: 5px 8px;
     flex-shrink: 0;
+    overflow: hidden;
   }
-  #header .r2 { color: #fff; }
-  #btn-speed { grid-row: 1 / span 2; grid-column: 2; padding: 4px 10px; font-size: 0.8rem; min-width: 64px; }
+  .hud-top { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .hud-date { font-family: var(--px); font-size: 1.05rem; font-weight: 600; }
+  .hud-tier { font-family: var(--px); color: var(--sky); font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .hud-chip { font-family: var(--px); font-size: 0.82rem; background: var(--well); border-radius: 6px; padding: 1px 7px 2px; color: var(--dim); }
+  .hud-chip b { color: var(--text); font-weight: 600; }
+  .hud-chip.money, .hud-chip.money b { color: var(--sun); }
+  .hud-chip.money.neg, .hud-chip.money.neg b { color: var(--coral); }
+  .hud-chip.rp b { color: var(--sky); }
+  #btn-speed { grid-row: 1 / span 2; grid-column: 2; align-self: center; min-width: 74px; }
+  .hud-xp { grid-column: 1 / -1; height: 4px; margin: 0 -8px 0 -10px; background: var(--lo); }
+  .hud-xp i { display: block; height: 100%; width: 0; background: var(--sky); transition: width 0.4s; }
+  /* ---------- Screen ---------- */
   #game-viewport {
-    width: min(100%, 480px, calc(40vh * 4 / 3));
-    width: min(100%, 480px, calc(40dvh * 4 / 3));
+    width: min(100%, 480px, calc(38vh * 4 / 3));
+    width: min(100%, 480px, calc(38dvh * 4 / 3));
     aspect-ratio: 4 / 3;
-    background: #111;
-    border: 3px solid var(--border);
-    border-radius: 8px;
+    background: #000;
+    border: 4px solid var(--lo);
+    border-radius: 14px;
+    box-shadow: 0 0 0 2px var(--hi), 0 10px 24px rgba(0, 0, 0, 0.45);
     position: relative;
-    box-shadow: 0 4px 20px rgba(102, 252, 241, 0.2);
     flex-shrink: 0;
     overflow: hidden;
   }
   canvas { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
-  #ui-container {
-    width: 100%;
-    max-width: 480px;
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
+  /* ---------- Panes ---------- */
+  #ui-container { width: 100%; max-width: 480px; flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .tab-pane {
     flex: 1;
     min-height: 0;
-    background: var(--panel-bg);
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    padding: 10px;
+    background: var(--win);
+    border: 2px solid;
+    border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+    border-radius: 12px;
+    padding: 12px;
     display: none;
     flex-direction: column;
-    gap: 7px;
+    gap: 9px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    font-size: 0.82rem;
+    font-size: 0.86rem;
+    line-height: 1.4;
   }
   .tab-pane.active { display: flex; }
-  nav {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
+  .pane-title { font-family: var(--px); font-size: 1.1rem; font-weight: 600; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .win { background: var(--well); border: 1px solid var(--edge); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .win-t { font-family: var(--px); color: var(--sun); font-size: 1rem; font-weight: 600; }
+  .fld { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .fld label { margin: 0; }
+  .title-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+  .cta button { padding: 11px 6px; font-size: 0.95rem; }
+  /* ---------- Nav ---------- */
+  nav { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 100%; max-width: 480px; flex-shrink: 0; }
+  .nav-btn { font-size: 0.66rem; padding: 5px 0 4px; line-height: 1.25; border-radius: 10px; font-weight: 500; }
+  .nav-btn .ic { font-size: 1.05rem; display: block; }
+  .nav-btn.active { background: var(--sun); color: var(--sun-ink); border-color: var(--sun-hi) var(--sun-lo) var(--sun-lo) var(--sun-hi); }
+  /* ---------- Controls ---------- */
+  button {
+    background: var(--well);
+    color: var(--text);
+    border: 2px solid;
+    border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: var(--px);
+    font-size: 0.86rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  button:active:not(:disabled) { border-color: var(--lo) var(--hi) var(--hi) var(--lo); transform: translateY(1px); }
+  button:disabled { opacity: 0.38; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+  .btn-accent { background: var(--sun); color: var(--sun-ink); border-color: var(--sun-hi) var(--sun-lo) var(--sun-lo) var(--sun-hi); font-weight: 600; }
+  .btn-accent:active:not(:disabled) { border-color: var(--sun-lo) var(--sun-hi) var(--sun-hi) var(--sun-lo); }
+  .btn-gold { color: var(--sun); }
+  .btn-danger { color: var(--coral); }
+  .btn-sm { padding: 5px 9px; font-size: 0.78rem; border-radius: 7px; }
+  select, input {
     width: 100%;
-    max-width: 480px;
-    flex-shrink: 0;
+    background-color: var(--ink);
+    color: var(--text);
+    border: 2px solid;
+    border-color: var(--lo) var(--edge) var(--edge) var(--lo);
+    border-radius: 8px;
+    padding: 9px 10px;
+    font-family: var(--ui);
+    font-size: 16px;
   }
-  button, select, input {
-    background: #0f141c;
-    color: #fff;
-    border: 1px solid var(--border);
-    padding: 8px;
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: bold;
+  input::placeholder { color: #7d74a8; }
+  select {
+    -webkit-appearance: none; appearance: none;
+    padding-right: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8' shape-rendering='crispEdges'%3E%3Cpath fill='%23ffcf4a' d='M0 0h10v2H8v2H6v2H4V4H2V2H0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 11px center;
   }
-  select, input { font-size: 16px; width: 100%; }
-  button { cursor: pointer; }
-  button:active:not(:disabled) { background: var(--border); color: #000; }
-  button:disabled { opacity: 0.4; }
-  .btn-accent { background: var(--border); color: #000; }
-  .btn-accent:active:not(:disabled) { background: var(--accent); }
-  .btn-gold { color: var(--gold); border-color: var(--gold); }
-  .btn-danger { color: var(--danger); border-color: var(--danger); }
-  .btn-sm { padding: 4px 7px; font-size: 0.7rem; }
-  .nav-btn { font-size: 0.56rem; padding: 5px 0; line-height: 1.35; }
-  .nav-btn .ic { font-size: 0.95rem; display: block; }
-  .nav-btn.active { background: var(--border); color: #000; }
-  label { font-size: 0.72rem; color: var(--muted); margin-bottom: -4px; }
-  .row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .seg { display: grid; gap: 5px; }
+  .seg3 { grid-template-columns: repeat(3, 1fr); }
+  .seg4 { grid-template-columns: repeat(4, 1fr); }
+  .seg2 { grid-template-columns: repeat(2, 1fr); }
+  .seg button { padding: 7px 2px; font-size: 0.78rem; }
+  .seg button.on { background: var(--sun); color: var(--sun-ink); border-color: var(--sun-hi) var(--sun-lo) var(--sun-lo) var(--sun-hi); font-weight: 600; }
+  label { font-size: 0.78rem; color: var(--dim); margin-bottom: -4px; }
+  /* ---------- Content ---------- */
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
-  .hl { color: var(--accent); font-weight: bold; }
-  .gold { color: var(--gold); }
-  .muted { color: var(--muted); }
-  .bad { color: var(--danger); }
-  .good { color: var(--good); }
-  .note { font-size: 0.74rem; color: #ccc; line-height: 1.45; background: var(--panel-2); border-radius: 4px; padding: 6px 8px; }
-  .card { background: var(--panel-2); border-radius: 5px; padding: 7px 8px; display: flex; flex-direction: column; gap: 5px; font-size: 0.75rem; }
-  .card .btns { display: flex; gap: 5px; flex-wrap: wrap; }
-  .sec { font-weight: bold; color: var(--accent); margin-top: 4px; }
-  .bar { height: 8px; background: #000; border-radius: 3px; overflow: hidden; flex: 1; }
+  .hl { color: var(--sky); font-weight: 600; }
+  .gold { color: var(--sun); }
+  .muted { color: var(--dim); }
+  .bad { color: var(--coral); }
+  .good { color: var(--mint); }
+  .note { font-size: 0.8rem; color: #ddd7f3; line-height: 1.5; background: var(--well); border-radius: 9px; padding: 8px 10px; box-shadow: inset 2px 2px 0 var(--lo); }
+  .card { background: var(--well); border: 1px solid var(--edge); border-radius: 10px; padding: 9px 10px; display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem; }
+  .card b { font-weight: 600; }
+  .card .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sec { font-family: var(--px); font-size: 1.02rem; font-weight: 600; color: var(--sun); margin-top: 6px; display: flex; align-items: center; gap: 7px; }
+  .sec::before { content: ''; width: 6px; height: 6px; background: var(--sun); box-shadow: 2px 2px 0 var(--sun-lo); flex-shrink: 0; }
+  .bar { height: 9px; background: var(--lo); border-radius: 2px; overflow: hidden; flex: 1; position: relative; }
   .bar > div { height: 100%; }
-  .statrow { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; }
-  .statrow span:first-child { width: 72px; }
-  .statrow span:last-child { width: 34px; text-align: right; }
-  /* Modal */
+  .bar::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 7px, rgba(12, 9, 25, 0.55) 7px 8px); pointer-events: none; }
+  .statrow { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; }
+  .statrow span:first-child { width: 78px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .statrow span:last-child { width: 38px; text-align: right; font-family: var(--px); }
+  .mini { font-size: 0.75rem; }
+  .chip { display: inline-block; font-size: 0.68rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--sky); color: var(--sky); margin: 0 3px 3px 0; }
+  .chip-bad { border-color: var(--coral); color: var(--coral); }
+  .chip-gold { border-color: var(--sun); color: var(--sun); }
+  .ms-done { color: var(--mint); }
+  .prio-row { display: grid; grid-template-columns: 1fr 38px 74px 38px; align-items: center; gap: 6px; font-size: 0.82rem; }
+  .prio-row button { padding: 4px 0; }
+  .pips { color: var(--sun); text-align: center; letter-spacing: 2px; font-size: 0.82rem; }
+  .pl-chart { display: flex; gap: 3px; background: var(--well); border-radius: 9px; padding: 8px; box-shadow: inset 2px 2px 0 var(--lo); }
+  .pl-col { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+  .pl-up { height: 40px; width: 100%; display: flex; align-items: flex-end; }
+  .pl-dn { height: 40px; width: 100%; display: flex; align-items: flex-start; border-top: 1px solid var(--hi); }
+  .pl-col i { display: block; width: 100%; border-radius: 1px; }
+  .pl-col span { font-size: 0.6rem; color: var(--dim); font-family: var(--px); }
+  /* ---------- Windows (modals) ---------- */
   #modal {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.82);
+    background: rgba(10, 7, 22, 0.78);
+    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
     display: none; justify-content: center; align-items: center;
-    z-index: 50; padding: 16px;
+    z-index: 50; padding: 14px;
   }
   #modal.show { display: flex; }
   .modal-card {
-    background: var(--panel-bg);
-    border: 3px solid var(--gold);
-    border-radius: 8px;
-    padding: 14px;
+    background: var(--win);
+    border: 3px solid;
+    border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+    border-radius: 14px;
+    box-shadow: 0 0 0 3px var(--lo), 0 20px 44px rgba(0, 0, 0, 0.55);
+    padding: 0 14px 14px;
     width: 100%;
     max-width: 420px;
-    max-height: 85dvh;
+    max-height: 86dvh;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    font-size: 0.8rem;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    animation: winpop 0.16s ease-out;
   }
-  .modal-card h3 { color: var(--gold); text-align: center; }
-  #modal-btns { display: flex; flex-direction: column; gap: 6px; }
-  .rev { display: flex; justify-content: space-between; gap: 8px; background: var(--panel-2); padding: 5px 7px; border-radius: 4px; font-size: 0.74rem; }
-  .rev b { color: var(--gold); min-width: 22px; text-align: right; }
-  .big { font-size: 1.6rem; font-weight: bold; text-align: center; color: var(--accent); }
-  .opt { text-align: left; width: 100%; line-height: 1.45; font-weight: normal; }
-  .opt b { color: var(--accent); }
-  .mini { font-size: 0.7rem; }
-  .chip { display: inline-block; font-size: 0.62rem; padding: 1px 6px; border-radius: 8px; border: 1px solid var(--border); color: var(--accent); margin: 0 3px 3px 0; }
-  .chip-bad { border-color: var(--danger); color: var(--danger); }
-  .chip-gold { border-color: var(--gold); color: var(--gold); }
-  .ms-done { color: var(--good); }
-  .prio-row { display: grid; grid-template-columns: 1fr 34px 70px 34px; align-items: center; gap: 6px; font-size: 0.74rem; }
-  .pips { color: var(--accent); text-align: center; letter-spacing: 1px; }
-  .pl-chart { display: flex; gap: 3px; background: var(--panel-2); border-radius: 4px; padding: 6px; }
-  .pl-col { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
-  .pl-up { height: 40px; width: 100%; display: flex; align-items: flex-end; }
-  .pl-dn { height: 40px; width: 100%; display: flex; align-items: flex-start; border-top: 1px solid rgba(69,162,158,0.5); }
-  .pl-col i { display: block; width: 100%; border-radius: 1px; }
-  .pl-col span { font-size: 0.55rem; color: var(--muted); }
-  .modal-card label { display: block; margin: 9px 0 4px; line-height: 1.2; }
-
+  @keyframes winpop { from { transform: translateY(10px) scale(0.98); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .modal-card { animation: none; } .hud-xp i { transition: none; } }
+  #modal-body { display: flex; flex-direction: column; gap: 8px; }
+  #modal-body > h3:first-child {
+    position: sticky; top: 0; z-index: 2;
+    margin: 0 -14px 2px;
+    padding: 11px 14px 9px;
+    background: var(--sun);
+    color: var(--sun-ink);
+    border-bottom: 3px solid var(--sun-lo);
+    font-family: var(--px);
+    font-size: 1.15rem;
+    font-weight: 600;
+    text-align: left;
+  }
+  .modal-card h3 { font-family: var(--px); color: var(--sun); font-weight: 600; }
+  .modal-card label { margin: 2px 0 -4px; }
+  #modal-btns { display: flex; flex-direction: column; gap: 7px; }
+  .rev { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--well); padding: 6px 9px; border-radius: 8px; font-size: 0.8rem; }
+  .rev b { font-family: var(--px); color: var(--sun); min-width: 24px; text-align: right; font-size: 1.05rem; }
+  .big { font-family: var(--px); font-size: 2.4rem; font-weight: 700; text-align: center; color: var(--sky); line-height: 1.1; }
+  .opt { text-align: left; width: 100%; line-height: 1.45; font-family: var(--ui); font-weight: 400; font-size: 0.84rem; }
+  .opt b { font-family: var(--px); color: var(--sun); font-weight: 600; font-size: 0.95rem; }
 </style>
 </head>
 <body>
 
 <div id="header">
-  <div><span id="cal-text">Y1 M1 W1</span> · <span id="tier-text"></span> R<span id="rank-text">1</span> <span class="muted" id="rank-exp"></span></div>
-  <button id="btn-speed" onclick="cycleSpeed()">▶ 1x</button>
-  <div class="r2"><span class="gold">$<span id="gold-text">0</span></span> · <span id="fans-text">0</span> fans · <span class="hl"><span id="rp-text">0</span> RP</span></div>
+  <div class="hud-top"><span id="cal-text" class="hud-date">Y1 M1 W1</span><span id="tier-text" class="hud-tier"></span></div>
+  <button id="btn-speed" onclick="cycleSpeed()" aria-label="Game speed">▶ 1x</button>
+  <div class="hud-chips">
+    <span class="hud-chip money">$<b id="gold-text">0</b></span>
+    <span class="hud-chip">★ <b id="fans-text">0</b></span>
+    <span class="hud-chip rp"><b id="rp-text">0</b> RP</span>
+    <span class="hud-chip">Rank <b id="rank-text">1</b></span>
+  </div>
+  <div class="hud-xp" title="Progress to the next rank"><i id="rank-bar"></i></div>
 </div>
 
 <div id="game-viewport">
@@ -201,32 +280,33 @@
   <!-- DEV -->
   <div id="tab-dev" class="tab-pane active">
     <div class="row">
-      <span id="dev-status" class="hl">Studio Idle</span>
-      <button id="btn-boost" class="btn-sm btn-gold" disabled onclick="useBoost()">⚡ Assistant Boost</button>
+      <span id="dev-status" class="pane-title">Studio idle</span>
+      <button id="btn-boost" class="btn-sm btn-gold" disabled onclick="useBoost()">⚡ Assistant boost</button>
     </div>
-    <div id="dev-setup" style="display:flex; flex-direction:column; gap:7px;">
-      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;"><input id="inp-title" maxlength="24" placeholder="" autocomplete="off"><button onclick="rollTitle()" title="Suggest a title">🎲</button></div>
-      <label>Genre</label>
-      <select id="sel-genre" onchange="updatePreview()"></select>
-      <label>Theme</label>
-      <select id="sel-theme" onchange="updatePreview()"></select>
-      <label>Platform</label>
-      <select id="sel-platform" onchange="updatePreview()"></select>
-      <label>Publisher</label>
-      <select id="sel-pub" onchange="updatePreview()"></select>
-      <div class="grid2">
-        <div style="display:flex;flex-direction:column;gap:7px;"><label>Budget</label><select id="sel-budget" onchange="updatePreview()"></select></div>
-        <div style="display:flex;flex-direction:column;gap:7px;"><label>Business model</label><select id="sel-monet" onchange="updatePreview()"></select></div>
+    <div id="dev-setup" class="stack">
+      <div class="win">
+        <div class="win-t">Concept</div>
+        <div class="title-row"><input id="inp-title" maxlength="24" placeholder="" autocomplete="off" aria-label="Game title"><button onclick="rollTitle()" aria-label="Suggest a title">🎲</button></div>
+        <div class="grid2">
+          <div class="fld"><label for="sel-genre">Genre</label><select id="sel-genre" onchange="updatePreview()"></select></div>
+          <div class="fld"><label for="sel-theme">Theme</label><select id="sel-theme" onchange="updatePreview()"></select></div>
+        </div>
+        <div class="fld"><label for="sel-seq">Sequel to</label><select id="sel-seq" onchange="onSequelPick()"></select></div>
       </div>
-      <div class="grid2">
-        <div style="display:flex;flex-direction:column;gap:7px;"><label>Audience</label><select id="sel-aud" onchange="updatePreview()"></select></div>
-        <div style="display:flex;flex-direction:column;gap:7px;"><label>Sequel to</label><select id="sel-seq" onchange="onSequelPick()"></select></div>
+      <div class="win">
+        <div class="win-t">Release plan</div>
+        <div class="fld"><label for="sel-platform">Platform</label><select id="sel-platform" onchange="updatePreview()"></select></div>
+        <div class="fld"><label for="sel-pub">Publisher</label><select id="sel-pub" onchange="updatePreview()"></select></div>
+        <div class="fld"><label>Budget</label><div id="seg-budget" class="seg seg3"></div></div>
+        <div class="fld"><label>Audience</label><div id="seg-aud" class="seg seg4"></div></div>
+        <div class="fld"><label>Business model</label><div id="seg-monet" class="seg seg2"></div></div>
+        <div style="display:none"><select id="sel-budget"></select><select id="sel-aud"></select><select id="sel-monet"></select></div>
       </div>
-      <div id="prio-box" class="note" style="display:flex;flex-direction:column;gap:5px;"></div>
+      <div id="prio-box" class="win"></div>
       <div id="dev-preview" class="note"></div>
-      <div class="grid2">
-        <button class="btn-accent" onclick="startDevelopment()">Begin Production</button>
-        <button onclick="openContracts()">Contract Work</button>
+      <div class="grid2 cta">
+        <button class="btn-accent" onclick="startDevelopment()">Start production</button>
+        <button onclick="openContracts()">Take a contract</button>
       </div>
     </div>
     <div id="dev-progress" style="display:none; flex-direction:column; gap:6px;">
@@ -553,7 +633,7 @@ const MILESTONES = [
   { id: 'dl1b',    n: 'One Billion!',      d: 'Reach 1,000,000,000 downloads',    test: s => s.totalDownloads >= 1e9, r: { gold: 5000000 } },
   { id: 'team7',   n: 'Growing Team',      d: 'Have 7 staff',                     test: s => s.team.length >= 7, r: { rp: 10 } },
   { id: 'senior',  n: 'Leadership',        d: 'Promote someone to a senior role', test: s => s.team.some(m => m.senior), r: { fans: 300 } },
-  { id: 'legend',  n: 'Living Legend',     d: 'Train a staff member to Lv20',     test: s => s.team.some(m => m.lv >= 20), r: { gold: 100000 } },
+  { id: 'legend',  n: 'Veteran Mentor',     d: 'Train a staff member to Lv20',     test: s => s.team.some(m => m.lv >= 20), r: { gold: 100000 } },
   { id: 'floor3',  n: 'Penthouse',         d: 'Move to the top floor',            test: s => s.floor >= 3, r: { fans: 2000 } },
   { id: 'goty',    n: 'Game of the Year',  d: 'Win Game of the Year',             test: s => (s.awards.goty || 0) >= 1, r: { rp: 25 } },
   { id: 'hopper',  n: 'Platform Hopper',   d: 'Release on 5 different platforms', test: s => s.platformsUsed.length >= 5, r: { gold: 30000 } },
@@ -699,6 +779,72 @@ MILESTONES.push(
   { id: 'value10m', n: 'Unicorn Dreams', d: 'Reach a company value of $10,000,000', test: () => companyValue() >= 1e7, r: { rp: 30 } },
   { id: 'guru', n: 'Genre Guru', d: 'Fully learn 5 genre profiles', test: s => Object.values(s.insights).filter(o => Object.keys(o).length >= 6).length >= 5, r: { rp: 20 } }
 );
+
+/* ---------- Legendary combos (real-world hits) ---------- */
+THEMES.push({ n: 'Crime', rp: 14, rank: 6 }, { n: 'Military', rp: 16, rank: 6 });
+THEMES.slice(-2).forEach(t => { T[t.n] = t; });
+Object.assign(THEME_WORDS, { 'Crime': ['Heist', 'Mob', 'Street', 'Getaway', 'Vice'], 'Military': ['Warfare', 'Squad', 'Frontline', 'Commando', 'Battalion'] });
+HOOKS.push(
+  { n: 'Base Building',       m: [1.05, 1, 1.15, 1],    good: ['Survival', 'Sandbox', 'Battle Royale', 'Tower Defense', 'Strategy', 'City Builder'] },
+  { n: 'Creature Collecting', m: [1, 1.05, 1.15, 1.05], good: ['RPG', 'Adventure', 'Card Game', 'Idle Clicker'] },
+  { n: 'Brutal Difficulty',   m: [1.2, 1, 1, 0.95],     good: ['Action', 'Roguelike', 'Metroidvania', 'Platformer', 'Fighting'] }
+);
+HOOKS.slice(-3).forEach(h => { HOOK[h.n] = h; });
+const LEGENDS = [
+  ['Battle Royale', 'Desert Island', 'Base Building', 'Fortnite'],
+  ['Action', 'Crime', 'Open World', 'Grand Theft Auto'],
+  ['Adventure', 'Wild West', 'Open World', 'Red Dead Redemption'],
+  ['RPG', 'Dragons', 'Open World', 'The Elder Scrolls'],
+  ['Sandbox', 'Fantasy', 'Procedural Worlds', 'Minecraft'],
+  ['RPG', 'Animal', 'Creature Collecting', 'Pokémon'],
+  ['Management Sim', 'Apartment', 'Cozy Vibes', 'The Sims'],
+  ['Farming Sim', 'Farm', 'Cozy Vibes', 'Stardew Valley'],
+  ['Farming Sim', 'Animal', 'Cozy Vibes', 'Animal Crossing'],
+  ['Shooter', 'Military', 'Competitive Ranked', 'Call of Duty'],
+  ['Shooter', 'Aliens', 'Party Multiplayer', 'Halo'],
+  ['Strategy', 'Fantasy', 'Competitive Ranked', 'League of Legends'],
+  ['Racing', 'Animal', 'Party Multiplayer', 'Mario Kart'],
+  ['Platformer', 'Fairy Tale', 'Cute Mascot', 'Super Mario Bros.'],
+  ['Adventure', 'Fantasy', 'Open World', 'The Legend of Zelda'],
+  ['Action', 'Dragons', 'Brutal Difficulty', 'Dark Souls'],
+  ['Roguelike', 'Mythology', 'Roguelike Runs', 'Hades'],
+  ['Survival', 'Haunted House', 'Branching Story', 'Resident Evil'],
+  ['Minigames', 'Space', 'Party Multiplayer', 'Among Us'],
+  ['Puzzle', 'Cooking', 'Cute Mascot', 'Candy Crush'],
+  ['Puzzle', 'Animal', 'Physics Sandbox', 'Angry Birds'],
+  ['Tower Defense', 'Fantasy', 'Base Building', 'Clash of Clans'],
+  ['Stealth', 'Spy', 'Branching Story', 'Metal Gear Solid'],
+  ['Metroidvania', 'Vampires', 'Hand-drawn Art', 'Castlevania'],
+  ['Shooter', 'Horror', 'Speedrun Friendly', 'Doom'],
+  ['RPG', 'Fantasy', 'Branching Story', 'Final Fantasy'],
+  ['Rhythm', 'Rock Band', 'Motion Controls', 'Guitar Hero'],
+  ['Fitness', 'Tennis', 'Motion Controls', 'Wii Sports'],
+  ['Visual Novel', 'Detective', 'Branching Story', 'Ace Attorney'],
+  ['Tower Defense', 'Zombie', 'Cute Mascot', 'Plants vs. Zombies'],
+  ['Idle Clicker', 'Cooking', 'Idle Progression', 'Cookie Clicker'],
+  ['Minigames', 'Cooking', 'Party Multiplayer', 'Overcooked'],
+  ['Action', 'Samurai', 'Open World', 'Ghost of Tsushima'],
+  ['Action', 'Dragons', 'Party Multiplayer', 'Monster Hunter'],
+  ['Puzzle', 'Robot', 'Physics Sandbox', 'Portal'],
+  ['Survival', 'Underwater', 'Base Building', 'Subnautica'],
+  ['Sandbox', 'Space', 'Procedural Worlds', "No Man's Sky"],
+  ['RPG', 'Space', 'Branching Story', 'Mass Effect'],
+  ['Strategy', 'Aliens', 'Roguelike Runs', 'XCOM'],
+  ['Fighting', 'Ninja', 'Competitive Ranked', 'Mortal Kombat'],
+  ['MMO', 'Fantasy', 'Open World', 'World of Warcraft'],
+  ['Card Game', 'Wizards', 'Competitive Ranked', 'Hearthstone'],
+  ['Racing', 'Crime', 'Open World', 'Need for Speed'],
+  ['Adventure', 'Post-Apocalypse', 'Branching Story', 'The Last of Us'],
+  ['RPG', 'Post-Apocalypse', 'Open World', 'Fallout']
+].map(([g, t, h, ref]) => ({ g, t, h, ref }));
+const legKeyOf = L => L.g + '|' + L.t + '|' + L.h;
+const LEGEND_PAIRS = new Set(LEGENDS.map(L => L.g + '|' + L.t));
+LEGENDS.forEach(L => { const h = HOOK[L.h]; if (h && !h.good.includes(L.g)) h.good.push(L.g); });
+const REVIEW_BIAS = [0.15, -0.2, 0.3, -0.45];
+MILESTONES.push(
+  { id: 'legend1', n: 'Living Legend', d: 'Hit a legendary combo', test: s => Object.keys(s.legends || {}).length >= 1, r: { fans: 2000 } },
+  { id: 'legend10', n: 'Hall of Legends', d: 'Hit 10 legendary combos', test: s => Object.keys(s.legends || {}).length >= 10, r: { gold: 1000000 } }
+);
 const AMAZING = new Set([
   'Adventure|Detective', 'Minigames|Animal', 'Card Game|Animal', 'Escape Game|Apartment',
   'Management Sim|Office Worker', 'Fitness|Tennis', 'Puzzle|Cooking', 'Quiz|Dinosaur',
@@ -719,9 +865,9 @@ const COMBO_DL = [0.7, 0.9, 1.1, 1.35, 1.7];
 function compat(g, t) {
   if (AMAZING.has(g + '|' + t)) return 4;
   const v = hashStr(g + '|' + t) % 100;
-  return v < 22 ? 0 : v < 58 ? 1 : v < 85 ? 2 : 3;
+  const r = v < 22 ? 0 : v < 58 ? 1 : v < 85 ? 2 : 3;
+  return LEGEND_PAIRS.has(g + '|' + t) ? Math.max(3, r) : r;
 }
-
 const FLOORS = [
   { desks: 5, rent: 800,  cost: 0,      rank: 1,  live: 2 },
   { desks: 7, rent: 2200, cost: 60000,  rank: 5,  live: 3 },
@@ -743,7 +889,7 @@ const CONTRACTS = ['Corporate Website', 'Ringtone Pack', 'Bank App Patch', 'Stic
 const SKY = ['#bde0fe', '#bde0fe', '#cdeac0', '#a8dadc', '#90e0ef', '#48cae4', '#48cae4', '#90e0ef', '#ffd6a5', '#f4a261', '#d4a5a5', '#bde0fe'];
 
 const TPS = 30;           // simulation ticks per second
-const TPW = 135;          // ticks per in-game week (4.5s at 1x)
+const TPW = 200;          // ticks per in-game week (~6.7s at 1x)
 const SAVE_KEY = 'pocketDevStudio_v1';
 const perkQueued = new Set();
 let MODS = null;
@@ -794,7 +940,7 @@ function newGame() {
   ];
   team.forEach((m, i) => { m.id = i + 1; m.skin = SKINS[i]; m.hs = i % 4; });
   return {
-    v: 4, gold: 20000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
+    v: 5, gold: 20000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
     cal: { y: 1, m: 1, w: 1 }, tick: 0, speed: 1,
     settings: { sound: true },
     team, nextId: 6,
@@ -810,7 +956,7 @@ function newGame() {
     decor: [], tech: {}, milestones: {}, hookNotes: {}, releasedCount: 0, bestScore: 0,
     awards: { goty: 0, excellence: 0 }, platformsUsed: [], investor: null, platDeal: null,
     prio: [2, 2, 2, 2, 2, 2], insights: {}, ownPlats: [], hwProj: null, execs: {}, policy: { hours: 0, benefits: 1, bonus: 0 },
-    loans: [], merch: [], book: {}, plHist: [], taxPaid: 0,
+    loans: [], merch: [], book: {}, plHist: [], taxPaid: 0, legends: {}, legendHints: {}, walkIn: null, rpBought: 0,
     rivals: RIVAL_DEFS.map(r => ({ n: r.n, fans: r.fans, growth: r.growth, skill: r.skill, best: 0, yearBest: 0 }))
   };
 }
@@ -846,15 +992,19 @@ function migrate(s) {
   if (!s.book) s.book = {};
   if (!Array.isArray(s.plHist)) s.plHist = [];
   if (!s.taxPaid) s.taxPaid = 0;
+  if (!s.legends) s.legends = {};
+  if (!s.legendHints) s.legendHints = {};
+  if (s.walkIn === undefined) s.walkIn = null;
+  if (!s.rpBought) s.rpBought = 0;
   s.team.forEach(normStaff);
   if (s.activeDev) normDev(s.activeDev);
-  s.v = 4;
+  s.v = 5;
   return s;
 }
 function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) { const s = JSON.parse(raw); if (s && s.v >= 1 && s.v <= 4) return migrate(Object.assign(newGame(), s)); }
+    if (raw) { const s = JSON.parse(raw); if (s && s.v >= 1 && s.v <= 5) return migrate(Object.assign(newGame(), s)); }
   } catch (e) {}
   return null;
 }
@@ -903,7 +1053,7 @@ function spend(n, cat) {
 }
 function earn(n, cat) { STATE.gold += n; STATE.ledger.inc += n; if (!FIN_CATS.has(cat)) STATE.totalRevenue += n; bookAdd(cat, n); }
 function opProfit(e) { return Object.entries(e.cats || {}).reduce((a, [k, v]) => FIN_CATS.has(k) ? a : a + v, 0); }
-function rankNeed() { return 40 + STATE.rank * 30; }
+function rankNeed() { return 50 + 30 * STATE.rank + 3 * STATE.rank * STATE.rank; }
 function addRankExp(n) {
   STATE.rankExp += n;
   while (STATE.rankExp >= rankNeed()) {
@@ -997,7 +1147,7 @@ function investorCut(n) {
   const iv = STATE.investor; if (!iv || iv.weeks <= 0 || n <= 0) return 0;
   const c = Math.round(n * iv.cut); iv.paid = (iv.paid || 0) + c; return c;
 }
-function expNeed(lv) { return Math.round(12 + lv * 10 + lv * lv * 0.5); }
+function expNeed(lv) { return Math.round(15 + 13 * lv + 1.2 * lv * lv); }
 function gainExp(m, n) {
   const M = MODS || computeMods();
   const mult = M.exp * (m.traits.includes('Fast Learner') ? 1.5 : 1) * (M.mentor && !m.perks.includes('ment') ? 1.15 : 1);
@@ -1474,6 +1624,10 @@ function completeProject() {
   const repeats = d.sequelOf ? 0 : STATE.history.slice(0, 3).filter(h => h.genre === d.genre && h.theme === d.theme).length;
   const audAdj = aud.good.includes(d.genre) ? 0.3 : aud.bad.includes(d.genre) ? -0.4 : 0;
   const lootKids = d.audience === 0 && d.monet === 3 ? -1.0 : 0;
+  const newHook = !!hook && !((d.hook + '|' + d.genre) in STATE.hookNotes);
+  const firstGenre = !STATE.levels.g[d.genre];
+  const legend = hook ? LEGENDS.find(L => L.g === d.genre && L.t === d.theme && L.h === d.hook) : null;
+  const newLegend = !!legend && !STATE.legends[legKeyOf(legend)];
   let hookAdj = 0, hc = -1;
   if (hook) { hc = hookCompat(d.hook, d.genre); hookAdj = HOOK_REVIEW[hc]; STATE.hookNotes[d.hook + '|' + d.genre] = hc; }
   const orig = d.sequelOf ? STATE.history.find(h => h.title === d.sequelOf) : null;
@@ -1496,7 +1650,10 @@ function completeProject() {
   const dirAdj = dir ? (dir.role === 'Planner' ? 0.2 : 0.05) + (dir.senior ? 0.15 : 0) + (dir.perks.includes('legend') ? 0.1 : 0) : -0.2;
   const base = 8.5 * (1 - Math.exp(-0.9 * q)) - 1.2 + COMBO_REVIEW[combo] + (trend ? 0.5 : 0) + (fit ? 0.4 : 0) + mo.rev + aud.rev + audAdj + lootKids +
     hookAdj + seqAdj + d.reviewBonus + pe.adj + secAdj + dirAdj - repeats * 0.8;
-  const scores = REVIEWERS.map(() => clamp(Math.round(base + rnd(-1.1, 1.1)), 1, 10));
+  const expect = Math.min(1.2, (STATE.rank - 1) * 0.08);
+  const rawQ = base + (legend ? 1.2 : 0) - expect;
+  const capped = rawQ <= 7 ? rawQ : 7 + 3 * (1 - Math.exp(-(rawQ - 7) / 2.5));
+  const scores = REVIEWERS.map((r, i) => clamp(Math.round(capped + REVIEW_BIAS[i] + rnd(-1, 1)), 1, 10));
   const total = scores.reduce((a, b) => a + b, 0);
   const hof = total >= 32;
 
@@ -1509,15 +1666,16 @@ function completeProject() {
   const mkt = Math.max(0.2, marketNow(plat));
   const dl = Math.round((400 + 25 * Math.pow(STATE.fans, 0.6)) * Math.pow(total / 20, 2) * mkt * COMBO_DL[combo] *
     (trend ? 1.3 : 1) * (fit ? 1.2 : 1) * pb.boost * mo.dl * aud.dl * hypeMul * (orig ? 1 + 0.15 / (seqN - 1) : 1) * (deal ? 1.4 : 1) *
-    (d.discount ? 1.25 : 1) * rnd(0.85, 1.15));
+    (d.discount ? 1.25 : 1) * (legend ? 1.6 : 1) * rnd(0.85, 1.15));
   const gross = Math.round(dl * plat.arpu * 1.5 * mo.launch * (d.discount ? 0.6 : 1));
   const pubTake = Math.round(gross * pb.cut);
   const invTake = investorCut(gross - pubTake);
   const rev = gross - pubTake - invTake;
-  const fansGain = Math.round(dl * (hof ? 0.08 : 0.04) * mo.fans * aud.fans * M.fans * (d.discount ? 1.2 : 1));
-  const rpGain = 2 + Math.round(total / 6);
+  const fansGain = Math.round(dl * (hof ? 0.08 : 0.04) * mo.fans * aud.fans * M.fans * (d.discount ? 1.2 : 1) * (legend ? 1.5 : 1));
+  let rpGain = 1 + (newCombo ? 3 : 0) + (newHook ? 2 : 0) + (firstGenre ? 2 : 0) + (newLegend ? 5 : 0) + (hof ? 1 : 0);
   earn(rev, 'Game sales');
-  STATE.fans += fansGain; STATE.rp += rpGain; STATE.totalDownloads += dl;
+  STATE.fans += fansGain; STATE.totalDownloads += dl;
+  if (legend) { STATE.legends[legKeyOf(legend)] = STATE.legends[legKeyOf(legend)] || d.title; delete STATE.legendHints[LEGENDS.indexOf(legend)]; }
   addRankExp(10 + total + (d.genre === 'Adventure' ? 10 : 0));
   STATE.levels.g[d.genre] = (STATE.levels.g[d.genre] || 0) + 1;
   STATE.levels.t[d.theme] = (STATE.levels.t[d.theme] || 0) + 1;
@@ -1571,6 +1729,8 @@ function completeProject() {
   if (!ins[worst]) { ins[worst] = pe.prof[worst]; learned.push(worst); }
   const unknown = AREAS.map((a, i) => i).filter(i => !ins[i]);
   if (unknown.length) { const u = pick(unknown); ins[u] = pe.prof[u]; learned.push(u); }
+  rpGain += learned.length;
+  STATE.rp += rpGain;
   let prioLine = '';
   if (Math.abs(pe.diff[worst]) > 0.06) prioLine = pe.diff[worst] > 0 ? `Critics felt too much went into <b>${AREAS[worst]}</b> for ${an(esc(d.genre))}.` : `Critics wanted more <b>${AREAS[worst]}</b> from ${an(esc(d.genre))}.`;
   else prioLine = `Critics loved how well the priorities suited ${an(esc(d.genre))}.`;
@@ -1601,6 +1761,9 @@ function completeProject() {
   const stars = '★'.repeat(starN) + '☆'.repeat(5 - starN);
   const revRows = scores.map((sc, i) => `<div class="rev"><span>${REVIEWERS[i]}: “${QUOTES[sc]}”</span><b>${sc}</b></div>`).join('');
   const notes = [prioLine];
+  if (legend) notes.unshift(`<span class="gold">🌟 Legendary combo! Critics are calling it the next ${esc(legend.ref)}.</span>`);
+  if (expect >= 0.4) notes.push(`<span class="muted">Critics expect more from ${an(studioTier())}.</span>`);
+  const rpWhy = [newCombo ? 'new combo' : '', newHook ? 'new hook' : '', firstGenre ? 'first ' + d.genre : '', learned.length ? 'genre insight' : '', newLegend ? 'legend' : ''].filter(Boolean);
   const weak = grades.filter(x => x.g === 'D' || x.g === 'C').map(x => SECTIONS[x.k].n);
   if (weak.length) notes.push(`<span class="bad">Weak areas: ${weak.join(', ')}.</span>`);
   if (hook) notes.push(`Hook ${esc(d.hook)}: <b style="color:${HOOK_COLOR[hc]}">${HOOK_LABEL[hc]}</b>`);
@@ -1621,14 +1784,14 @@ function completeProject() {
   const html = `
     <h3>${esc(d.title)}</h3>
     <div class="muted" style="text-align:center;">${esc(d.genre)} × ${esc(d.theme)} · ${esc(d.platform)}</div>
-    <div style="text-align:center;">Combo: <b style="color:${COMBO_COLOR[combo]}">${COMBO_LABEL[combo]}</b>${newCombo ? ' <span class="gold">(new!)</span>' : ''}${trend ? ' · <span class="good">Trending!</span>' : ''}${fit ? ' · <span class="good">Platform favourite</span>' : ''}</div>
+    <div style="text-align:center;">Combo: ${legend ? '<b class="gold">🌟 Legendary!</b> · ' : ''}<b style="color:${COMBO_COLOR[combo]}">${COMBO_LABEL[combo]}</b>${newCombo ? ' <span class="gold">(new!)</span>' : ''}${trend ? ' · <span class="good">Trending!</span>' : ''}${fit ? ' · <span class="good">Platform favourite</span>' : ''}</div>
     ${repeats ? `<div class="note bad">Critics feel it's a rerun of your recent work (-${(repeats * 0.8).toFixed(1)} per review). Mix up your combos!</div>` : ''}
     ${revRows}
     <div class="big">${total} / 40</div>
     <div style="text-align:center; color:var(--gold);">${stars}</div>
     ${hof ? '<div style="text-align:center;" class="gold">🏆 HALL OF FAME! +$10,000</div>' : ''}
     <div class="note mini">${notes.join('<br>')}</div>
-    <div class="note">Downloads: <b>${fmt(dl)}</b>${hype ? ` (hype ${Math.round(hype)})` : ''}<br>Launch revenue: <b class="gold">${money(rev)}</b>${pubTake ? ` after ${esc(pb.n)}'s ${Math.round(pb.cut * 100)}% cut` : ''}${invTake ? ` and ${money(invTake)} to your investor` : ''}<br>New fans: +${fmt(fansGain)} · Research: +${rpGain} RP<br>${liveNote}${pubLine ? '<br>' + pubLine : ''}</div>
+    <div class="note">Downloads: <b>${fmt(dl)}</b>${hype ? ` (hype ${Math.round(hype)})` : ''}<br>Launch revenue: <b class="gold">${money(rev)}</b>${pubTake ? ` after ${esc(pb.n)}'s ${Math.round(pb.cut * 100)}% cut` : ''}${invTake ? ` and ${money(invTake)} to your investor` : ''}<br>New fans: +${fmt(fansGain)} · Research: +${rpGain} RP${rpWhy.length ? ' <span class="muted">(' + rpWhy.join(', ') + ')</span>' : ''}<br>${liveNote}${pubLine ? '<br>' + pubLine : ''}</div>
     <div class="sec">Credits</div><div class="note mini">${gradeLine}<br>${credits}<div class="muted" style="margin-top:3px;">Team morale ${mood >= 0 ? '+' : ''}${mood}${bonusLine}</div></div>
     <div class="note mini muted">Decisions: ${d.decisions.map(esc).join(' · ')}</div>`;
   playSound(hof ? 'fanfare' : 'coin');
@@ -1670,6 +1833,7 @@ function advanceWeek() {
     if (M.muse) m.morale = Math.max(50, m.morale);
     m.morale = clamp(m.morale, 0, 100);
     if (m.raiseCd > 0) m.raiseCd--;
+    if (m.role === 'Planner' && m.vac <= 0 && Math.random() < (m.lv + (m.senior ? 5 : 0)) / 130 * (m.traits.includes('Visionary') ? 2 : 1)) { STATE.rp++; news(`${m.name} sketched a new idea: +1 RP`, '#7cc8ff'); }
   });
   const sad = STATE.team.find(m => m.morale < 20 && !m.traits.includes('Loyal'));
   if (sad && STATE.team.length > 1 && Math.random() < 0.08) evBurnout(sad);
@@ -1678,6 +1842,7 @@ function advanceWeek() {
     if (!STATE.investor.weeks) news(`The investor deal has ended. They took ${money(STATE.investor.paid || 0)} in total.`, '#9aa5b1');
   }
   hardwareWeek();
+  if (STATE.walkIn && --STATE.walkIn.weeks <= 0) { news(`${STATE.walkIn.c.name} took a job elsewhere.`, '#9aa5b1'); STATE.walkIn = null; }
 
   if (Math.random() < 0.12) randomEvent();
 
@@ -1752,12 +1917,44 @@ function evBurnout(m) {
     { label: "They'll be fine", action: () => { if (!m.traits.includes('Loyal') && STATE.team.length > 1 && Math.random() < 0.4) removeStaff(m, `${m.name} quit. The burnout was real.`); else { m.morale = Math.max(0, m.morale - 5); news(`${m.name} soldiers on, unhappily.`, '#ef476f'); } } }]);
 }
 function evGenius() {
+  if (STATE.walkIn) return;
   const c = randomStaff(3); c.lv = 3; c.traits = [pick(['Visionary', 'Fast Learner', 'Workaholic', 'Rockstar'])];
   c.salary = Math.round(c.salary * 1.3 / 50) * 50;
-  const fee = c.salary * 3, full = STATE.team.length >= deskCount();
-  showModal(`<h3>A Walk-in Genius</h3><div class="note"><b>${esc(c.name)}</b>, a ${c.role} with a legendary portfolio, wants to join.<br>${STATS.map((x, i) => x + ' ' + c.s[i]).join(' · ')} · SPD ${c.spd}<br>Trait: ${c.traits[0]} · ${money(c.salary)}/mo · signing fee ${money(fee)}${full ? '<br><span class="bad">No free desk.</span>' : ''}</div>`, [
-    { label: 'Hire them', cls: 'btn-accent', disabled: full || STATE.gold < fee, action: () => { if (!spend(fee)) return; c.id = STATE.nextId++; STATE.team.push(c); computeMods(); news(`${c.name} joined! What a coup.`, '#ffd166'); renderStaff(); checkMilestones(); } },
-    { label: 'Not now' }]);
+  STATE.walkIn = { c, fee: c.salary * 3, weeks: 3 };
+  walkInModal();
+}
+function walkInModal() {
+  const w = STATE.walkIn; if (!w) return;
+  const c = w.c, full = STATE.team.length >= deskCount(), broke = STATE.gold < w.fee;
+  showModal(`<h3>A walk-in genius</h3><div class="note"><b>${esc(c.name)}</b>, a ${c.role} with a legendary portfolio, wants to join.<br>${STATS.map((x, i) => x + ' ' + c.s[i]).join(', ')}, speed ${c.spd}<br>Trait: ${c.traits[0]}. Loves ${esc(c.favG)}.<br>${money(c.salary)}/mo, signing fee ${money(w.fee)}${full ? '<br><span class="gold">Every desk is taken. Let someone go to make room, or think it over: the offer stands for ' + w.weeks + ' more week' + (w.weeks === 1 ? '' : 's') + ' in the Staff tab.</span>' : ''}${broke ? '<br><span class="bad">You can’t cover the signing fee yet.</span>' : ''}</div>`, [
+    full ? { label: 'Make room…', cls: 'btn-accent', disabled: broke, action: () => replaceModal('walkin', -1) }
+         : { label: `Hire for ${money(w.fee)}`, cls: 'btn-accent', disabled: broke, action: () => hireWalkIn(0) },
+    { label: 'Think it over' },
+    { label: 'Turn them down', action: () => { STATE.walkIn = null; renderStaff(); } }]);
+}
+function hireWalkIn(replaceId) {
+  const w = STATE.walkIn; if (!w) return;
+  if (!replaceId && STATE.team.length >= deskCount()) { replaceModal('walkin', -1); return; }
+  if (STATE.gold < w.fee) { playSound('error'); news('Not enough money for the signing fee.', '#ef476f'); return; }
+  if (replaceId) letGo(replaceId);
+  spend(w.fee, 'Staff');
+  const c = w.c; c.id = STATE.nextId++; normStaff(c); STATE.team.push(c); STATE.walkIn = null;
+  computeMods(); playSound('fanfare'); news(`${c.name} joined! What a coup.`, '#ffd166');
+  renderStaff(); checkMilestones(); save();
+}
+function letGo(id) {
+  const m = findStaff(id); if (!m) return;
+  removeStaff(m, `${m.name} has left the studio.`);
+  STATE.team.forEach(x => { x.morale = Math.max(0, x.morale - 4); });
+}
+function replaceModal(src, idx) {
+  const d = STATE.activeDev;
+  const rows = STATE.team.map(m => `<button class="opt" onclick="doReplace('${src}',${idx},${m.id})"><b>${esc(m.name)}</b> · ${staffTitle(m)} Lv${m.lv}<br><span class="muted">${STATS.map((x, i) => x[0] + m.s[i]).join(' ')}, ${money(m.salary)}/mo${d && d.lead === m.id ? ', directing the current game' : ''}${d && postsOf(d, m.id).length ? ', owns an area on the current game' : ''}</span></button>`).join('');
+  showModal(`<h3>Make room</h3><div class="note">Choose who leaves to free a desk. The rest of the team will be a little shaken.</div>${rows}`, [{ label: 'Cancel' }]);
+}
+function doReplace(src, idx, id) {
+  if (src === 'walkin') { hireWalkIn(id); closeModal(); }
+  else hireCandidate(idx, id);
 }
 function evFanArt() {
   const g = pick(STATE.live); if (!g) return;
@@ -1822,7 +2019,7 @@ const STUDIO_EVENTS = [
   { w: 1, c: () => STATE.rank >= 2 && !(STATE.investor && STATE.investor.weeks > 0), f: evInvestor },
   { w: 2, c: () => STATE.team.length, f: evGameJam },
   { w: 2, c: () => STATE.history.some(h => h.total >= 26), f: evCopycat },
-  { w: 1, c: () => STATE.rank >= 3, f: evGenius },
+  { w: 1, c: () => STATE.rank >= 3 && !STATE.walkIn, f: evGenius },
   { w: 2, c: () => STATE.live.length, f: evFanArt },
   { w: 2, c: () => STATE.live.some(g => ESPORT_GENRES.includes(g.genre)), f: evEsports },
   { w: 2, c: () => !STATE.platDeal, f: evPlatformDeal },
@@ -1869,6 +2066,7 @@ function monthEnd() {
   save();
 }
 function yearEnd() {
+  STATE.rpBought = 0;
   const ty = STATE.cal.y - 1;
   const tprof = STATE.plHist.filter(e => e.y === ty).reduce((a, e) => a + opProfit(e), 0);
   const tax = tprof > 0 ? Math.round(tprof * taxRate()) : 0;
@@ -1963,7 +2161,7 @@ function prioRecommend() {
 function prioReset() { STATE.prio = [2, 2, 2, 2, 2, 2]; renderPrio(); updatePreview(); }
 function renderPrio() {
   const g = $('sel-genre').value, ins = STATE.insights[g] || {}, left = PRIO_BUDGET - prioUsed();
-  $('prio-box').innerHTML = `<div class="row"><b class="hl">Development priorities</b><span class="mini ${left ? 'gold' : 'muted'}">${left} pts left</span></div>` +
+  $('prio-box').innerHTML = `<div class="row"><span class="win-t">Priorities</span><span class="mini ${left ? 'gold' : 'muted'}">${left} pts left</span></div>` +
     AREAS.map((a, i) => `<div class="prio-row"><span>${a}${ins[i] ? ` <span class="chip ${ins[i] === 'H' ? 'chip-gold' : ins[i] === 'L' ? 'chip-bad' : ''}">${ins[i]}</span>` : ''}</span>` +
       `<button class="btn-sm" onclick="prioAdj(${i},-1)">−</button><span class="pips">${'●'.repeat(STATE.prio[i])}${'○'.repeat(PRIO_MAX - STATE.prio[i])}</span>` +
       `<button class="btn-sm" onclick="prioAdj(${i},1)">+</button></div>`).join('') +
@@ -2258,6 +2456,42 @@ function renderBiz() {
   $('tab-biz').innerHTML = html;
 }
 
+
+/* ---------- Research ---------- */
+function researchCost() { return Math.round(2500 * rankK() * (1 + 0.35 * (STATE.rpBought || 0)) / 100) * 100; }
+function fundResearch() {
+  const c = researchCost();
+  if (!spend(c, 'Research')) return;
+  STATE.rpBought = (STATE.rpBought || 0) + 1; STATE.rp += 2;
+  playSound('level'); news('Research grant funded: +2 RP', '#7cc8ff');
+  renderLab(); updateHeader(); save();
+}
+function legendMask(i) {
+  const L = LEGENDS[i], h = STATE.legendHints[i] || [];
+  return `${h.includes('g') ? esc(L.g) : '???'} × ${h.includes('t') ? esc(L.t) : '???'} + ${h.includes('h') ? esc(L.h) : '???'}`;
+}
+function legendHint() {
+  const open = LEGENDS.map((L, i) => i).filter(i => !STATE.legends[legKeyOf(LEGENDS[i])] && (STATE.legendHints[i] || []).length < 2);
+  if (!open.length) return -1;
+  const i = pick(open), h = STATE.legendHints[i] = STATE.legendHints[i] || [];
+  const next = ['h', 'g', 't'].find(x => !h.includes(x));
+  h.push(next);
+  return i;
+}
+function evRumour() {
+  const i = legendHint(); if (i < 0) return;
+  playSound('click');
+  showModal(`<h3>📰 Industry rumour</h3><div class="note">An insider says the next <b>${esc(LEGENDS[i].ref)}</b> will be:<br><br><b class="gold">${legendMask(i)}</b><br><br>Rumours are saved in the Lab under Legendary combos.</div>`);
+}
+STUDIO_EVENTS.push({ w: 3, c: () => LEGENDS.some(L => !STATE.legends[legKeyOf(L)]), f: evRumour });
+function legendsHtml() {
+  const found = LEGENDS.filter(L => STATE.legends[legKeyOf(L)]);
+  const hinted = LEGENDS.map((L, i) => i).filter(i => !STATE.legends[legKeyOf(LEGENDS[i])] && (STATE.legendHints[i] || []).length);
+  return `<div class="sec">Legendary combos (${found.length}/${LEGENDS.length})</div><div class="note mini">Some genre, theme and hook combinations echo real-world mega-hits. Match one exactly for a big review and sales boost. Rumours come from GameCon and industry gossip.</div>` +
+    found.map(L => `<div class="row mini"><span>🌟 ${esc(L.g)} × ${esc(L.t)} + ${esc(L.h)}</span><span class="gold">${esc(L.ref)}</span></div>`).join('') +
+    hinted.map(i => `<div class="row mini"><span class="muted">❔ ${legendMask(i)}</span><span class="muted">${esc(LEGENDS[i].ref)}?</span></div>`).join('') +
+    (found.length + hinted.length === 0 ? '<div class="muted mini">None found yet.</div>' : '');
+}
 /* ---------- Calendar events ---------- */
 function monthEvents() {
   const m = STATE.cal.m;
@@ -2295,6 +2529,8 @@ function attendCon(b) {
       pubLine = `<br><br>🤝 ${esc(pb.n)} loved your booth: +50% advance on your next deal with them, and the relationship improves.`;
     }
   }
+  const rumour = legendHint();
+  if (rumour >= 0) pubLine += `<br><br>📰 Overheard on the show floor: the next <b>${esc(LEGENDS[rumour].ref)}</b> will be ${legendMask(rumour)}.`;
   showModal(`<h3>GameCon Results</h3><div class="big" style="font-size:1.1rem;">Booth ranked #${place} of 40</div><div class="note">+${fmt(fans)} fans · +${b.hype} hype ${forGame ? 'for ' + esc(d.title) : 'banked for your next project'}${pubLine}</div>`);
   renderAll();
 }
@@ -2455,13 +2691,17 @@ function openCandidates() {
       <div>${c.traits.map(t => `<span class="chip ${TRAITS[t].bad ? 'chip-bad' : ''}">${t}</span>`).join('')}<span class="chip chip-gold">♥ ${esc(c.favG)}</span></div>
       <div class="mini muted">${c.traits.map(t => `${t}: ${TRAITS[t].d}`).join(' · ')}</div>
       <div class="row"><span class="gold">Signing fee ${money(signFee(c))}</span>
-      <button class="btn-sm btn-accent" ${full ? 'disabled' : ''} onclick="hireCandidate(${i})">Hire</button></div></div>`).join('');
-  showModal(`<h3>Applicants</h3>${full ? '<div class="note bad">All desks are full. Upgrade your floor or dismiss someone first.</div>' : ''}${rows || '<div class="note">No applicants left.</div>'}`, [{ label: 'Close' }]);
+      <button class="btn-sm btn-accent" onclick="hireCandidate(${i})">${full ? 'Replace…' : 'Hire'}</button></div></div>`).join('');
+  showModal(`<h3>Applicants</h3>${full ? '<div class="note gold">All desks are full. Hiring someone means letting a current staff member go.</div>' : ''}${rows || '<div class="note">No applicants left.</div>'}`, [{ label: 'Close' }]);
 }
-function hireCandidate(i) {
+function hireCandidate(i, replaceId) {
   const c = STATE.candidates[i];
-  if (!c || STATE.team.length >= deskCount()) return;
-  if (!spend(signFee(c), 'Staff')) return;
+  if (!c) return;
+  if (!replaceId && STATE.team.length >= deskCount()) { replaceModal('cand', i); closeModal(); return; }
+  const fee = signFee(c);
+  if (STATE.gold < fee) { playSound('error'); news('Not enough money for the signing fee.', '#ef476f'); return; }
+  if (replaceId) letGo(replaceId);
+  spend(fee, 'Staff');
   c.id = STATE.nextId++;
   normStaff(c);
   STATE.team.push(c);
@@ -2530,11 +2770,11 @@ function resetGame() {
 }
 function afterReset() { rebuildPlatforms(); computeMods(); projectiles = []; particles = []; ticker = []; refreshDevOptions(); renderDevMode(); renderAll(); save(); }
 function cycleSpeed() {
-  const order = [1, 2, 4, 0];
-  STATE.speed = order[(order.indexOf(STATE.speed) + 1) % order.length];
+  const order = [1, 2, 4, 0, 0.5];
+  const i = order.indexOf(STATE.speed);
+  STATE.speed = order[(i < 0 ? 0 : i + 1) % order.length];
   playSound('click'); updateHeader();
 }
-
 /* =========================================================
    UI RENDERING
    ========================================================= */
@@ -2559,17 +2799,24 @@ function updateHeader() {
   $('cal-text').textContent = `Y${c.y} M${c.m} W${c.w}`;
   $('rank-text').textContent = STATE.rank;
   $('tier-text').textContent = studioTier();
-  $('rank-exp').textContent = `(${Math.floor(STATE.rankExp / rankNeed() * 100)}%)`;
-  const gt = $('gold-text'); gt.textContent = fmt(STATE.gold); gt.parentElement.style.color = STATE.gold < 0 ? 'var(--danger)' : 'var(--gold)';
+  $('rank-bar').style.width = Math.min(100, STATE.rankExp / rankNeed() * 100).toFixed(1) + '%';
+  const gt = $('gold-text'); gt.textContent = fmt(STATE.gold); gt.parentElement.classList.toggle('neg', STATE.gold < 0);
   $('fans-text').textContent = fmt(STATE.fans);
   $('rp-text').textContent = STATE.rp;
-  $('btn-speed').textContent = STATE.speed === 0 ? '⏸ Paused' : '▶ ' + STATE.speed + 'x';
+  $('btn-speed').textContent = STATE.speed === 0 ? '⏸ Paused' : '▶ ' + (STATE.speed === 0.5 ? '½' : STATE.speed) + 'x';
 }
-
+function renderSegs() {
+  const mk = (id, sel, arr) => {
+    const cur = +$(sel).value;
+    $(id).innerHTML = arr.map((x, i) => `<button class="${i === cur ? 'on' : ''}" onclick="setSeg('${sel}',${i})">${x.n}</button>`).join('');
+  };
+  mk('seg-budget', 'sel-budget', BUDGETS); mk('seg-aud', 'sel-aud', AUDIENCES); mk('seg-monet', 'sel-monet', MONET);
+}
+function setSeg(sel, i) { $(sel).value = String(i); playSound('click'); updatePreview(); }
 function refreshDevOptions() {
   const keep = { g: $('sel-genre').value, t: $('sel-theme').value, p: $('sel-platform').value, pub: $('sel-pub').value };
-  $('sel-genre').innerHTML = STATE.unlocked.g.map(n => `<option value="${esc(n)}">${esc(n)} · Lv${lvlOf('g', n)}</option>`).join('');
-  $('sel-theme').innerHTML = STATE.unlocked.t.map(n => `<option value="${esc(n)}">${esc(n)} · Lv${lvlOf('t', n)}</option>`).join('');
+  $('sel-genre').innerHTML = STATE.unlocked.g.map(n => `<option value="${esc(n)}">${esc(n)}${lvlOf('g', n) ? ' ★' + lvlOf('g', n) : ''}</option>`).join('');
+  $('sel-theme').innerHTML = STATE.unlocked.t.map(n => `<option value="${esc(n)}">${esc(n)}${lvlOf('t', n) ? ' ★' + lvlOf('t', n) : ''}</option>`).join('');
   $('sel-platform').innerHTML = PLATFORMS.filter(platLive).map(p => platformOpen(p)
     ? `<option value="${p.n}">${p.n} · ${p.own ? '★ your platform' : money(p.fee) + ' fee'}</option>`
     : `<option value="${p.n}" disabled>🔒 ${p.n} (${STATE.rank < p.rank ? 'Rank ' + p.rank : 'needs licence'})</option>`).join('');
@@ -2589,6 +2836,7 @@ function refreshDevOptions() {
 let lastGT = '';
 function updatePreview() {
   const g = $('sel-genre').value, t = $('sel-theme').value, p = $('sel-platform').value;
+  renderSegs();
   if (g + '|' + t !== lastGT) { lastGT = g + '|' + t; refreshTitleHint(); renderPrio(); }
   if (!g || !t || !P[p]) { $('dev-preview').innerHTML = 'Pick a platform you hold a licence for (see the Market tab).'; return; }
   const bi = isNaN(+$('sel-budget').value) ? 1 : +$('sel-budget').value;
@@ -2624,7 +2872,7 @@ function renderDevMode() {
   const d = STATE.activeDev;
   $('dev-setup').style.display = d ? 'none' : 'flex';
   $('dev-progress').style.display = d ? 'flex' : 'none';
-  $('dev-status').textContent = d ? (d.kind === 'contract' ? 'Contract: ' : 'Making: ') + d.title : 'Studio Idle';
+  $('dev-status').textContent = d ? (d.kind === 'contract' ? 'Contract: ' : 'Making: ') + d.title : 'Studio idle';
   $('btn-boost').disabled = !(d && d.kind === 'game' && d.phase === 3 && !d.boostUsed);
   if (!d) updatePreview();
   updateDevPanel();
@@ -2694,6 +2942,12 @@ function renderStaff() {
   let html = `<div class="row"><span class="sec">Development Floor</span><span class="muted">${STATE.team.length}/${desks} desks</span></div>
     <div class="grid2"><button class="btn-accent" onclick="snackBundle()">Snack Bundle $1,000</button>
     <button onclick="teamRetreat()">Team Retreat ${money(6000 + STATE.team.length * 800)}</button></div>`;
+  if (STATE.walkIn) {
+    const w = STATE.walkIn;
+    html += `<div class="card" style="border-color:var(--sun)"><div class="row"><b class="gold">🌟 ${esc(w.c.name)} is waiting for an answer</b><span class="mini muted">${w.weeks} wk left</span></div>
+      <div class="mini muted">${w.c.role}, ${STATS.map((x, i) => x[0] + w.c.s[i]).join(' ')}, ${w.c.traits.join(', ')}, fee ${money(w.fee)}</div>
+      <div class="btns"><button class="btn-sm btn-accent" onclick="walkInModal()">Review the offer</button></div></div>`;
+  }
   STATE.team.forEach(m => {
     const stamPct = m.stam / m.maxStam * 100, mor = Math.round(m.morale), expPct = Math.min(100, m.exp / expNeed(m.lv) * 100);
     const pend = perkPending(m) >= 0;
@@ -2793,7 +3047,8 @@ function renderLab() {
   const combos = Object.entries(STATE.combos).sort((a, b) => b[1] - a[1]);
   const hooks = Object.entries(STATE.hookNotes).sort((a, b) => b[1] - a[1]);
   let html = `<div class="row"><span class="sec">Research Lab</span><span class="hl">${STATE.rp} RP</span></div>
-    <div class="note">Earn research points from releases, contracts, jams and staff ideas. Spend them on studio tech, genres and themes.</div>
+    <div class="note">Research points come from trying something new (combos, hooks, genres and genre insights), planners' ideas, game jams and research grants. Repeating a winning formula teaches you very little.</div>
+    <div class="row card" style="flex-direction:row;"><span><b>Fund a research grant</b><br><span class="muted">+2 RP · price rises with each grant this year</span></span><button class="btn-sm btn-accent" ${STATE.gold < researchCost() ? 'disabled' : ''} onclick="fundResearch()">${money(researchCost())}</button></div>
     <div class="sec">Studio Tech</div>${techRows}
     <div class="sec">Genres</div>${lockedG.map(g => row('g', g)).join('') || '<div class="muted">All genres unlocked!</div>'}
     <div class="sec">Themes</div>${lockedT.map(t => row('t', t)).join('') || '<div class="muted">All themes unlocked!</div>'}
@@ -2805,6 +3060,7 @@ function renderLab() {
   html += hooks.length
     ? hooks.map(([k, v]) => `<div class="row" style="font-size:0.74rem;"><span>${esc(k.replace('|', ' in '))}</span><b style="color:${HOOK_COLOR[v]}">${HOOK_LABEL[v]}</b></div>`).join('')
     : '<div class="muted">Release games with a hook to learn which hooks suit which genres.</div>';
+  html += legendsHtml();
   html += insightsHtml();
   $('tab-lab').innerHTML = html;
 }
@@ -2855,7 +3111,7 @@ const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 function px(c, x, y, w, h) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); }
 function txt(s, x, y, color, size, align) {
-  ctx.font = `bold ${size || 8}px "Courier New", monospace`;
+  ctx.font = `600 ${(size || 8) + 1}px "Pixelify Sans", "Courier New", monospace`;
   ctx.textAlign = align || 'center';
   ctx.fillStyle = '#000'; ctx.fillText(s, x + 1, y + 1);
   ctx.fillStyle = color || '#fff'; ctx.fillText(s, x, y);
@@ -3102,7 +3358,7 @@ function update() {
       if (m.senior) spd *= 1.1;
       if (d.pace === 2 && m.traits.includes('Night Owl')) spd *= 1.3;
       m.cd += spd;
-      if (m.cd >= 55) { m.cd = 0; doHit(m); }
+      if (m.cd >= 72) { m.cd = 0; doHit(m); }
     } else {
       m.stam = Math.min(m.maxStam, m.stam + 0.35 * regen);
     }
@@ -3143,6 +3399,7 @@ $('sel-aud').innerHTML = AUDIENCES.map((a, i) => `<option value="${i}">${a.n}</o
 $('sel-aud').value = '2';
 computeMods();
 refreshDevOptions();
+renderSegs();
 renderPrio();
 refreshTitleHint();
 $('sel-genre').value = 'Adventure'; $('sel-theme').value = 'Detective';

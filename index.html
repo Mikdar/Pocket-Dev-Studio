@@ -219,8 +219,12 @@
   .pip.on { background: var(--sky); } .pip.met { background: var(--mint); } .pip.extra { background: var(--sun); }
   .pip.need { background: transparent; box-shadow: inset 0 0 0 2px var(--coral); }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .teamsel { width: auto; min-width: 140px; padding: 4px 8px; font-size: 0.8rem; }
   .chips button { padding: 6px 9px; font-size: 0.78rem; min-height: 34px; }
   .chips button.on { background: var(--sky); color: var(--ink); }
+  .teambar button { flex: 1 1 140px; text-align: left; border-width: 2px; }
+  .teambar button.on { background: var(--well); color: var(--text); box-shadow: 0 0 0 2px currentColor inset; }
+  #team-bar button.on .muted { color: var(--text); opacity: 0.8; }
   .chips button.on .muted { color: var(--ink); opacity: 0.7; }
   .lvpips { color: var(--sun); letter-spacing: 1px; }
   .pl-chart { display: flex; gap: 3px; background: var(--well); border-radius: 9px; padding: 8px; box-shadow: inset 2px 2px 0 var(--lo); }
@@ -302,38 +306,40 @@
 <div id="ui-container">
   <!-- DEV -->
   <div id="tab-dev" class="tab-pane active">
+    <div id="team-bar" class="chips teambar" style="display:none"></div>
     <div class="row">
       <span id="dev-status" class="pane-title">Studio idle</span>
       <button id="btn-boost" class="btn-sm btn-gold" disabled data-why="The assistant boost can be used once per game, during Phase 3 (Beta)." onclick="useBoost()">⚡ Assistant boost</button>
     </div>
     <div id="dev-setup" class="stack">
       <div class="win">
+        <div id="seg-kind" class="seg seg2" style="margin-bottom:6px;"></div>
         <div class="win-t">Concept</div>
         <div class="title-row"><input id="inp-title" maxlength="24" placeholder="" autocomplete="off" aria-label="Game title"><button onclick="rollTitle()" aria-label="Suggest a title">🎲</button></div>
         <div class="grid2">
-          <div class="fld"><label for="sel-genre">Genre</label><select id="sel-genre" onchange="updatePreview()"></select></div>
-          <div class="fld"><label for="sel-theme">Theme</label><select id="sel-theme" onchange="updatePreview()"></select></div>
+          <div class="fld"><label id="lbl-genre" for="sel-genre">Genre</label><select id="sel-genre" onchange="updatePreview()"></select></div>
+          <div class="fld"><label id="lbl-theme" for="sel-theme">Theme</label><select id="sel-theme" onchange="updatePreview()"></select></div>
         </div>
-        <div class="fld"><label for="sel-hook">Hook</label><select id="sel-hook" onchange="updatePreview()"></select></div>
+        <div class="fld" id="fld-hook"><label for="sel-hook">Hook</label><select id="sel-hook" onchange="updatePreview()"></select></div>
         <div id="hook-info" class="mini muted"></div>
-        <div class="fld"><label for="sel-seq">Sequel to</label><select id="sel-seq" onchange="onSequelPick()"></select></div>
+        <div class="fld" id="fld-seq"><label for="sel-seq">Sequel to</label><select id="sel-seq" onchange="onSequelPick()"></select></div>
       </div>
       <div class="win">
         <div class="win-t">Release plan</div>
         <div class="fld"><label for="sel-platform">Lead platform</label><select id="sel-platform" onchange="updatePreview()"></select></div>
         <div class="fld"><label>Also release on</label><div id="port-chips" class="chips"></div></div>
-        <div class="fld"><label for="sel-pub">Publisher</label><select id="sel-pub" onchange="updatePreview()"></select></div>
-        <div class="fld"><label>Game size</label><div id="seg-size" class="seg seg5"></div></div>
-        <div class="fld"><label for="sel-engine">Engine</label><select id="sel-engine" onchange="updatePreview()"></select></div>
+        <div class="fld" id="fld-pub"><label for="sel-pub">Publisher</label><select id="sel-pub" onchange="updatePreview()"></select></div>
+        <div class="fld"><label id="lbl-size">Game size</label><div id="seg-size" class="seg seg5"></div></div>
+        <div class="fld" id="fld-engine"><label for="sel-engine">Engine</label><select id="sel-engine" onchange="updatePreview()"></select></div>
         <div class="fld"><label>Budget</label><div id="seg-budget" class="seg seg3"></div></div>
-        <div class="fld"><label>Audience</label><div id="seg-aud" class="seg seg4"></div></div>
+        <div class="fld" id="fld-aud"><label>Audience</label><div id="seg-aud" class="seg seg4"></div></div>
         <div class="fld"><label>Business model</label><div id="seg-monet" class="seg seg2"></div></div>
         <div style="display:none"><select id="sel-size"></select><select id="sel-budget"></select><select id="sel-aud"></select><select id="sel-monet"></select></div>
       </div>
       <div id="prio-box" class="win"></div>
       <div id="dev-preview" class="note"></div>
       <div class="grid2 cta">
-        <button class="btn-accent" onclick="startDevelopment()">Start production</button>
+        <button id="btn-start" class="btn-accent" onclick="startDevelopment()">Start production</button>
         <button onclick="openContracts()">Take a contract</button>
       </div>
     </div>
@@ -656,7 +662,7 @@ const DECOR = {
   aquarium:   { n: 'Aquarium',         cost: 14000, morale: 9, d: '+9 morale' },
   neon:       { n: 'Neon Sign',        cost: 18000, morale: 3, hype: 8, d: '+8 hype on every project, +3 morale' }
 };
-const DECOR_SLOTS = [4, 8, 12, 16];
+const DECOR_SLOTS = [4, 8, 12, 16, 16, 16];
 const TECH = [
   { id: 'engine1', n: 'Code Libraries',    rp: 8,  rank: 1,  d: 'Every idea +5%' },
   { id: 'qa1',     n: 'QA Process',        rp: 10, rank: 1,  d: '25% fewer bugs' },
@@ -699,6 +705,11 @@ const MILESTONES = [
   { id: 'engine3', n: 'Cutting Edge',      d: 'Release version 3 of your engine',   test: s => !!(s.engine && s.engine.v >= 3), r: { fans: 3000 } },
   { id: 'licensor',n: 'Engine Licensor',   d: 'Have 5 studios licensing your engine', test: s => !!(s.engine && s.engine.lic && s.engine.lic.studios >= 5), r: { gold: 250000 } },
   { id: 'aaa',     n: 'Blockbuster',       d: 'Release an AAA game',                test: s => s.history.some(h => h.size === 4), r: { fans: 5000 } },
+  { id: 'soft1',   n: 'Software House',    d: 'Release your first software product', test: s => (s.softCount || 0) >= 1, r: { rp: 5 } },
+  { id: 'soft10',  n: 'Tech Company',      d: 'Release 10 software products',      test: s => (s.softCount || 0) >= 10, r: { gold: 300000 } },
+  { id: 'teams3',  n: 'Studio Network',    d: 'Run 3 teams at once',               test: s => (s.teams || []).length >= 3, r: { fans: 3000 } },
+  { id: 'tower',   n: 'Skyline',           d: 'Move to the Tech Park Tower',         test: s => s.floor >= 5, r: { fans: 20000 } },
+  { id: 'ghq',     n: 'Global Player',     d: 'Move to the Global HQ',               test: s => s.floor >= 6, r: { rp: 60 } },
   { id: 'campus',  n: 'Campus Life',       d: 'Move to the Studio Campus',        test: s => s.floor >= 4, r: { rp: 30 } },
   { id: 'rooms5',  n: 'Fully Equipped',    d: 'Run 5 rooms at once',              test: s => Object.values(s.rooms || {}).filter(v => v > 0).length >= 5, r: { rp: 15 } },
   { id: 'room3',   n: 'State of the Art',  d: 'Upgrade a room to Lv3',            test: s => Object.values(s.rooms || {}).some(v => v >= 3), r: { fans: 1500 } },
@@ -733,14 +744,14 @@ function staffWeekly(m) {
   if (m.traits.includes('Slacker')) f *= 0.85; if (m.traits.includes('Perfectionist')) f *= 0.9;
   return staffWeeklyRaw(m.spd, m.lv, (m.s[R.main] + m.s[R.sub]) / 2) * f;
 }
-function teamWeekly() { return STATE.team.filter(m => m.vac <= 0).reduce((a, m) => a + staffWeekly(m), 0) * 0.85 || 1; }
+function teamWeekly(t) { t = t === undefined ? (STATE.focus || 0) : t; return teamStaff(t).filter(m => m.vac <= 0).reduce((a, m) => a + staffWeekly(m), 0) * 0.85 || 1; }
 function projectWork(size, plats, budget, rank) {
   const z = SIZES[size] || SIZES[1];
   const platF = Math.max(...plats.map(p => 0.85 + 0.15 * (p.hp || 1))) * (1 + 0.15 * (plats.length - 1));
   return Math.round(refWeekly(rank) * 0.85 * z.team * z.weeks * platF * (BUDGETS[budget] || BUDGETS[1]).hp);
 }
 function workLeft(d) {
-  if (!d || d.kind !== 'game') return 0;
+  if (!d || d.kind === 'contract') return 0;
   let left = Math.max(0, d.balloon.hp);
   for (let ph = d.phase + 1; ph <= 3; ph++) left += phaseHp(d, ph);
   if (d.phase <= 3) left += phaseHp(d, 3) * 0.12;
@@ -1151,10 +1162,12 @@ function compat(g, t) {
   return LEGEND_PAIRS.has(g + '|' + t) ? Math.max(3, r) : r;
 }
 const FLOORS = [
-  { n: 'Garage Office',   desks: 5,  rent: 800,   cost: 0,       rank: 1,  live: 2, rooms: 2, decor: 4 },
-  { n: 'Downtown Office', desks: 7,  rent: 2200,  cost: 60000,   rank: 5,  live: 3, rooms: 3, decor: 8 },
-  { n: 'Penthouse Loft',  desks: 9,  rent: 5500,  cost: 250000,  rank: 11, live: 4, rooms: 5, decor: 12 },
-  { n: 'Studio Campus',   desks: 10, rent: 14000, cost: 1200000, rank: 15, live: 5, rooms: 7, decor: 16 }
+  { n: 'Garage Office',   desks: 5,  teams: 1, rent: 800,   cost: 0,        rank: 1,  live: 2, rooms: 2,  decor: 4,  d: 'Where it all began.' },
+  { n: 'Downtown Office', desks: 8,  teams: 2, rent: 2200,  cost: 60000,    rank: 4,  live: 3, rooms: 3,  decor: 8,  d: 'Room for a second team.' },
+  { n: 'Penthouse Loft',  desks: 12, teams: 2, rent: 5500,  cost: 250000,   rank: 8,  live: 4, rooms: 5,  decor: 12, d: 'A skyline view and space to grow.' },
+  { n: 'Studio Campus',   desks: 18, teams: 3, rent: 14000, cost: 1200000,  rank: 12, live: 5, rooms: 7,  decor: 16, d: 'A whole building for three teams.' },
+  { n: 'Tech Park Tower', desks: 25, teams: 4, rent: 35000, cost: 6000000,  rank: 16, live: 6, rooms: 9,  decor: 16, d: 'A glass tower in the tech district.' },
+  { n: 'Global HQ',       desks: 34, teams: 5, rent: 90000, cost: 30000000, rank: 20, live: 8, rooms: 11, decor: 16, d: 'The headquarters of an industry giant.' }
 ];
 // Rooms: one per slot, each upgradable to Lv3. cost/upkeep per level.
 const ROOMS = {
@@ -1251,14 +1264,14 @@ function newGame() {
   ];
   team.forEach((m, i) => { m.id = i + 1; m.skin = SKINS[i]; m.hs = i % 4; });
   return {
-    v: 7, gold: 30000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
+    v: 8, gold: 30000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
     cal: { y: 1, m: 1, w: 1 }, tick: 0, speed: 1,
     settings: { sound: true },
     team, nextId: 6,
     unlocked: { g: GENRES.filter(g => g.rp === 0).map(g => g.n), t: THEMES.filter(t => t.rp === 0).map(t => t.n) },
     levels: { g: {}, t: {} },
-    combos: {}, history: [], live: [], activeDev: null, nextDevId: 1,
-    facilities: { coffee: false, pcs: false, servers: false }, rooms: {}, engine: null,
+    combos: {}, history: [], live: [], activeDev: null, devs: [], teams: [{ n: 'Team A' }], focus: 0, nextDevId: 1,
+    facilities: { coffee: false, pcs: false, servers: false }, rooms: {}, engine: null, legacyDone: {}, softHistory: [], softFits: {},
     trend: null, yearBest: null, debtMonths: 0,
     ledger: { inc: 0, exp: 0, lastInc: 0, lastExp: 0 },
     totalDownloads: 0, totalRevenue: 0, candidates: [], contractOffers: [], over: false,
@@ -1273,6 +1286,7 @@ function newGame() {
 }
 function save() { try { if (STATE && !STATE.over) localStorage.setItem(SAVE_KEY, JSON.stringify(STATE)); } catch (e) {} }
 function migrate(s) {
+  attachDevs(s);
   if (!Array.isArray(s.licences) || s.v === 1) {
     s.licences = ['Feature Phone', 'Web Browser', 'Smartphone', 'PC'];
     ['Tablet', 'Cloud Console', 'VR Headset'].forEach(n => { const p = P[n]; if (s.rank >= p.rank && s.cal.y >= p.year) s.licences.push(n); });
@@ -1324,25 +1338,101 @@ function migrate(s) {
     if (s.walkIn && s.walkIn.c) normStaff(s.walkIn.c);
     if (s.activeDev && s.activeDev.kind === 'game' && s.activeDev.size === undefined) { s.activeDev.size = 0; s.activeDev.weeks = 0; }
   }
+  if (!Array.isArray(s.teams) || !s.teams.length) s.teams = [{ n: 'Team A' }];
+  if (s.hofCount === undefined) s.hofCount = s.history.filter(h => h.total >= 32).length;
+  if (s.aaaBest === undefined) s.aaaBest = s.history.filter(h => h.size === 4).reduce((a, h) => Math.max(a, h.total), 0);
+  if (!s.legacyDone) s.legacyDone = {};
+  if (!Array.isArray(s.softHistory)) s.softHistory = [];
+  if (!s.softFits) s.softFits = {};
+  s.devs.forEach((d, t) => { if (d) { d.team = t; normDev(d); } });
+  if (!(s.focus >= 0 && s.focus < s.teams.length)) s.focus = 0;
   s.team.forEach(normStaff);
-  if (s.activeDev) normDev(s.activeDev);
-  s.v = 7;
+  s.v = 8;
   return s;
 }
 function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) { const s = JSON.parse(raw); if (s && s.v >= 1 && s.v <= 7) return migrate(Object.assign(newGame(), s)); }
+    if (raw) { const s = JSON.parse(raw); if (s && s.v >= 1 && s.v <= 8) return migrate(Object.assign(newGame(), s)); }
   } catch (e) {}
   return null;
 }
 
-let STATE = load() || newGame();
+let STATE = attachDevs(load() || newGame());
 rebuildPlatforms();
 let projectiles = [], particles = [], ticker = [];
 let acc = 0, lastT = performance.now(), frameT = 0, lastHitSound = 0, simTick = 0;
 let currentTab = 'dev';
 
+
+/* ---------- Teams ---------- */
+const TEAM_NAMES = ['Team A', 'Team B', 'Team C', 'Team D', 'Team E', 'Team F'];
+const TEAM_COLORS = ['#ffd166', '#4cc9f0', '#f72585', '#06d6a0', '#c77dff', '#ff9f1c'];
+const TEAM_MAX = 10;
+function attachDevs(s) {
+  if (!Array.isArray(s.devs)) s.devs = [];
+  const own = Object.getOwnPropertyDescriptor(s, 'activeDev');
+  if (own && 'value' in own) { if (own.value && !s.devs[0]) s.devs[0] = own.value; delete s.activeDev; }
+  Object.defineProperty(s, 'activeDev', { configurable: true, enumerable: false,
+    get() { return this.devs[this.focus || 0] || null; }, set(v) { this.devs[this.focus || 0] = v; } });
+  return s;
+}
+function teamCount() { return Math.max(1, (STATE.teams || []).length); }
+function teamSlots() { return FLOORS[STATE.floor - 1].teams || 1; }
+function teamOf(m) { return Math.min(teamCount() - 1, m.team || 0); }
+function teamStaff(t) { return STATE.team.filter(m => teamOf(m) === t); }
+function teamName(t) { return (STATE.teams[t] && STATE.teams[t].n) || TEAM_NAMES[t] || 'Team ' + (t + 1); }
+function teamColor(t) { return TEAM_COLORS[t % TEAM_COLORS.length]; }
+function devOfTeam(t) { return STATE.devs[t] || null; }
+function teamCost() { return Math.round(40000 * rankK() / 1000) * 1000; }
+function teamUpkeep() { return Math.round(1500 * rankK() / 100) * 100; }
+function focusTeam(t) {
+  if (t < 0 || t >= teamCount()) return;
+  STATE.focus = t; projectiles = []; playSound('click');
+  refreshDevOptions(); renderDevMode(); renderTeamBar();
+}
+function foundTeam() {
+  if (teamCount() >= teamSlots()) { playSound('error'); toast('This office has room for no more teams. Move to a bigger office.', '#ff6b7d'); return; }
+  if (!spend(teamCost(), 'Teams')) return;
+  const t = teamCount();
+  STATE.teams.push({ n: TEAM_NAMES[t] || 'Team ' + (t + 1) });
+  playSound('fanfare'); news(`${teamName(t)} founded! Move staff into it from the Staff tab.`, '#ffd166');
+  renderStaff(); renderTeamBar(); save();
+}
+function disbandTeam(t) {
+  if (t === 0 || t >= teamCount()) return;
+  if (STATE.devs[t]) { playSound('error'); toast(`${teamName(t)} is still working on a project.`, '#ff6b7d'); return; }
+  showModal(`<h3>Disband ${esc(teamName(t))}?</h3><div class="note">Its staff move to ${esc(teamName(0))}. The founding cost is not refunded.</div>`,
+    [{ label: 'Disband', cls: 'btn-danger', action: () => {
+      STATE.team.forEach(m => { const mt = m.team || 0; if (mt === t) m.team = 0; else if (mt > t) m.team = mt - 1; });
+      STATE.devs.splice(t, 1); STATE.teams.splice(t, 1); STATE.focus = 0;
+      news(`${teamName(t)} disbanded.`, '#9aa5b1'); renderStaff(); renderDevMode(); renderTeamBar(); save();
+    } }, { label: 'Cancel' }]);
+}
+function setStaffTeam(id, t) {
+  const m = findStaff(id); t = +t; if (!m || t < 0 || t >= teamCount()) return;
+  if (teamOf(m) === t) return;
+  if (teamStaff(t).length >= TEAM_MAX) { playSound('error'); toast(`${teamName(t)} is full (${TEAM_MAX} staff).`, '#ff6b7d'); renderStaff(); return; }
+  const old = devOfTeam(teamOf(m));
+  if (old && old.kind !== 'contract') { if (old.lead === m.id) old.lead = 0; if (old.assign) old.assign = old.assign.map(x => x === m.id ? 0 : x); }
+  m.team = t; playSound('click'); toast(`${m.name} moved to ${teamName(t)}.`);
+  renderStaff(); renderTeamBar(); save();
+}
+function renderTeamBar() {
+  const el = $('team-bar'); if (!el) return;
+  if (teamCount() < 2) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = 'flex';
+  el.innerHTML = STATE.teams.map((tm, t) => {
+    const d = devOfTeam(t), pct = d ? Math.round(clamp(100 - d.balloon.hp / d.balloon.maxHp * 100, 0, 100)) : 0;
+    const what = !d ? 'idle' : d.kind === 'contract' ? 'contract' : `${esc(d.title)} · ${d.awaiting ? 'ready!' : 'P' + d.phase + ' ' + pct + '%'}`;
+    return `<button class="${t === (STATE.focus || 0) ? 'on' : ''}" style="border-color:${teamColor(t)}" onclick="focusTeam(${t})"><b style="color:${teamColor(t)}">${esc(teamName(t))}</b> <span class="muted">${teamStaff(t).length}👤 · ${what}</span></button>`;
+  }).join('');
+}
+function devModal(d, html, buttons, onShow) {
+  modalQueue.push({ html: (teamCount() > 1 && d ? `<div class="mini" style="color:${teamColor(d.team || 0)};font-weight:700;">${esc(teamName(d.team || 0))}</div>` : '') + html,
+    buttons: buttons || [{ label: 'OK', cls: 'btn-accent' }], onShow, team: d ? (d.team || 0) : undefined });
+  if (!modalOpen) closeModal();
+}
 /* =========================================================
    MODALS
    ========================================================= */
@@ -1356,6 +1446,7 @@ function closeModal() {
   const m = modalQueue.shift();
   if (!m) { modalOpen = false; $('modal').classList.remove('show'); return; }
   modalOpen = true;
+  if (m.team !== undefined && STATE.devs && STATE.devs[m.team] && (STATE.focus || 0) !== m.team) { STATE.focus = m.team; projectiles = []; try { renderDevMode(); renderTeamBar(); } catch (e) {} }
   $('modal-body').innerHTML = m.html;
   const box = $('modal-btns'); box.innerHTML = '';
   m.buttons.forEach(b => {
@@ -1432,7 +1523,7 @@ function weeklyRev(g) {
   return Math.round(g.users * g.arpu * 0.1 * (g.event > 0 ? 1.3 : 1) * (g.liveMul || 1) * (g.saleWeeks > 0 ? g.saleMul : 1) * (1 - (g.cut || 0)));
 }
 function normDev(d) {
-  if (!d || d.kind !== 'game') return d;
+  if (!d || (d.kind !== 'game' && d.kind !== 'soft')) return d;
   if (!d.mods) d.mods = {};
   if (!d.mods.statMul) d.mods.statMul = [1, 1, 1, 1, 1, 1];
   if (d.mods.statMul.length === 4) { const o = d.mods.statMul; d.mods.statMul = [o[0], o[1], o[1], o[3], o[2], o[3]]; }
@@ -1518,7 +1609,7 @@ function staffTitle(m) {
 }
 function removeStaff(m, msg) {
   STATE.team = STATE.team.filter(x => x.id !== m.id);
-  const d = STATE.activeDev; if (d && d.lead === m.id) d.lead = 0;
+  STATE.devs.forEach(d => { if (d && d.lead === m.id) d.lead = 0; });
   news(msg, '#ef476f'); computeMods(); renderStaff();
 }
 function checkMilestones() {
@@ -1537,7 +1628,7 @@ function checkMilestones() {
 }
 function rivalsTick() {
   STATE.rivals.forEach(r => {
-    r.fans = Math.round(r.fans * (1 + r.growth * rnd(0.4, 1.6)));
+    r.fans = Math.round(r.fans * (1 + r.growth * rnd(0.4, 1.6) * (r.owned ? 0.6 : 1)));
     if (Math.random() < 0.3) {
       const score = clamp(Math.round(r.skill + rnd(-6, 6) + (STATE.engine && STATE.engine.lic ? Math.min(2, STATE.engine.lic.studios * 0.15) : 0)), 6, 40);
       r.yearBest = Math.max(r.yearBest || 0, score); r.best = Math.max(r.best || 0, score);
@@ -1554,6 +1645,7 @@ function costBreakdown() {
     'Salaries': STATE.team.reduce((a, m) => a + m.salary, 0),
     'Rent': FLOORS[STATE.floor - 1].rent,
     'Upkeep': roomUpkeep(),
+    'Teams': Math.max(0, teamCount() - 1) * teamUpkeep(),
     'Executives': Object.values(STATE.execs).reduce((a, v) => a + v, 0),
     'Benefits': (pol.cost || 0) * STATE.team.length
   };
@@ -1602,7 +1694,7 @@ function setupPhase(d) {
   b.color = colors[d.phase - 1];
   b.maxHp = d.phase === 4 ? Math.round((30 + d.bugs * 14) * (hasTech('qa2') ? 0.65 : 1) * [1, 0.9, 0.8, 0.7][roomLv('qa')]) : d.phase === 5 ? Math.round(phaseHp(d, 3) * (d.work ? 0.3 : 0.4)) : phaseHp(d, d.phase);
   b.hp = b.maxHp;
-  $('btn-boost').disabled = !(d.phase === 3 && !d.boostUsed);
+  if ((d.team || 0) === (STATE.focus || 0)) $('btn-boost').disabled = !(d.phase === 3 && !d.boostUsed);
 }
 
 
@@ -1669,7 +1761,18 @@ const ENG_SUF = ['Engine', 'Tech', 'Forge', 'Core', 'Works', 'Frame'];
 function engName() { return pick(ENG_PRE) + ' ' + pick(ENG_SUF); }
 function engReady() { return !!(STATE.engine && STATE.engine.ready); }
 function engCap(v) { return Math.min(5, v + 1); }
-function engFresh() { const e = STATE.engine; if (!e) return 1; const age = yearFrac() - (e.lastV || yearFrac()); return clamp(1 - 0.05 * Math.max(0, age - 1.5), 0.7, 1); }
+function engMaxed() { const e = STATE.engine; return !!(e && e.v >= 5 && ENGINE_MODS.every(md => e.mods[md.id] >= 5)); }
+function engFresh() { const e = STATE.engine; if (!e || engMaxed()) return 1; const age = yearFrac() - (e.lastV || yearFrac()); return clamp(1 - 0.05 * Math.max(0, age - (e.v >= 5 ? 3 : 1.5)), 0.7, 1); }
+function engRefreshCost() { const e = STATE.engine; return Math.round(engVerCost(Math.min(4, e ? e.v : 1)) * 0.3 / 1000) * 1000; }
+function engineRefresh() {
+  const e = STATE.engine; if (!engReady()) return;
+  if (e.job) { playSound('error'); toast('The engine team is already busy. One job at a time.', '#ff6b7d'); return; }
+  if (engFresh() >= 1) { toast('The engine is fully up to date.'); return; }
+  if (STATE.rp < 3) { playSound('error'); toast('Needs 3 RP.', '#ff6b7d'); return; }
+  if (!spend(engRefreshCost(), 'Engine')) return;
+  STATE.rp -= 3; e.job = { kind: 'refresh', weeks: 0, total: 6 };
+  playSound('click'); news(`The engine team is modernising ${e.name}.`, '#66fcf1'); computeMods(); renderLab(); updateHeader(); save();
+}
 function engQuality() { const e = STATE.engine; if (!engReady()) return 0; return Math.round((Object.values(e.mods).reduce((a, b) => a + b, 0) + 3 * e.v) * engFresh() * 10) / 10; }
 function engSpeed() {
   const progs = STATE.team.filter(m => m.vac <= 0 && (m.role === 'Programmer' || m.perks.includes('arch')));
@@ -1747,6 +1850,7 @@ function engineWeek() {
   const j = e.job; e.job = null;
   if (j.kind === 'build') { e.ready = true; e.lastV = yearFrac(); news(`${e.name} is ready! Pick it as the engine for your next game.`, '#ffd166'); playSound('fanfare'); }
   else if (j.kind === 'mod') { e.mods[j.mod]++; const md = ENGINE_MODS.find(x => x.id === j.mod); news(`${e.name}: ${md.n} upgraded to Lv${e.mods[j.mod]}.`, '#ffd166'); playSound('level'); }
+  else if (j.kind === 'refresh') { e.lastV = yearFrac(); news(`${e.name} has been modernised: full bonuses restored.`, '#ffd166'); playSound('level'); }
   else if (j.kind === 'ver') { e.v++; e.lastV = yearFrac(); news(`${e.name} v${e.v} released! Module limits raised.`, '#ffd166'); playSound('fanfare'); STATE.fans += 200 * e.v; }
   computeMods(); refreshDevOptions(); checkMilestones();
 }
@@ -1783,11 +1887,14 @@ function engineHtml() {
   const job = e.job, sum = Object.values(e.mods).reduce((a, b) => a + b, 0), cap = engCap(e.v), fr = engFresh();
   h += `<div class="card"><div class="row"><b>⚙ ${esc(e.name)} ${e.ready ? 'v' + e.v : '(in development)'}</b><span class="mini muted">${e.ready ? `Quality ${engQuality()} · ${e.games || 0} games` : ''}</span></div>`;
   if (job) {
-    const pc = Math.min(100, job.weeks / job.total * 100), what = job.kind === 'build' ? 'Building v1' : job.kind === 'ver' ? `Building v${e.v + 1}` : `Upgrading ${ENGINE_MODS.find(x => x.id === job.mod).n}`;
+    const pc = Math.min(100, job.weeks / job.total * 100), what = job.kind === 'build' ? 'Building v1' : job.kind === 'ver' ? `Building v${e.v + 1}` : job.kind === 'refresh' ? 'Modernising the engine' : `Upgrading ${ENGINE_MODS.find(x => x.id === job.mod).n}`;
     h += `<div class="mini"><b>${what}</b></div><div class="statrow"><span>Progress</span><div class="bar"><div style="background:var(--sun);width:${pc}%"></div></div><span>${Math.max(0, Math.ceil((job.total - job.weeks) / engSpeed()))} wk</span></div><div class="mini muted">Team works 7% slower while the engine team is busy. Your best programmer sets the pace.</div>`;
   }
   if (e.ready) {
-    if (fr < 1) h += `<div class="mini bad">The engine is ageing: bonuses are down ${Math.round((1 - fr) * 100)}%. A new version brings it up to date.</div>`;
+    if (engMaxed()) h += `<div class="mini gold">🏆 Industry standard: a fully upgraded v5 engine never ages.</div>`;
+    else if (fr < 1) h += `<div class="mini bad">The engine is ageing: bonuses are down ${Math.round((1 - fr) * 100)}%. Modernise it or build a new version.</div>
+      <button class="btn-sm btn-accent" ${job || STATE.rp < 3 || STATE.gold < engRefreshCost() ? 'disabled' : ''} data-why="${job ? 'The engine team is already busy.' : STATE.rp < 3 ? 'Needs 3 RP.' : ''}" onclick="engineRefresh()">Modernise: ${money(engRefreshCost())} · 3 RP · about ${Math.round(6 / engSpeed())} wks</button>`;
+    else if (e.v >= 5) h += `<div class="mini muted">At v5 the engine stays current for 3 years at a time. Max every module to make it an industry standard that never ages.</div>`;
     h += ENGINE_MODS.map(md => {
       const lv = e.mods[md.id], why = job ? 'The engine team is already busy. One job at a time.' : lv >= cap ? `At the v${e.v} limit. Release a new version to go further.` : STATE.rp < engUpRp(lv) ? `Needs ${engUpRp(lv)} RP (you have ${STATE.rp}).` : STATE.gold < engUpCost(lv) ? `Not enough money: this needs ${money(engUpCost(lv))}.` : '';
       return `<div class="row" style="flex-direction:row;"><span><b>${md.n}</b> <span class="lvpips">${'★'.repeat(lv)}${'☆'.repeat(cap - lv)}</span><br><span class="mini muted">${md.d}</span></span>
@@ -1812,7 +1919,188 @@ function evEngineHit() {
   STATE.fans += fans; STATE.hypeBank += 6;
   news(`${r.n} shipped a hit on ${e.name}! Your engine's reputation grows (+${fmt(fans)} fans, +6 banked hype).`, '#ffd166');
 }
+
+/* ---------- Software products ---------- */
+const SOFT_STATS = ['Usability', 'Content', 'Design', 'Media', 'Features', 'Cloud'];
+const SOFT_TYPES = [
+  { n: 'Utility App',          rank: 1,  cost: 600,   prof: 'HLMLHL', arpu: 1.0, plats: ['Smartphone', 'Web Browser'], great: ['Consumers'], good: ['Students', 'Creators'], poor: ['Enterprise'], w: ['Toolkit', 'Cleaner', 'Helper', 'Widgets', 'Scanner'] },
+  { n: 'Educational Software', rank: 2,  cost: 900,   prof: 'MHMMML', arpu: 1.2, plats: ['Tablet', 'PC', 'Web Browser'], great: ['Students'], good: ['Consumers'], poor: ['Developers', 'Enterprise'], w: ['Learn', 'Academy', 'Tutor', 'Classroom', 'Lessons'] },
+  { n: 'Productivity Suite',   rank: 3,  cost: 1500,  prof: 'HMMLHM', arpu: 2.5, plats: ['PC', 'Web Browser'], great: ['Businesses'], good: ['Students', 'Creators'], poor: ['Gamers'], w: ['Office', 'Docs', 'Notes', 'Planner', 'Sheets'] },
+  { n: 'Social App',           rank: 4,  cost: 1500,  prof: 'HMHMMH', arpu: 1.2, plats: ['Smartphone'], great: ['Consumers', 'Gamers'], good: ['Students', 'Creators'], poor: ['Enterprise', 'Businesses'], w: ['Chat', 'Connect', 'Circle', 'Feed', 'Hub'] },
+  { n: 'Creative Tools',       rank: 5,  cost: 2500,  prof: 'HLHHHL', arpu: 3,   plats: ['PC', 'Tablet'], great: ['Creators'], good: ['Students', 'Businesses'], poor: ['Enterprise'], w: ['Studio', 'Canvas', 'Paint', 'Cut', 'Forge'] },
+  { n: 'Music & Video App',    rank: 5,  cost: 2500,  prof: 'HHHHML', arpu: 1.8, plats: ['Smartphone', 'Smart TV', 'Tablet'], great: ['Consumers'], good: ['Gamers', 'Students'], poor: ['Developers', 'Enterprise'], w: ['Tunes', 'Stream', 'Play', 'Cast', 'Beats'] },
+  { n: 'Business Software',    rank: 6,  cost: 3000,  prof: 'MLLLHH', arpu: 5,   plats: ['PC', 'Web Browser'], great: ['Businesses', 'Enterprise'], good: ['Creators'], poor: ['Students', 'Gamers'], w: ['CRM', 'Ledger', 'Payroll', 'Books', 'Desk'] },
+  { n: 'Developer Tools',      rank: 7,  cost: 3000,  prof: 'HMLLHM', arpu: 4,   plats: ['PC'], great: ['Developers'], good: ['Enterprise', 'Creators'], poor: ['Consumers', 'Students'], w: ['Code', 'IDE', 'Build', 'Debug', 'Kit'] },
+  { n: 'Security Suite',       rank: 8,  cost: 4000,  prof: 'MLLLHH', arpu: 3.5, plats: ['PC', 'Smartphone'], great: ['Businesses', 'Enterprise'], good: ['Consumers'], poor: ['Gamers'], w: ['Shield', 'Guard', 'Vault', 'Defender', 'Lock'] },
+  { n: 'Cloud Platform',       rank: 10, cost: 7000,  prof: 'MLLLHH', arpu: 7,   plats: ['Web Browser', 'PC'], great: ['Developers', 'Enterprise'], good: ['Businesses'], poor: ['Consumers', 'Students'], w: ['Cloud', 'Compute', 'Host', 'Sky', 'Grid'] },
+  { n: 'AI Assistant',         rank: 12, cost: 9000,  prof: 'HHMMHH', arpu: 4,   plats: ['Smartphone', 'PC', 'Web Browser'], great: ['Consumers', 'Businesses', 'Developers'], good: ['Creators', 'Students'], poor: [], w: ['Assistant', 'Mind', 'Copilot', 'Brain', 'Genie'] },
+  { n: 'Operating System',     rank: 15, cost: 15000, prof: 'HLHMHH', arpu: 6,   plats: ['PC', 'Tablet'], great: ['Consumers', 'Businesses'], good: ['Developers', 'Enterprise'], poor: [], w: ['OS', 'Shell', 'Kernel', 'Desktop', 'Core'] }
+];
+const SOFT_MARKETS = [
+  { n: 'Consumers', rank: 1, size: 1.3, arpu: 1 }, { n: 'Students', rank: 1, size: 0.8, arpu: 0.7 }, { n: 'Gamers', rank: 2, size: 0.9, arpu: 1 },
+  { n: 'Creators', rank: 3, size: 0.7, arpu: 1.3 }, { n: 'Businesses', rank: 4, size: 0.9, arpu: 1.6 }, { n: 'Developers', rank: 6, size: 0.5, arpu: 1.8 },
+  { n: 'Enterprise', rank: 9, size: 0.35, arpu: 3.5 }
+];
+const SOFT_MODELS = [
+  { n: 'One-off licence', launch: 2.0, live: 0.3, d: 'big launch sales, a small tail' },
+  { n: 'Subscription', launch: 0.4, live: 1.6, ret: 0.012, d: 'little at launch, steady monthly income' },
+  { n: 'Freemium', launch: 0.7, live: 1.1, dl: 1.5, d: 'more users, some pay for extras' },
+  { n: 'Ad-supported', launch: 0.2, live: 0.8, dl: 2.0, rev: -0.3, d: 'free for users, critics grumble' }
+];
+const SOFT_FIT_LBL = ['Poor fit', 'Fair fit', 'Good fit', 'Great fit!'], SOFT_FIT_REV = [-0.8, -0.1, 0.5, 1.1], SOFT_FIT_DL = [0.7, 0.9, 1.15, 1.4];
+const SOFT_REVIEWERS = ['ByteWire', 'App Advisor', 'Stack Weekly', 'The Ledger'];
+const SOFT_FOCUS = [[2, 0], [0, 4], [4, 5], [5, 1]];
+const SOFT_BRAND = ['Swift', 'Bright', 'Nimbus', 'Orbit', 'Pixel', 'Quantum', 'Echo', 'Nova', 'Snap', 'Flux', 'Zen', 'Atlas', 'Lumen', 'Kite', 'Polar'];
+const SOFT = Object.fromEntries(SOFT_TYPES.map(t => [t.n, t]));
+const SMK = Object.fromEntries(SOFT_MARKETS.map(m => [m.n, m]));
+SOFT_TYPES.forEach(t => { t.soft = true; t.drain = 0.9; t.w = t.prof.split('').map(c => ({ H: 1.25, M: 1, L: 0.8 })[c]); G[t.n] = t; });
+SOFT_TYPES.forEach((t, i) => { t.wordsList = [['Toolkit', 'Cleaner', 'Helper', 'Widgets', 'Scanner'], ['Learn', 'Academy', 'Tutor', 'Classroom', 'Lessons'], ['Office', 'Docs', 'Notes', 'Planner', 'Sheets'],
+  ['Chat', 'Connect', 'Circle', 'Feed', 'Hub'], ['Studio', 'Canvas', 'Paint', 'Cut', 'Forge'], ['Tunes', 'Stream', 'Play', 'Cast', 'Beats'], ['CRM', 'Ledger', 'Payroll', 'Books', 'Desk'],
+  ['Code', 'IDE', 'Build', 'Debug', 'Kit'], ['Shield', 'Guard', 'Vault', 'Defender', 'Lock'], ['Cloud', 'Compute', 'Host', 'Sky', 'Grid'], ['Assistant', 'Mind', 'Copilot', 'Brain', 'Genie'], ['OS', 'Shell', 'Kernel', 'Desktop', 'Core']][i]; });
+let devKind = 'game';
+function isSoftMode() { return devKind === 'soft'; }
+function statNames(d) { return (d ? d.kind === 'soft' : isSoftMode()) ? SOFT_STATS : STATS; }
+function softFit(type, market) { const t = SOFT[type]; if (!t) return 1; return t.great.includes(market) ? 3 : t.good.includes(market) ? 2 : t.poor.includes(market) ? 0 : 1; }
+function softTitle(type) { const t = SOFT[type]; for (let i = 0; i < 12; i++) { const n = `${pick(SOFT_BRAND)} ${pick((t && t.wordsList) || ['App'])}`; if (!(STATE.softHistory || []).some(h => h.title === n)) return n; } return pick(SOFT_BRAND) + ' ' + type; }
+function setDevKind(k) {
+  if (k === devKind) return;
+  devKind = k; playSound('click'); portSel = [];
+  $('sel-genre').value = ''; $('sel-theme').value = '';
+  refreshDevOptions(); updatePreview();
+}
+function applyKindUI() {
+  const soft = isSoftMode();
+  ['fld-hook', 'hook-info', 'fld-seq', 'fld-pub', 'fld-engine', 'fld-aud'].forEach(id => { const el = $(id); if (el) el.style.display = soft ? 'none' : ''; });
+  $('lbl-genre').textContent = soft ? 'Software type' : 'Genre'; $('lbl-theme').textContent = soft ? 'Market' : 'Theme';
+  $('lbl-size').textContent = soft ? 'Project size' : 'Game size';
+  $('seg-kind').innerHTML = `<button class="${soft ? '' : 'on'}" onclick="setDevKind('game')">🎮 Game</button><button class="${soft ? 'on' : ''}" onclick="setDevKind('soft')">💾 Software</button>`;
+  $('btn-start').textContent = soft ? 'Start development' : 'Start production';
+}
+function softPreviewHtml() {
+  const g = $('sel-genre').value, t = $('sel-theme').value, p = $('sel-platform').value, ST = SOFT[g], MK = SMK[t];
+  if (!ST || !MK || !P[p]) return 'Pick a software type, a market and a platform you hold a licence for.';
+  const bi = curBudget(), si = curSize(), z = SIZES[si], mo = SOFT_MODELS[+$('sel-monet').value] || SOFT_MODELS[1];
+  const plat = P[p], ports = portSel.map(n => P[n]).filter(Boolean), allP = [plat, ...ports];
+  const key = g + '|' + t, known = key in (STATE.softFits || {}), pfit = allP.some(x => ST.plats.includes(x.n));
+  const cost = projectCost(g, bi, plat, ports, '', si, ''), avail = teamStaff(STATE.focus || 0).filter(m => m.vac <= 0).length;
+  const wk = Math.max(1, Math.round(projectWork(si, allP, bi, STATE.rank) * (hasExec('producer') ? 0.9 : 1) * 0.92 / teamWeekly()));
+  const ins = STATE.insights[g] || {}, nIns = Object.keys(ins).length;
+  return `Market fit: ${known ? `<b>${SOFT_FIT_LBL[STATE.softFits[key]]}</b>` : '<span class="muted">??? (untested)</span>'}<br>` +
+    `<b>${z.n}</b> project. With your ${avail} available staff: <b class="gold">about ${wk} weeks</b> (${(wk / 4.33).toFixed(1)} months)${avail < z.team ? ` · <span class="bad">a team of ${z.team} would be faster</span>` : ''}<br>` +
+    `Cost: <b class="gold">${money(cost)}</b> · Platform: ${pfit ? '<b class="good">a natural home</b>' : '<span class="bad">unusual for ' + esc(g) + '</span>'} (best on ${ST.plats.join(', ')})<br>` +
+    `${MK.n}: market size ×${MK.size}, spend ×${MK.arpu} · ${esc(mo.n)}: ${mo.d}<br>` +
+    `Needs known ${nIns}/6 · <span class="muted">Software has no publisher, hook or engine. It earns from users in Live Ops, and builds fewer fans than games.</span>`;
+}
+function startSoftware() {
+  if (STATE.activeDev) return;
+  const type = $('sel-genre').value, market = $('sel-theme').value, ST = SOFT[type], MK = SMK[market];
+  if (!ST || !MK) { playSound('error'); toast('Pick a software type and a market.', '#ff6b7d'); return; }
+  if (STATE.rank < ST.rank || STATE.rank < MK.rank) { playSound('error'); toast('That type or market is not unlocked yet.', '#ff6b7d'); return; }
+  const plat = P[$('sel-platform').value];
+  if (!plat || !platformOpen(plat)) { playSound('error'); toast('Get a licence for that platform in Market first.', '#ff6b7d'); return; }
+  if (!teamStaff(STATE.focus || 0).some(m => m.vac <= 0)) { playSound('error'); toast('Nobody in this team is available.', '#ff6b7d'); return; }
+  const budget = curBudget(), monet = +$('sel-monet').value || 0, size = curSize(), z = SIZES[size];
+  if (STATE.rank < z.rank) { playSound('error'); toast(`${z.n} projects unlock at studio Rank ${z.rank}.`, '#ff6b7d'); return; }
+  const ports = portSel.map(n => P[n]).filter(x => x && platformOpen(x) && x.n !== plat.n);
+  clampPrio();
+  const cost = projectCost(type, budget, plat, ports, '', size, '');
+  if (!spend(cost, 'Development')) return;
+  const title = ($('inp-title').value || '').trim() || ($('inp-title').placeholder || '').trim() || softTitle(type);
+  const M = computeMods(), pr = STATE.prio.slice(), pe = prioEval(type, pr);
+  const d = normDev({
+    kind: 'soft', team: STATE.focus || 0, id: STATE.nextDevId++, title, genre: type, theme: market, platform: plat.n, plats: [plat.n, ...ports.map(x => x.n)], rank: STATE.rank,
+    size, weeks: 0, work: projectWork(size, [plat, ...ports], budget, STATE.rank), engine: 'none',
+    phase: 1, phaseName: '', mult: (1 + 0.03 * lvlOf('g', type)) * BUDGETS[budget].q, bugs: 0, hits: 0, gainSum: 0, boostUsed: false,
+    stats: [0, 0, 0, 0, 0, 0], budget, monet, audience: 2, prio: pr, prioMul: pe.statMul, hype: Math.round(M.hype * 0.5),
+    balloon: { x: 160, y: 146, r: 20, hp: 1, maxHp: 1, color: '#4cc9f0' }
+  });
+  if (hasExec('producer')) d.mods.hpMul *= 0.9;
+  d.decisions.push(`${z.n} project`, `${BUDGETS[budget].n} budget`, SOFT_MODELS[monet].n, `For ${market}`);
+  if (ports.length) d.decisions.push(`Multi-platform: ${d.plats.join(', ')}`);
+  STATE.activeDev = d; setupPhase(d);
+  $('inp-title').value = ''; portSel = [];
+  playSound('click'); news(`Development started: ${title}`, '#66fcf1');
+  renderDevMode(); assignModal(d);
+}
+function completeSoftware(d) {
+  STATE.devs[d.team || 0] = null; projectiles = projectiles.filter(x => x.devId !== d.id);
+  const M = computeMods(), ST = SOFT[d.genre] || SOFT_TYPES[0], MK = SMK[d.theme] || SOFT_MARKETS[0], mo = SOFT_MODELS[d.monet] || SOFT_MODELS[1], w = ST.w;
+  const plats = platsOf(d), plat = plats[0], share = platShares(plats), shTot = share.reduce((a, b) => a + b, 0) || 1;
+  const q = d.hits ? (d.gainSum / d.hits) / (targetSkill(d.rank) / 12) : 0.5;
+  if (!STATE.softFits) STATE.softFits = {};
+  const fitC = softFit(d.genre, d.theme), key = d.genre + '|' + d.theme, newFit = !(key in STATE.softFits);
+  STATE.softFits[key] = fitC;
+  const pfit = plats.some(x => ST.plats.includes(x.n)), firstType = !STATE.levels.g[d.genre];
+  const pe = prioEval(d.genre, d.prio), tgt = targetSkill(d.rank), wsum = w.reduce((a, b) => a + b, 0);
+  const crew = STATE.team.filter(m => d.contrib[m.id]);
+  const avgSkill = k => crew.length ? crew.reduce((a, m) => a + m.s[k], 0) / crew.length : 40;
+  const grades = SECTIONS.map((sc, k) => { const m = d.assign ? findStaff(d.assign[k]) : null; const sk = m ? staffSkill(m, k, d.genre) * (postsOf(d, m.id).length > 1 ? 0.9 : 1) : avgSkill(k) * (d.assign ? 0.75 : 0.95); const r = sk / tgt; return { k, m, r, g: gradeOf(r) }; });
+  const secAdj = grades.reduce((a, x) => a + clamp((x.r - 1) * 1.2, -0.6, 0.5) * w[x.k], 0) / wsum;
+  const dir = findStaff(d.lead), dirAdj = dir ? 0.15 + (dir.senior ? 0.15 : 0) : -0.2;
+  const expect = Math.min(1.2, (STATE.rank - 1) * 0.08);
+  const raw = execScore(q) + SOFT_FIT_REV[fitC] + (pfit ? 0.4 : -0.2) + pe.adj + secAdj + dirAdj + d.reviewBonus + (mo.rev || 0) + sizeOf(d).review + 0.1 * roomLv('playtest') - expect;
+  const capped = raw <= 7 ? raw : 7 + 3 * (1 - Math.exp(-(raw - 7) / 2.5));
+  const sSum = d.stats.reduce((a, b) => a + b, 0) || 1, rel = d.stats.map((v, k) => (v / sSum) / (w[k] / wsum));
+  const focusAdj = SOFT_FOCUS.map(f => clamp(((rel[f[0]] + rel[f[1]]) / 2 - 1) * 1.2, -0.6, 0.6));
+  const scores = SOFT_REVIEWERS.map((r, i) => clamp(Math.round(capped + REVIEW_BIAS[i] + focusAdj[i] + rnd(-1, 1)), 1, 10));
+  const total = scores.reduce((a, b) => a + b, 0);
+  const hypeMul = 1 + Math.min(d.hype || 0, 100) / 150;
+  const dl = Math.round((400 + 25 * Math.pow(STATE.fans, 0.6)) * Math.pow(total / 20, 1.7) * shTot * MK.size * SOFT_FIT_DL[fitC] * (mo.dl || 1) * (pfit ? 1.15 : 1) *
+    hypeMul * sizeOf(d).dl * (d.discount ? 1.25 : 1) * rnd(0.85, 1.15));
+  const arpu = ST.arpu * MK.arpu * 2;
+  const gross = Math.round(dl * arpu * 1.5 * mo.launch * sizeOf(d).rev * (d.discount ? 0.6 : 1));
+  const invTake = investorCut(gross), rev = gross - invTake;
+  earn(rev, 'Software sales');
+  const fansGain = Math.round(dl * 0.02 * 3e6 / (3e6 + STATE.fans));
+  STATE.fans += fansGain; STATE.totalDownloads += dl;
+  addRankExp(Math.round((10 + total) * 0.7 * sizeOf(d).rx));
+  STATE.levels.g[d.genre] = (STATE.levels.g[d.genre] || 0) + 1;
+  STATE.softCount = (STATE.softCount || 0) + 1;
+  const ins = STATE.insights[d.genre] = STATE.insights[d.genre] || {}, learned = [];
+  if (pe.worst >= 0 && !ins[pe.worst]) { ins[pe.worst] = pe.prof[pe.worst]; learned.push(pe.worst); }
+  const unknown = IDX.filter(i => !ins[i]); if (unknown.length) { const u = pick(unknown); ins[u] = pe.prof[u]; learned.push(u); }
+  const rpGain = 1 + sizeOf(d).rp + (newFit ? 2 : 0) + (firstType ? 2 : 0) + learned.length;
+  STATE.rp += rpGain;
+  STATE.team.forEach(m => { if (d.contrib[m.id]) { m.shipped++; } m.morale = clamp(m.morale + (total >= 30 ? 6 : total < 16 ? -6 : 1), 0, 100); });
+  const mvpId = Object.keys(d.contrib).sort((a, b) => d.contrib[b] - d.contrib[a])[0], mvp = mvpId ? findStaff(+mvpId) : null;
+  if (mvp) { mvp.mvps++; gainExp(mvp, 15); }
+  if (!STATE.softHistory) STATE.softHistory = [];
+  STATE.softHistory.unshift({ title: d.title, type: d.genre, market: d.theme, total, dl, y: STATE.cal.y, size: d.size, weeks: d.weeks });
+  if (STATE.softHistory.length > 30) STATE.softHistory.length = 30;
+  const statSum = d.stats.reduce((a, b) => a + b, 0) || 1, retShare = (d.stats[0] + d.stats[5]) / 2 / (statSum / NS);
+  const ret = clamp(0.9 + 0.04 * (retShare - 1) + 0.07 * (total / 40) + (mo.ret || 0), 0.86, 0.985);
+  const app = { id: d.id, kind: 'app', title: d.title, genre: d.genre, platform: plat.n, plats: plats.map(x => x.n), users: dl, peak: dl, arpu: +arpu.toFixed(2), ret, score: total, weeks: 0, event: 0,
+    revTotal: rev, updates: 0, cap: Math.round(dl * 3), cut: 0, liveMul: mo.live, monet: -1, saleWeeks: 0, saleMul: 1 };
+  const liveNote = addLive(app);
+  const notes = [];
+  notes.push(`${esc(d.genre)} for ${esc(d.theme)}: <b>${SOFT_FIT_LBL[fitC]}</b>${newFit ? ' <span class="gold">(new!)</span>' : ''}`);
+  notes.push(pfit ? `<span class="good">${esc(plat.n)} suits ${esc(d.genre)}.</span>` : `<span class="bad">Reviewers expected it on ${ST.plats.join(' or ')}.</span>`);
+  focusAdj.forEach((a, i) => { const f = SOFT_FOCUS[i], nm = `${SOFT_STATS[f[0]].toLowerCase()} and ${SOFT_STATS[f[1]].toLowerCase()}`;
+    if (a >= 0.3) notes.push(`<span class="good">${SOFT_REVIEWERS[i]} praised the ${nm}.</span>`); else if (a <= -0.3) notes.push(`<span class="bad">${SOFT_REVIEWERS[i]} found the ${nm} thin.</span>`); });
+  if (pe.worst >= 0) notes.push(pe.diff[pe.worst] > 0 ? `Reviewers felt too much went into <b>${SOFT_STATS[pe.worst]}</b>.` : `Reviewers wanted more <b>${SOFT_STATS[pe.worst]}</b>.`);
+  learned.forEach(i => notes.push(`📓 Learned: ${esc(d.genre)} needs <b>${LV_NAME[pe.prof[i]]}</b> ${SOFT_STATS[i]}`));
+  const weak = grades.filter(x => x.g === 'D' || x.g === 'C').map(x => SECTIONS[x.k].n); if (weak.length) notes.push(`<span class="bad">Weak areas: ${weak.join(', ')}.</span>`);
+  for (let i = 0; i < 40; i++) particles.push({ conf: true, x: rnd(0, 320), y: rnd(-60, 0), vx: rnd(-0.4, 0.4), vy: rnd(0.3, 1.2), color: pick(['#4cc9f0', '#06d6a0', '#ffd166']), life: 200 });
+  const html = `<h3>${esc(d.title)}</h3><div class="muted" style="text-align:center;">${esc(d.genre)} · for ${esc(d.theme)} · ${plats.map(x => esc(x.n)).join(' + ')}</div>
+    <div class="mini muted" style="text-align:center;">${sizeOf(d).n} project · ${d.weeks || '?'} weeks in development</div>
+    ${scores.map((sc, i) => `<div class="rev"><span>${SOFT_REVIEWERS[i]}: “${QUOTES[sc]}”</span><b>${sc}</b></div>`).join('')}
+    <div class="big">${total} / 40</div><div class="note mini">${notes.join('<br>')}</div>
+    <div class="note">Users: <b>${fmt(dl)}</b><br>Launch revenue: <b class="gold">${money(rev)}</b>${invTake ? ` after ${money(invTake)} to your investor` : ''}<br>New fans: +${fmt(fansGain)} · Research: +${rpGain} RP<br>${liveNote}</div>
+    <div class="note mini">${SOFT_STATS.map((st, k) => `<span style="color:${STAT_COLORS[k]}">${st}</span> ${Math.round(d.stats[k])}`).join(' · ')}</div>
+    <div class="note mini muted">Decisions: ${d.decisions.map(esc).join(' · ')}</div>`;
+  playSound(total >= 32 ? 'fanfare' : 'coin');
+  showModal(html, [{ label: 'Launch! 🚀', cls: 'btn-accent' }]);
+  checkMilestones(); renderDevMode(); renderAll(); save();
+}
+function addLive(entry) {
+  const isApp = entry.kind === 'app', same = STATE.live.filter(g => (g.kind === 'app') === isApp);
+  if (same.length < liveSlots()) { STATE.live.push(entry); return isApp ? 'Now live: earns from users every week.' : 'Live service launched.'; }
+  let wi = -1; STATE.live.forEach((g, i) => { if ((g.kind === 'app') === isApp && (wi < 0 || g.users < STATE.live[wi].users)) wi = i; });
+  if (wi >= 0 && STATE.live[wi].users < entry.users) { const old = STATE.live[wi].title; STATE.live[wi] = entry; return `Slots full: replaced ${esc(old)}.`; }
+  return `Slots full: this ${isApp ? 'product' : 'title'} was not added to Live Ops.`;
+}
 function startDevelopment() {
+  if (isSoftMode()) return startSoftware();
   if (STATE.activeDev) return;
   let genre = $('sel-genre').value, theme = $('sel-theme').value;
   const platform = $('sel-platform').value;
@@ -1822,7 +2110,7 @@ function startDevelopment() {
   if (!STATE.unlocked.g.includes(genre) || !STATE.unlocked.t.includes(theme)) { news('That genre or theme is not unlocked.', '#ef476f'); return; }
   const plat = P[platform];
   if (!platformOpen(plat)) { playSound('error'); news('Get a licence for that platform in Market first.', '#ef476f'); return; }
-  if (!STATE.team.some(m => m.vac <= 0)) { news('Everyone is away! Wait for someone to come back.', '#ef476f'); return; }
+  if (!teamStaff(STATE.focus || 0).some(m => m.vac <= 0)) { playSound('error'); toast(teamCount() > 1 ? `Nobody in ${teamName(STATE.focus || 0)} is available. Move staff into it from the Staff tab.` : 'Everyone is away! Wait for someone to come back.', '#ff6b7d'); return; }
   const budget = +$('sel-budget').value || 0, monet = +$('sel-monet').value || 0;
   const audience = isNaN(+$('sel-aud').value) ? 2 : +$('sel-aud').value;
   const pb = PUB[$('sel-pub').value] || PUBLISHERS[0];
@@ -1849,11 +2137,11 @@ function startDevelopment() {
   const mult = (1 + 0.03 * lvlOf('g', genre)) * (1 + 0.03 * lvlOf('t', theme)) * BUDGETS[budget].q;
   const pr = STATE.prio.slice(), pe = prioEval(genre, pr);
   const d = normDev({
-    kind: 'game', id: STATE.nextDevId++, title, genre, theme, platform, plats: [platform, ...ports.map(x => x.n)], hook: hk ? hk.n : '', rank: STATE.rank,
+    kind: 'game', team: STATE.focus || 0, id: STATE.nextDevId++, title, genre, theme, platform, plats: [platform, ...ports.map(x => x.n)], hook: hk ? hk.n : '', rank: STATE.rank,
     size, weeks: 0, work: projectWork(size, [plat, ...ports], budget, STATE.rank), engine: engKey,
     phase: 1, phaseName: '', mult, bugs: 0, hits: 0, gainSum: 0, boostUsed: false,
     stats: [0, 0, 0, 0, 0, 0], budget, focus: -1, monet, pub: pb.n, adv, audience, prio: pr, prioMul: pe.statMul,
-    hype: STATE.hypeBank + M.hype + 8 * STATE.team.filter(x => x.vac <= 0 && x.perks.includes('pitch')).length, sequelOf: seq ? seq.title : '',
+    hype: STATE.hypeBank + M.hype + 8 * teamStaff(STATE.focus || 0).filter(x => x.vac <= 0 && x.perks.includes('pitch')).length, sequelOf: seq ? seq.title : '',
     balloon: { x: 160, y: 146, r: 20, hp: 1, maxHp: 1, color: '#4cc9f0' }
   });
   if (hasExec('producer')) d.mods.hpMul *= 0.9;
@@ -1904,14 +2192,14 @@ function pickHook(hn) {
   closeModal();
 }
 function setPace(i) {
-  const d = STATE.activeDev; if (!d || d.kind !== 'game' || !PACE[i]) return;
+  const d = STATE.activeDev; if (!d || d.kind === 'contract' || !PACE[i]) return;
   if (d.pace !== i) { d.pace = i; if (i === 2 && !d.decisions.includes('Crunched')) d.decisions.push('Crunched'); news(`Work pace: ${PACE[i].n}`, i === 2 ? '#ef476f' : '#66fcf1'); }
   playSound('click'); renderDevControls();
 }
 function mktCost(mk) { return Math.round(mk.cost * rankK() * (hasTech('mkt2') ? 0.5 : 1) * (hasExec('cmo') ? 0.75 : 1) * (1 - 0.1 * roomLv('marketing')) / 100) * 100; }
 function buyMarketing(i) {
   const d = STATE.activeDev, mk = MARKETING[i];
-  if (!d || d.kind !== 'game' || !mk || d.mkt[i]) return;
+  if (!d || d.kind === 'contract' || !mk || d.mkt[i]) return;
   if (!spend(mktCost(mk), 'Marketing')) return;
   d.mkt[i] = true;
   const h = mk.hype + (hasTech('mkt2') ? 5 : 0);
@@ -1933,7 +2221,7 @@ function designModal(d) {
     const c = CARDS[i], cost = cardCost(c);
     return `<button class="opt" ${cost > STATE.gold ? 'disabled' : ''} onclick="pickCard(${i})"><b>${c.n}</b> · ${cost ? `<span class="gold">${money(cost)}</span>` : '<span class="good">free</span>'}<br><span class="muted">${c.d}</span></button>`;
   }).join('');
-  showModal(`<h3>Design Meeting</h3><div class="note">Alpha is starting. The team pitches ${idx.length === 4 ? 'four' : 'three'} ideas for ${esc(d.title)}. Pick one, or stick to the plan.</div>${rows}`, [{ label: 'Stick to the plan' }]);
+  devModal(d, `<h3>Design Meeting</h3><div class="note">Alpha is starting. The team pitches ${idx.length === 4 ? 'four' : 'three'} ideas for ${esc(d.title)}. Pick one, or stick to the plan.</div>${rows}`, [{ label: 'Stick to the plan' }]);
 }
 function pickCard(i) {
   const d = STATE.activeDev, c = CARDS[i];
@@ -1954,7 +2242,7 @@ function playtestModal(d) {
   const weak = rel.indexOf(Math.min(...rel)), strong = rel.indexOf(Math.max(...rel));
   d.ptWeak = weak; d.ptStrong = strong;
   const fix = Math.round(1500 * rankK() / 100) * 100;
-  showModal(`<h3>Playtest Feedback</h3><div class="note">Beta is starting. Testers love the <b style="color:${STAT_COLORS[strong]}">${STATS[strong]}</b>, but say the <b style="color:${STAT_COLORS[weak]}">${STATS[weak]}</b> feels thin. How do you respond?</div>
+  devModal(d, `<h3>Playtest Feedback</h3><div class="note">Beta is starting. Testers love the <b style="color:${STAT_COLORS[strong]}">${STATS[strong]}</b>, but say the <b style="color:${STAT_COLORS[weak]}">${STATS[weak]}</b> feels thin. How do you respond?</div>
     <button class="opt" ${fix > STATE.gold ? 'disabled' : ''} onclick="pickPlaytest(0)"><b>Fix the weak spot</b> · <span class="gold">${money(fix)}</span><br><span class="muted">${STATS[weak]} +35% for the rest of development</span></button>
     <button class="opt" onclick="pickPlaytest(1)"><b>Double down</b> · <span class="good">free</span><br><span class="muted">${STATS[strong]} +20%, ${STATS[weak]} -10%</span></button>
     <button class="opt" onclick="pickPlaytest(2)"><b>Open beta for fans</b> · <span class="good">free</span><br><span class="muted">+15 hype and a few fans, but players find extra bugs</span></button>`,
@@ -1977,6 +2265,9 @@ function pickPlaytest(k) {
 }
 function execScore(q) { return 8 * (1 - Math.exp(-0.55 * q)) - 0.4; }
 function forecastScore(d) {
+  if (d.kind === 'soft') { const q = d.hits ? (d.gainSum / d.hits) / (targetSkill(d.rank) / 12) : 0.5, pe = prioEval(d.genre, d.prio), ST = SOFT[d.genre];
+    const raw = execScore(q) + SOFT_FIT_REV[softFit(d.genre, d.theme)] + (platsOf(d).some(x => ST && ST.plats.includes(x.n)) ? 0.4 : -0.2) + pe.adj + d.reviewBonus + sizeOf(d).review + 0.1 * roomLv('playtest') - Math.min(1.2, (STATE.rank - 1) * 0.08);
+    return clamp(Math.round((raw <= 7 ? raw : 7 + 3 * (1 - Math.exp(-(raw - 7) / 2.5))) * 4 - 0.4), 4, 40); }
   const q = d.hits ? (d.gainSum / d.hits) / (targetSkill(d.rank) / 12) : 0.5;
   const combo = compat(d.genre, d.theme), hc = d.hook ? hookCompat(d.hook, d.genre) : -1, pe = prioEval(d.genre, d.prio);
   const aud = AUDIENCES[d.audience] || AUDIENCES[2], mo = MONET[d.monet] || MONET[1];
@@ -1990,11 +2281,11 @@ function releaseModal(d) {
   const q = d.hits ? (d.gainSum / d.hits) / (targetSkill(d.rank) / 12) : 0.5;
   const est = clamp(Math.round((q * 3 - 0.5) * 2) / 2, 1, 5);
   const cost = Math.round(2000 * rankK() * Math.max(1, sizeOf(d).cost) / 100) * 100;
-  const pw = d.work ? Math.max(1, Math.round(phaseHp(d, 3) * 0.3 / teamWeekly())) : 2;
+  const pw = d.work ? Math.max(1, Math.round(phaseHp(d, 3) * 0.3 / teamWeekly(d.team || 0))) : 2;
   const ptl = roomLv('playtest'), fc = ptl ? forecastScore(d) : 0, spread = [0, 6, 3, 1][ptl];
-  showModal(`<h3>Ready to Ship?</h3><div class="note">${esc(d.title)} is through debugging. The team's gut feel on build quality: <b class="gold">${'★'.repeat(Math.floor(est))}${est % 1 ? '½' : ''}</b> (before combo, hook, platform and critics). Hype: <b>${Math.round(d.hype)}</b>.${ptl ? `<br>🧪 Playtest Lab forecast: <b class="gold">${Math.max(4, fc - spread)}–${Math.min(40, fc + spread)}</b> / 40.` : ''}<br><br>A polish sprint adds a short extra phase where every idea counts 25% more, and critics notice the care. A launch discount trades launch revenue for more downloads and fans.</div>`,
-    [{ label: 'Release now 🚀', cls: 'btn-accent', action: () => { d.awaiting = false; completeProject(); } },
-     { label: 'Launch at a discount (+25% downloads, -40% launch revenue)', action: () => { d.awaiting = false; d.discount = true; d.decisions.push('Launch discount'); completeProject(); } },
+  devModal(d, `<h3>Ready to Ship?</h3><div class="note">${esc(d.title)} is through debugging. The team's gut feel on build quality: <b class="gold">${'★'.repeat(Math.floor(est))}${est % 1 ? '½' : ''}</b> (before combo, hook, platform and critics). Hype: <b>${Math.round(d.hype)}</b>.${ptl ? `<br>🧪 Playtest Lab forecast: <b class="gold">${Math.max(4, fc - spread)}–${Math.min(40, fc + spread)}</b> / 40.` : ''}<br><br>A polish sprint adds a short extra phase where every idea counts 25% more, and critics notice the care. A launch discount trades launch revenue for more downloads and fans.</div>`,
+    [{ label: 'Release now 🚀', cls: 'btn-accent', action: () => { d.awaiting = false; completeProject(d); } },
+     { label: 'Launch at a discount (+25% downloads, -40% launch revenue)', action: () => { d.awaiting = false; d.discount = true; d.decisions.push('Launch discount'); completeProject(d); } },
      { label: `Polish sprint (${money(cost)}, about ${pw} wk${pw > 1 ? 's' : ''})`, disabled: STATE.gold < cost || d.polished, action: () => {
         if (!spend(cost)) { releaseModal(d); return; }
         d.awaiting = false; d.polished = true; d.reviewBonus += 0.3; d.decisions.push('Polish sprint');
@@ -2045,7 +2336,7 @@ const DEV_EVENTS = [
 ];
 function devEvent(d) {
   d.eventsFired++;
-  const crew = STATE.team.filter(x => x.vac <= 0);
+  const crew = teamStaff(d.team || 0).filter(x => x.vac <= 0);
   if (crew.length < 2) return;
   const m = pick(crew); let m2 = pick(crew); if (m2 === m) m2 = crew.find(x => x !== m);
   let ev = pick(DEV_EVENTS);
@@ -2053,7 +2344,7 @@ function devEvent(d) {
   const run = (fn, label) => () => { const res = fn(d, m, m2); news(res, '#66fcf1'); d.decisions.push(`${ev.t}: ${label}`); };
   const btns = [ev.a, ev.b, ev.c].filter(Boolean).map((o, i) => { const l = lab(o[0]); return { label: l, cls: i === 0 ? 'btn-accent' : '', action: run(o[1], l.replace(/ \(.*\)$/, '')) }; });
   playSound('click');
-  showModal(`<h3>${ev.t}</h3><div class="note">${esc(ev.txt(d, m, m2))}</div>`, btns);
+  devModal(d, `<h3>${ev.t}</h3><div class="note">${esc(ev.txt(d, m, m2))}</div>`, btns);
 }
 function genContracts() {
   const k = (1 + 0.3 * (STATE.rank - 1)) * (hasExec('bizdev') ? 1.3 : 1), out = [], names = CONTRACTS.slice().sort(() => Math.random() - 0.5);
@@ -2077,7 +2368,7 @@ function takeContract(i) {
   const c = STATE.contractOffers[i];
   if (!c || STATE.activeDev) return;
   STATE.activeDev = {
-    kind: 'contract', id: STATE.nextDevId++, title: c.title, pay: c.pay, phase: 1, phaseName: 'Contract',
+    kind: 'contract', team: STATE.focus || 0, id: STATE.nextDevId++, title: c.title, pay: c.pay, phase: 1, phaseName: 'Contract',
     rank: STATE.rank, hits: 0, gainSum: 0, stats: [0, 0, 0, 0], bugs: 0,
     balloon: { x: 160, y: 146, r: 16, hp: c.hp, maxHp: c.hp, color: '#adb5bd' }
   };
@@ -2088,23 +2379,23 @@ function takeContract(i) {
 
 function useBoost() {
   const d = STATE.activeDev;
-  if (!d || d.kind !== 'game' || d.phase !== 3 || d.boostUsed) return;
+  if (!d || d.kind === 'contract' || d.phase !== 3 || d.boostUsed) return;
   d.boostUsed = true;
   d.stats = d.stats.map(v => v * 1.2);
   d.gainSum *= 1.2;
-  STATE.team.forEach(m => { if (!m.rest) m.stam = Math.min(m.maxStam, m.stam + 25); });
+  teamStaff(d.team || 0).forEach(m => { if (!m.rest) m.stam = Math.min(m.maxStam, m.stam + 25); });
   particles.push({ x: 160, y: 118, text: 'ASSISTANT BOOST x1.2!', color: '#ffd166', life: 60, vy: -0.4 });
   playSound('fanfare');
   $('btn-boost').disabled = true;
 }
 
-function doHit(m) {
-  const d = STATE.activeDev;
+function doHit(m, d) {
+  d = d || STATE.activeDev;
   if (!d) return;
   const M = MODS || computeMods();
   const b = d.balloon, R = ROLES[m.role], tr = m.traits, pk = m.perks;
   const isLead = d.lead === m.id;
-  const posts = d.kind === 'game' ? postsOf(d, m.id) : [];
+  const posts = d.kind !== 'contract' ? postsOf(d, m.id) : [];
   let idx;
   if (posts.length && Math.random() < 0.6) idx = pick(posts);
   else { const r = Math.random(); idx = r < 0.55 ? R.main : r < 0.8 ? R.sub : Math.floor(Math.random() * NS); }
@@ -2116,7 +2407,7 @@ function doHit(m) {
   const critMul = pk.includes('clutch') ? 2.5 : 2;
   const dmg = (5 + m.lv * 0.6 + skill / 25) * (crit ? 1.5 : 1) * (d.phase === 4 && pk.includes('hunter') ? 2 : 1) * (d.phase === 1 && M.proto ? 1.25 : 1);
   let label;
-  if (d.kind === 'game') {
+  if (d.kind !== 'contract') {
     const aud = AUDIENCES[d.audience] || AUDIENCES[2], hook = HOOK[d.hook];
     let personal = 1;
     if (isLead && idx === R.main) personal *= 1.3;
@@ -2149,9 +2440,10 @@ function doHit(m) {
   } else {
     label = '+' + Math.round(dmg);
   }
-  projectiles.push({ x: m.x, y: m.y - 14, tx: b.x + rnd(-8, 8), ty: b.y + rnd(-8, 8), color: STAT_COLORS[idx],
+  if ((d.team || 0) === (STATE.focus || 0)) projectiles.push({ x: m.x, y: m.y - 14, tx: b.x + rnd(-8, 8), ty: b.y + rnd(-8, 8), color: STAT_COLORS[idx],
     dmg: Math.round(dmg), label: crit ? label + '!' : label, crit, devId: d.id, t: 0 });
-  if (crit) for (let i = 0; i < 4; i++) particles.push({ spark: true, x: m.x + rnd(-7, 7), y: m.y - 22 + rnd(-4, 4), color: '#ffd166', life: 18, vy: -0.5 });
+  else { d.balloon.hp -= Math.round(dmg); checkPhase(d); }
+  if ((d.team || 0) === (STATE.focus || 0) && crit) for (let i = 0; i < 4; i++) particles.push({ spark: true, x: m.x + rnd(-7, 7), y: m.y - 22 + rnd(-4, 4), color: '#ffd166', life: 18, vy: -0.5 });
   m.anim = 8;
   let drain = staminaDrain(d) * (isLead ? 1.25 : 1) * (M.drain || 1);
   if (tr.includes('Workaholic')) drain *= 0.75;
@@ -2176,37 +2468,39 @@ function levelUp(m) {
 function onImpact(p) {
   particles.push({ x: p.tx, y: p.ty - 4, text: p.label, color: p.crit ? '#fff' : p.color, life: 28, vy: -0.7 });
   if (simTick - lastHitSound > 3) { playSound('hit'); lastHitSound = simTick; }
-  const d = STATE.activeDev;
-  if (d && d.id === p.devId) { d.balloon.hp -= p.dmg; checkPhase(); }
+  const d = STATE.devs.find(x => x && x.id === p.devId);
+  if (d) { d.balloon.hp -= p.dmg; checkPhase(d); }
 }
-function checkPhase() {
-  const d = STATE.activeDev;
+function checkPhase(d) {
+  d = d || STATE.activeDev;
   if (!d || d.awaiting || d.balloon.hp > 0) return;
-  playSound('pop');
-  for (let i = 0; i < 10; i++) particles.push({ x: d.balloon.x + rnd(-20, 20), y: d.balloon.y + rnd(-14, 14), text: '*', color: d.balloon.color, life: 24, vy: rnd(-1.2, -0.3) });
-  if (d.kind === 'contract') return finishContract();
-  projectiles = [];
+  const shown = (d.team || 0) === (STATE.focus || 0);
+  if (shown) playSound('pop');
+  if (shown) for (let i = 0; i < 10; i++) particles.push({ x: d.balloon.x + rnd(-20, 20), y: d.balloon.y + rnd(-14, 14), text: '*', color: d.balloon.color, life: 24, vy: rnd(-1.2, -0.3) });
+  if (d.kind === 'contract') return finishContract(d);
+  projectiles = projectiles.filter(x => x.devId !== d.id);
   if (d.phase === 4 && !d.polished) { d.awaiting = true; releaseModal(d); return; }
-  if (d.phase >= 4) return completeProject();
+  if (d.phase >= 4) return completeProject(d);
   d.phase++;
   setupPhase(d);
-  news(d.phaseName, '#66fcf1');
-  if (d.phase === 2) designModal(d);
-  else if (d.phase === 3) playtestModal(d);
+  news((teamCount() > 1 ? teamName(d.team || 0) + ': ' : '') + d.phaseName, '#66fcf1');
+  if (d.kind === 'game' && d.phase === 2) designModal(d);
+  else if (d.kind === 'game' && d.phase === 3) playtestModal(d);
 }
 
-function finishContract() {
-  const d = STATE.activeDev;
-  STATE.activeDev = null; projectiles = [];
+function finishContract(d) {
+  d = d || STATE.activeDev;
+  STATE.devs[d.team || 0] = null; projectiles = projectiles.filter(x => x.devId !== d.id);
   earn(d.pay, 'Contracts'); STATE.rp += 1; addRankExp(5);
   playSound('coin');
   news(`Contract done: +${money(d.pay)}`, '#ffd166');
   renderDevMode(); renderAll(); save();
 }
 
-function completeProject() {
-  const d = normDev(STATE.activeDev);
-  STATE.activeDev = null; projectiles = [];
+function completeProject(dd) {
+  const d = normDev(dd || STATE.activeDev);
+  if (d.kind === 'soft') return completeSoftware(d);
+  STATE.devs[d.team || 0] = null; projectiles = projectiles.filter(x => x.devId !== d.id);
   const M = computeMods();
   const plats = platsOf(d), plat = plats[0], pb = PUB[d.pub] || PUBLISHERS[0], mo = MONET[d.monet] || MONET[1], w = G[d.genre].w;
   const share = platShares(plats), shTot = share.reduce((a, b) => a + b, 0) || 1;
@@ -2285,6 +2579,8 @@ function completeProject() {
   if (hof) earn(10000, 'Awards');
   STATE.releasedCount++;
   STATE.bestScore = Math.max(STATE.bestScore, total);
+  if (hof) STATE.hofCount = (STATE.hofCount || 0) + 1;
+  if (d.size === 4) STATE.aaaBest = Math.max(STATE.aaaBest || 0, total);
   const solo = plats.length === 1;
   plats.forEach((pl, i) => {
     if (!STATE.platformsUsed.includes(pl.n)) STATE.platformsUsed.push(pl.n);
@@ -2354,13 +2650,7 @@ function completeProject() {
   const ret = clamp(0.84 + 0.05 * (retShare - 1) + 0.1 * (total / 40) + mo.ret, 0.78, 0.975);
   const game = { id: d.id, title: d.title, genre: d.genre, platform: plat.n, plats: plats.map(p => p.n), users: dl, peak: dl, arpu: +arpuW.toFixed(2), ret, score: total, weeks: 0, event: 0,
     revTotal: rev, updates: 0, cap: Math.round(dl * 2.5), cut: pb.cut, liveMul: mo.live, monet: d.monet, saleWeeks: 0, saleMul: 1 };
-  let liveNote = '';
-  if (STATE.live.length < liveSlots()) { STATE.live.push(game); liveNote = 'Live service launched.'; }
-  else {
-    let wi = 0; STATE.live.forEach((g, i) => { if (g.users < STATE.live[wi].users) wi = i; });
-    if (STATE.live[wi].users < dl) { liveNote = `Live slots full: replaced ${esc(STATE.live[wi].title)}.`; STATE.live[wi] = game; }
-    else liveNote = 'Live slots full: this title was not added to Live Ops.';
-  }
+  const liveNote = addLive(game);
 
   for (let i = 0; i < (hof ? 90 : 45); i++) particles.push({ conf: true, x: rnd(0, 320), y: rnd(-60, 0), vx: rnd(-0.4, 0.4), vy: rnd(0.3, 1.2), color: pick(['#ffd166', '#ef476f', '#06d6a0', '#4cc9f0', '#9d4edd']), life: 200 });
 
@@ -2419,7 +2709,7 @@ function completeProject() {
    TIME
    ========================================================= */
 function advanceWeek() {
-  const c = STATE.cal, M = computeMods(), d = STATE.activeDev;
+  const c = STATE.cal, M = computeMods();
   for (const g of STATE.live) {
     let weekly = weeklyRev(g);
     weekly -= investorCut(weekly);
@@ -2443,7 +2733,8 @@ function advanceWeek() {
   STATE.team.forEach(m => {
     if (m.vac > 0) { m.vac--; if (m.vac === 0) { m.stam = m.maxStam; news(`${m.name} is back from vacation, refreshed!`, '#06d6a0'); } }
     m.morale += (eq - m.morale) * 0.08;
-    if (d && d.kind === 'game' && m.vac <= 0) {
+    const d = STATE.devs[teamOf(m)];
+    if (d && d.kind !== 'contract' && m.vac <= 0) {
       m.morale += PACE[d.pace].morale * (m.traits.includes('Hothead') ? 2 : 1);
       if (m.favG === d.genre) m.morale += 1.5;
     }
@@ -2458,7 +2749,7 @@ function advanceWeek() {
     STATE.investor.weeks--;
     if (!STATE.investor.weeks) news(`The investor deal has ended. They took ${money(STATE.investor.paid || 0)} in total.`, '#9aa5b1');
   }
-  if (d && d.kind === 'game') d.weeks = (d.weeks || 0) + 1;
+  STATE.devs.forEach(d => { if (d && d.kind !== 'contract') d.weeks = (d.weeks || 0) + 1; });
   hardwareWeek();
   storeWeek();
   engineWeek();
@@ -2565,7 +2856,7 @@ function hireWalkIn(replaceId) {
   if (STATE.gold < w.fee) { playSound('error'); news('Not enough money for the signing fee.', '#ef476f'); return; }
   if (replaceId) letGo(replaceId);
   spend(w.fee, 'Staff');
-  const c = w.c; c.id = STATE.nextId++; normStaff(c); STATE.team.push(c); STATE.walkIn = null;
+  const c = w.c; c.id = STATE.nextId++; normStaff(c); c.team = STATE.focus || 0; STATE.team.push(c); STATE.walkIn = null;
   computeMods(); playSound('fanfare'); news(`${c.name} joined! What a coup.`, '#ffd166');
   renderStaff(); checkMilestones(); save();
 }
@@ -2682,6 +2973,8 @@ function monthEnd() {
   });
   rivalsTick();
   engineMonth();
+  subsidiaryMonth();
+  checkLegacy();
   if (roomLv('rnd') && STATE.cal.m % 3 === 1) { STATE.rp += roomLv('rnd'); news(`R&D Lab delivered +${roomLv('rnd')} RP this quarter`, '#7cc8ff'); }
   checkMilestones();
   const nextM = STATE.cal.m % 12 + 1;
@@ -2704,7 +2997,9 @@ function yearEnd() {
     showModal(`<h3>🧾 Year ${ty} Tax Bill</h3><div class="note">Operating profit for Year ${ty}: <b class="good">${money(tprof)}</b><br>Corporate tax at ${Math.round(taxRate() * 100)}%: <b class="bad">${money(tax)}</b><br>${hasExec('cfo') ? 'Your CFO kept the rate low.' : 'A CFO (Biz tab) would cut the rate to 8%.'}</div>`);
   }
   const best = STATE.yearBest; STATE.yearBest = null;
-  const rTop = STATE.rivals.reduce((a, r) => (r.yearBest || 0) > (a ? a.yearBest : 0) ? r : a, null);
+  const rTop = STATE.rivals.filter(r => !r.owned).reduce((a, r) => (r.yearBest || 0) > (a ? a.yearBest : 0) ? r : a, null);
+  STATE.topYears = STATE.rivals.every(r => r.owned || STATE.fans > r.fans) ? (STATE.topYears || 0) + 1 : 0; STATE.topBest = Math.max(STATE.topBest || 0, STATE.topYears);
+  if ((STATE.cal.y - 1) % 10 === 0 && STATE.cal.y > 1) legacyReview((STATE.cal.y - 1) / 10);
   const rScore = rTop ? rTop.yearBest || 0 : 0;
   STATE.rivals.forEach(r => { r.yearBest = 0; r.skill += 0.4; });
   const yr = STATE.cal.y - 1;
@@ -2727,7 +3022,7 @@ function gameOver() {
   STATE.over = true;
   try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
   showModal(`<h3>Bankrupt</h3><div class="note">Three months in the red and the bank has called in the loan. Your studio released ${STATE.history.length} game(s) with ${fmt(STATE.totalDownloads)} total downloads.</div>`,
-    [{ label: 'Start a New Studio', cls: 'btn-accent', action: () => { STATE = newGame(); afterReset(); } }]);
+    [{ label: 'Start a New Studio', cls: 'btn-accent', action: () => { STATE = attachDevs(applyLegacy(newGame())); afterReset(); } }]);
 }
 
 
@@ -2748,10 +3043,12 @@ function suggestTitle(g, t) {
   return `${t} ${g}`.slice(0, 24);
 }
 function rollTitle() {
+  if (isSoftMode()) { $('inp-title').value = softTitle($('sel-genre').value); playSound('click'); return; }
   const g = $('sel-genre').value, t = $('sel-theme').value;
   if (g && t) { $('inp-title').value = suggestTitle(g, t); playSound('click'); }
 }
 function refreshTitleHint() {
+  if (isSoftMode()) { $('inp-title').placeholder = softTitle($('sel-genre').value); return; }
   const g = $('sel-genre').value, t = $('sel-theme').value;
   if (g && t && !$('sel-seq').value) $('inp-title').placeholder = suggestTitle(g, t);
 }
@@ -2825,7 +3122,7 @@ function renderPrio() {
   const known = AREAS.filter((a, i) => ins[i]).length;
   $('prio-box').innerHTML = `<div class="row"><span class="win-t">Design points</span><span class="mini ${left ? 'gold' : 'muted'}">${left} of ${cap} left</span></div>` +
     `<div class="mini muted">${esc(g)} needs ${reqTot} points${BUDGET_PTS[b] ? ` · ${BUDGETS[b].n} budget ${BUDGET_PTS[b] > 0 ? '+' : ''}${BUDGET_PTS[b]}` : ''}${ml ? ` · Meeting Room +${ml}` : ''}${known < 6 ? ` · ${known}/6 needs known` : ''}</div>` +
-    AREAS.map((a, i) => {
+    (isSoftMode() ? SOFT_STATS : AREAS).map((a, i) => {
       const lv = ins[i], need = lv ? REQ[lv] : 0, v = STATE.prio[i];
       const pips = [0, 1, 2, 3, 4].map(j => `<i class="pip ${j < v ? (need ? (j < need ? 'met' : 'extra') : 'on') : (j < need ? 'need' : '')}"></i>`).join('');
       return `<div class="prio-row"><span>${a}${lv ? ` <span class="chip ${lv === 'H' ? 'chip-gold' : lv === 'L' ? 'chip-bad' : ''}">${lv} ${need}</span>` : ' <span class="mini muted">?</span>'}</span>` +
@@ -2849,7 +3146,7 @@ function gradeOf(r) { return r >= 1.4 ? 'S' : r >= 1.15 ? 'A' : r >= 0.95 ? 'B' 
 function staffSkill(m, k, genre) { return m.s[k] * (1 + 0.04 * Math.min(5, (m.gx && m.gx[genre]) || 0)) * (m.favG === genre ? 1.08 : 1); }
 function postsOf(d, id) { return d && d.assign ? IDX.filter(k => d.assign[k] === id) : []; }
 function autoAssign(d) {
-  const avail = STATE.team.filter(m => m.vac <= 0);
+  const avail = teamStaff(d.team || 0).filter(m => m.vac <= 0);
   const order = IDX.slice().sort((a, b) => G[d.genre].w[b] - G[d.genre].w[a]);
   const used = new Set(), as = [0, 0, 0, 0, 0, 0];
   order.forEach(k => {
@@ -2862,11 +3159,11 @@ function autoAssign(d) {
   return { as, lead: lead ? lead.id : 0 };
 }
 function assignModal(d) {
-  const avail = STATE.team.filter(m => m.vac <= 0), auto = autoAssign(d);
-  const opt = (k, sel) => '<option value="0">— nobody —</option>' + avail.map(m => `<option value="${m.id}" ${m.id === sel ? 'selected' : ''}>${esc(m.name)} · ${k < 0 ? staffTitle(m) : STATS[k] + ' ' + Math.round(staffSkill(m, k, d.genre))}${m.favG === d.genre ? ' ♥' : ''}</option>`).join('');
-  showModal(`<h3>Staff the Project</h3><div class="note mini">Six posts, one per game stat. Post owners do most of the work on their area, with a 30% bonus; one person on two posts is stretched. Their skill sets that area's grade, and critics punish weak areas. ♥ means they love ${esc(d.genre)}. Staff get better at genres they have shipped before. The director is best as a Planner.</div>
+  const avail = teamStaff(d.team || 0).filter(m => m.vac <= 0), auto = autoAssign(d);
+  const opt = (k, sel) => '<option value="0">— nobody —</option>' + avail.map(m => `<option value="${m.id}" ${m.id === sel ? 'selected' : ''}>${esc(m.name)} · ${k < 0 ? staffTitle(m) : statNames(d)[k] + ' ' + Math.round(staffSkill(m, k, d.genre))}${m.favG === d.genre ? ' ♥' : ''}</option>`).join('');
+  devModal(d, `<h3>Staff the Project</h3><div class="note mini">Six posts, one per game stat. Post owners do most of the work on their area, with a 30% bonus; one person on two posts is stretched. Their skill sets that area's grade, and critics punish weak areas. ♥ means they love ${esc(d.genre)}. Staff get better at genres they have shipped before. The director is best as a Planner.</div>
     <label>Director</label><select id="as-dir" onchange="assignPreview()">${opt(-1, auto.lead)}</select>
-    ${SECTIONS.map((sc, k) => `<label>${sc.n} · <span style="color:${STAT_COLORS[k]}">${STATS[k]}</span></label><select id="as-${k}" onchange="assignPreview()">${opt(k, auto.as[k])}</select>`).join('')}
+    ${SECTIONS.map((sc, k) => `<label>${sc.n} · <span style="color:${STAT_COLORS[k]}">${statNames(d)[k]}</span></label><select id="as-${k}" onchange="assignPreview()">${opt(k, auto.as[k])}</select>`).join('')}
     <div id="as-prev" class="note mini"></div>`,
     [{ label: 'Confirm team', cls: 'btn-accent', action: confirmAssign }], assignPreview);
 }
@@ -3355,6 +3652,7 @@ function evRumour() {
   showModal(`<h3>📰 Industry rumour</h3><div class="note">An insider says the next <b>${esc(LEGENDS[i].ref)}</b> will be:<br><br><b class="gold">${legendMask(i)}</b><br><br>Rumours are saved in the Lab under Legendary combos.</div>`);
 }
 STUDIO_EVENTS.push({ w: 3, c: () => LEGENDS.some(L => !STATE.legends[legKeyOf(L)]), f: evRumour });
+STUDIO_EVENTS.push({ w: 1, c: () => STATE.rank >= 10 && STATE.rivals.filter(r => !r.owned).length >= 2, f: evMerger });
 STUDIO_EVENTS.push({ w: 2, c: () => STATE.engine && STATE.engine.lic && STATE.engine.lic.studios >= 2, f: evEngineHit });
 function legendsHtml() {
   const found = LEGENDS.filter(L => STATE.legends[legKeyOf(L)]);
@@ -3365,6 +3663,143 @@ function legendsHtml() {
     (found.length + hinted.length === 0 ? '<div class="muted mini">None found yet.</div>' : '');
 }
 
+
+/* ---------- End game ---------- */
+const ACQ_RANK = 12;
+function acqPrice(r) { return Math.round(Math.max(1000, r.fans) * 12 / 100000) * 100000; }
+function acqIncome(r) { return Math.round(Math.pow(Math.max(1, r.fans), 0.9) * 1.2); }
+function acquireRival(n) {
+  const r = STATE.rivals.find(x => x.n === n); if (!r || r.owned) return;
+  if (STATE.rank < ACQ_RANK) { playSound('error'); toast(`Acquisitions unlock at studio Rank ${ACQ_RANK}.`, '#ff6b7d'); return; }
+  if (STATE.fans < r.fans * 1.5) { playSound('error'); toast(`${r.n}'s board won't sell until you have 1.5× their fans.`, '#ff6b7d'); return; }
+  const price = acqPrice(r);
+  showModal(`<h3>Acquire ${esc(r.n)}?</h3><div class="note">${esc(r.n)} has ${fmt(r.fans)} fans. Buying it costs <b class="gold">${money(price)}</b>. It becomes your subsidiary: it keeps making games, pays you about <b>${money(acqIncome(r))}</b> a month, sends some of its fans your way, and stops competing for awards.</div>`,
+    [{ label: `Buy for ${money(price)}`, cls: 'btn-accent', disabled: STATE.gold < price, action: () => {
+      if (!spend(price, 'Acquisitions')) return;
+      r.owned = true; r.ownedSince = STATE.cal.y; STATE.fans += Math.round(r.fans * 0.1);
+      playSound('fanfare'); news(`${r.n} is now part of your studio group!`, '#ffd166'); renderMarket(); checkMilestones(); save();
+    } }, { label: 'Not now' }]);
+}
+function subsidiaryMonth() {
+  STATE.rivals.forEach(r => { if (!r.owned) return; const inc = acqIncome(r); earn(inc, 'Subsidiaries'); STATE.fans += Math.round(r.fans * 0.002); });
+}
+const LEGACY_GOALS = [
+  { id: 'goty5', n: 'Dynasty', d: 'Win Game of the Year 5 times', lp: 3, t: s => (s.awards.goty || 0) >= 5 },
+  { id: 'hof10', n: 'Hall of Famer x10', d: 'Release 10 games scoring 32+', lp: 2, t: s => (s.hofCount || 0) >= 10 },
+  { id: 'perfect', n: 'Masterpiece', d: 'Release a perfect 40/40 game', lp: 3, t: s => s.bestScore >= 40 },
+  { id: 'aaa36', n: 'Blockbuster Hit', d: 'Release an AAA game scoring 36+', lp: 3, t: s => (s.aaaBest || 0) >= 36 },
+  { id: 'legends20', n: 'Living History', d: 'Hit 20 legendary combos', lp: 3, t: s => Object.keys(s.legends || {}).length >= 20 },
+  { id: 'fans100m', n: 'Household Name', d: 'Reach 100,000,000 fans', lp: 3, t: s => s.fans >= 1e8 },
+  { id: 'value1b', n: 'Billion-Dollar Company', d: 'Reach a company value of $1,000,000,000', lp: 3, t: () => companyValue() >= 1e9 },
+  { id: 'top3', n: 'Undisputed Leader', d: 'Finish 3 years in a row as #1 in the industry', lp: 3, t: s => (s.topBest || 0) >= 3 },
+  { id: 'console10m', n: 'Console King', d: 'Sell 10,000,000 units of one console', lp: 2, t: s => s.ownPlats.some(o => o.installed >= 1e7) },
+  { id: 'store10m', n: 'Storefront Empire', d: 'Reach 10,000,000 store players', lp: 2, t: s => !!(s.store && s.store.users >= 1e7) },
+  { id: 'eng20', n: 'Engine of the Industry', d: 'Have 20 studios licensing your engine', lp: 2, t: s => !!(s.engine && s.engine.lic && s.engine.lic.studios >= 20) },
+  { id: 'engmax', n: 'Industry Standard', d: 'Fully upgrade your engine to v5', lp: 2, t: () => engMaxed() },
+  { id: 'soft36', n: 'Killer App', d: 'Release software scoring 36+', lp: 2, t: s => (s.softHistory || []).some(h => h.total >= 36) },
+  { id: 'teams5', n: 'Studio Empire', d: 'Run 5 teams at once', lp: 2, t: s => (s.teams || []).length >= 5 },
+  { id: 'ghq', n: 'Global Giant', d: 'Move to the Global HQ', lp: 2, t: s => s.floor >= 6 },
+  { id: 'buyall', n: 'Consolidation', d: 'Acquire every rival studio', lp: 3, t: s => s.rivals.every(r => r.owned) }
+];
+const LEGACY_PERKS = [
+  { id: 'seed', n: 'Seed funding', lp: 2, d: 'Start every new studio with $50,000 more' },
+  { id: 'rp', n: 'Research head start', lp: 1, d: 'Start with 20 extra research points' },
+  { id: 'fans', n: 'Loyal fanbase', lp: 2, d: 'Start with 3,000 fans who follow you' },
+  { id: 'contacts', n: 'Industry contacts', lp: 2, d: 'Start at Rank 2 with every publisher liking you more' },
+  { id: 'notes', n: 'Old notebooks', lp: 3, d: 'Keep your combo notebook, hook notes and genre insights' },
+  { id: 'vet', n: 'Veteran co-founder', lp: 3, d: 'Start with a Lv8 Game Director with exceptional potential' },
+  { id: 'engine', n: 'Engine IP', lp: 3, d: 'Start with a ready-to-use v1 engine of your own' },
+  { id: 'office', n: 'Downtown start', lp: 3, d: 'Start in the Downtown Office with room for two teams' }
+];
+const LEGACY_KEY = 'pocketDevStudio_legacy';
+function loadLegacy() { try { return Object.assign({ lp: 0, gen: 1, perks: {}, hall: [] }, JSON.parse(localStorage.getItem(LEGACY_KEY) || '{}')); } catch (e) { return { lp: 0, gen: 1, perks: {}, hall: [] }; } }
+function saveLegacy(L) { try { localStorage.setItem(LEGACY_KEY, JSON.stringify(L)); } catch (e) {} }
+function runLP() { return LEGACY_GOALS.reduce((a, g) => a + ((STATE.legacyDone || {})[g.id] ? g.lp : 0), 0); }
+function checkLegacy() {
+  if (!STATE.legacyDone) STATE.legacyDone = {};
+  LEGACY_GOALS.forEach(g => {
+    if (STATE.legacyDone[g.id]) return;
+    let ok = false; try { ok = g.t(STATE); } catch (e) {}
+    if (!ok) return;
+    STATE.legacyDone[g.id] = STATE.cal.y;
+    playSound('fanfare');
+    showModal(`<h3>🌟 Legacy goal: ${g.n}</h3><div class="note" style="text-align:center;">${g.d}<br><br>+<b class="gold">${g.lp} Legacy Points</b> for this studio's legacy.<br><span class="muted">Legacy Points carry over when you found a new studio.</span></div>`);
+  });
+}
+function legacyScore() {
+  return Math.round(runLP() * 100 + Math.log10(Math.max(10, companyValue())) * 40 + (STATE.awards.goty || 0) * 60 + (STATE.hofCount || 0) * 15 + Object.keys(STATE.legends || {}).length * 10 + STATE.rank * 10);
+}
+function legacyGrade(sc) { return sc >= 2600 ? 'S' : sc >= 1900 ? 'A' : sc >= 1300 ? 'B' : sc >= 800 ? 'C' : 'D'; }
+function legacyReview(decade) {
+  const sc = legacyScore(), gr = legacyGrade(sc), done = LEGACY_GOALS.filter(g => (STATE.legacyDone || {})[g.id]).length;
+  playSound('fanfare');
+  showModal(`<h3>📜 ${decade * 10}-Year Legacy Review</h3><div class="big">${gr}</div><div class="note" style="text-align:center;">Legacy score <b class="gold">${fmt(sc)}</b><br>
+    ${STATE.releasedCount} games · ${STATE.softCount || 0} software · ${STATE.awards.goty || 0}× Game of the Year · company value ${money(companyValue())}<br>
+    Legacy goals ${done}/${LEGACY_GOALS.length} (${runLP()} LP)</div>
+    <div class="note mini">${decade >= 2 ? 'You can keep building this studio for as long as you like, or retire and found a new studio from the Studio tab, carrying your Legacy Points into permanent bonuses.' : 'Keep going: legacy goals, acquisitions and a second decade await. From Year 15 you can also retire and found a new studio with permanent bonuses.'}</div>`,
+    [{ label: 'Onwards', cls: 'btn-accent' }]);
+}
+function canRetire() { return STATE.cal.y >= 15 || runLP() >= 8; }
+function legacyHtml() {
+  const L = loadLegacy(), lp = runLP(), done = STATE.legacyDone || {};
+  let h = `<div class="sec">Legacy</div><div class="note mini">Late-game goals for a studio that has everything. Each one earns Legacy Points (LP). Retire to found a new studio and spend banked LP on permanent bonuses for every studio after it.</div>
+    <div class="row"><span>Legacy score <b class="gold">${fmt(legacyScore())}</b> (${legacyGrade(legacyScore())})</span><span class="mini">This studio ${lp} LP · banked ${L.lp} LP · generation ${L.gen}</span></div>`;
+  h += LEGACY_GOALS.map(g => `<div class="row mini ${done[g.id] ? 'ms-done' : 'muted'}"><span>${done[g.id] ? '🌟' : '⬜'} ${g.n}: ${g.d}</span><span>${g.lp} LP</span></div>`).join('');
+  const owned = LEGACY_PERKS.filter(x => L.perks[x.id]);
+  if (owned.length) h += `<div class="mini">Permanent bonuses: ${owned.map(x => `<span class="chip chip-gold">${x.n}</span>`).join('')}</div>`;
+  if (L.hall.length) h += `<div class="mini muted">Past studios: ${L.hall.slice(-5).map(x => `${esc(x.n)} (${x.years} yrs, ${x.grade})`).join(' · ')}</div>`;
+  h += `<button ${canRetire() ? '' : 'disabled'} data-why="You can retire from Year 15, or earlier once this studio has 8 Legacy Points." onclick="retireModal()">🏁 Retire and found a new studio<br><span class="muted">Banks this studio's ${lp} LP and starts again with your bonuses</span></button>`;
+  return h;
+}
+function retireModal() {
+  if (!canRetire()) return;
+  const lp = runLP(), sc = legacyScore();
+  showModal(`<h3>Retire and found a new studio?</h3><div class="note">This studio's story ends with a legacy grade of <b>${legacyGrade(sc)}</b>. Its <b class="gold">${lp} LP</b> go into your legacy bank, then you spend LP on permanent bonuses and start again from Year 1.<br><br><span class="bad">This studio's save is replaced. This can't be undone.</span></div>`,
+    [{ label: 'Retire', cls: 'btn-danger', action: () => {
+      const L = loadLegacy();
+      L.lp += lp; L.hall.push({ n: `Studio ${L.gen}`, years: STATE.cal.y - 1, grade: legacyGrade(sc), score: sc, best: STATE.bestScore });
+      L.gen++;
+      L.carry = { combos: STATE.combos, hookNotes: STATE.hookNotes, insights: STATE.insights, softFits: STATE.softFits || {} };
+      saveLegacy(L); perkShop();
+    } }, { label: 'Keep playing' }]);
+}
+function perkShop() {
+  const L = loadLegacy();
+  const rows = LEGACY_PERKS.map(x => L.perks[x.id] ? `<div class="row mini"><span>✅ <b>${x.n}</b>: ${x.d}</span><span class="good">Owned</span></div>`
+    : `<button class="opt" ${L.lp < x.lp ? 'disabled' : ''} onclick="buyLegacy('${x.id}')"><b>${x.n}</b> · <span class="gold">${x.lp} LP</span><br><span class="muted">${x.d}</span></button>`).join('');
+  showModal(`<h3>Legacy bonuses</h3><div class="note">Banked: <b class="gold">${L.lp} LP</b>. Bonuses are permanent and apply to every new studio.</div>${rows}`,
+    [{ label: 'Found the new studio 🚀', cls: 'btn-accent', action: () => newStudio() }]);
+}
+function buyLegacy(id) {
+  const L = loadLegacy(), x = LEGACY_PERKS.find(y => y.id === id);
+  if (!x || L.perks[id] || L.lp < x.lp) return;
+  L.lp -= x.lp; L.perks[id] = true; saveLegacy(L); playSound('level'); closeModal(); perkShop();
+}
+function applyLegacy(st) {
+  const L = loadLegacy(), pk = L.perks || {};
+  if (pk.seed) st.gold += 50000;
+  if (pk.rp) st.rp += 20;
+  if (pk.fans) st.fans += 3000;
+  if (pk.contacts) { st.rank = Math.max(st.rank, 2); for (const k in st.pubRep) st.pubRep[k] = Math.min(100, st.pubRep[k] + 20); }
+  if (pk.notes && L.carry) { st.combos = L.carry.combos || {}; st.hookNotes = L.carry.hookNotes || {}; st.insights = L.carry.insights || {}; st.softFits = L.carry.softFits || {}; }
+  if (pk.vet) { const v = makeStaff(pick(NAMES), 'Planner', [70, 55, 40, 40, 45, 40], 52, null, ['Visionary'], 5); v.id = st.nextId++; v.lv = 8; v.senior = true; v.salary = Math.round(v.salary * 1.4 / 50) * 50; st.team.push(v); }
+  if (pk.engine) st.engine = { name: engName(), v: 1, mods: Object.fromEntries(ENGINE_MODS.map(md => [md.id, 1])), ready: true, job: null, lastV: 1, lic: { open: false, tier: 1, studios: 0, total: 0 }, games: 0 };
+  if (pk.office) st.floor = 2;
+  st.legacyGen = L.gen;
+  return st;
+}
+function newStudio() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  STATE = attachDevs(applyLegacy(newGame()));
+  afterReset();
+  showModal(`<h3>A new beginning</h3><div class="note" style="text-align:center;">Generation ${STATE.legacyGen || 1} of your studio legacy starts today. Your permanent bonuses are in place.</div>`);
+}
+function evMerger() {
+  const free = STATE.rivals.filter(r => !r.owned); if (free.length < 2) return;
+  const a = free[0], b = free[1];
+  a.fans += Math.round(b.fans * 0.6); a.skill += 1; b.fans = Math.round(b.fans * 0.5);
+  news(`Industry shake-up: ${a.n} absorbed part of ${b.n}. ${a.n} is now stronger than ever.`, '#ef476f');
+}
 /* ---------- Digital storefront ---------- */
 const STORE_RANK = 6, STORE_BASE = 90000;
 const STORE_FEATS = {
@@ -3882,6 +4317,8 @@ function hireCandidate(i, replaceId) {
   spend(fee, 'Staff');
   c.id = STATE.nextId++;
   normStaff(c);
+  c.team = teamStaff(STATE.focus || 0).length < TEAM_MAX ? (STATE.focus || 0) : STATE.teams.findIndex((x, t) => teamStaff(t).length < TEAM_MAX);
+  if (c.team < 0) c.team = 0;
   STATE.team.push(c);
   STATE.candidates.splice(i, 1);
   computeMods();
@@ -3955,9 +4392,9 @@ function closeRoom(id) {
 function toggleSound() { STATE.settings.sound = !STATE.settings.sound; renderStudio(); save(); }
 function resetGame() {
   showModal('<h3>Reset Save?</h3><div class="note">This wipes your studio and starts from Year 1.</div>',
-    [{ label: 'Wipe and Restart', cls: 'btn-danger', action: () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} STATE = newGame(); afterReset(); } }, { label: 'Cancel' }]);
+    [{ label: 'Wipe and Restart', cls: 'btn-danger', action: () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} STATE = attachDevs(applyLegacy(newGame())); afterReset(); } }, { label: 'Cancel' }]);
 }
-function afterReset() { rebuildPlatforms(); computeMods(); projectiles = []; particles = []; ticker = []; refreshDevOptions(); renderDevMode(); renderAll(); save(); }
+function afterReset() { attachDevs(STATE); rebuildPlatforms(); computeMods(); projectiles = []; particles = []; ticker = []; refreshDevOptions(); renderDevMode(); renderAll(); save(); }
 function cycleSpeed() {
   const order = [1, 2, 4, 0, 0.5];
   const i = order.indexOf(STATE.speed);
@@ -4001,21 +4438,25 @@ function renderSegs() {
   };
   const cs = curSize();
   $('seg-size').innerHTML = SIZES.map((z, i) => `<button class="${i === cs ? 'on' : ''}" ${STATE.rank < z.rank ? 'disabled' : ''} data-why="${z.n} games unlock at studio Rank ${z.rank}." onclick="setSeg('sel-size',${i})">${z.n}</button>`).join('');
-  mk('seg-budget', 'sel-budget', BUDGETS); mk('seg-aud', 'sel-aud', AUDIENCES); mk('seg-monet', 'sel-monet', MONET);
+  mk('seg-budget', 'sel-budget', BUDGETS); mk('seg-aud', 'sel-aud', AUDIENCES); mk('seg-monet', 'sel-monet', isSoftMode() ? SOFT_MODELS : MONET);
 }
 function setSeg(sel, i) { $(sel).value = String(i); playSound('click'); updatePreview(); }
 function refreshDevOptions() {
   const keep = { g: $('sel-genre').value, t: $('sel-theme').value, p: $('sel-platform').value, pub: $('sel-pub').value };
-  $('sel-genre').innerHTML = STATE.unlocked.g.map(n => `<option value="${esc(n)}">${esc(n)}${lvlOf('g', n) ? ' ★' + lvlOf('g', n) : ''}</option>`).join('');
-  $('sel-theme').innerHTML = STATE.unlocked.t.map(n => `<option value="${esc(n)}">${esc(n)}${lvlOf('t', n) ? ' ★' + lvlOf('t', n) : ''}</option>`).join('');
+  const soft = isSoftMode(), gList = soft ? SOFT_TYPES.filter(x => STATE.rank >= x.rank).map(x => x.n) : STATE.unlocked.g, tList = soft ? SOFT_MARKETS.filter(x => STATE.rank >= x.rank).map(x => x.n) : STATE.unlocked.t;
+  $('sel-genre').innerHTML = gList.map(n => `<option value="${esc(n)}">${esc(n)}${lvlOf('g', n) ? ' ★' + lvlOf('g', n) : ''}</option>`).join('') +
+    (soft ? SOFT_TYPES.filter(x => STATE.rank < x.rank).map(x => `<option disabled>🔒 ${esc(x.n)} (Rank ${x.rank})</option>`).join('') : '');
+  $('sel-theme').innerHTML = tList.map(n => `<option value="${esc(n)}">${esc(n)}${!soft && lvlOf('t', n) ? ' ★' + lvlOf('t', n) : ''}</option>`).join('') +
+    (soft ? SOFT_MARKETS.filter(x => STATE.rank < x.rank).map(x => `<option disabled>🔒 ${esc(x.n)} (Rank ${x.rank})</option>`).join('') : '');
+  applyKindUI();
   $('sel-platform').innerHTML = PLATFORMS.filter(platLive).map(p => platformOpen(p)
     ? `<option value="${p.n}">${p.n} · ${p.store ? '★ your store' : p.own ? '★ your console' : money(p.fee) + ' fee'}</option>`
     : `<option value="${p.n}" disabled>🔒 ${p.n} (${STATE.rank < p.rank ? 'Rank ' + p.rank : 'needs licence'})</option>`).join('');
   $('sel-pub').innerHTML = PUBLISHERS.map(pb => pubAvailable(pb)
     ? `<option value="${pb.n}">${pb.n}${pb.adv ? ` · takes ${Math.round(pb.cut * 100)}%` : ''}${STATE.pubBonus === pb.n ? ' · bonus!' : ''}</option>`
     : `<option value="${pb.n}" disabled>🔒 ${pb.n} (${STATE.rank < pb.rank ? 'Rank ' + pb.rank : 'not signing you'})</option>`).join('');
-  if (keep.g && STATE.unlocked.g.includes(keep.g)) $('sel-genre').value = keep.g;
-  if (keep.t && STATE.unlocked.t.includes(keep.t)) $('sel-theme').value = keep.t;
+  if (keep.g && gList.includes(keep.g)) $('sel-genre').value = keep.g;
+  if (keep.t && tList.includes(keep.t)) $('sel-theme').value = keep.t;
   if (keep.p && P[keep.p] && platformOpen(P[keep.p])) $('sel-platform').value = keep.p;
   else { const first = (platformOpen(P['Smartphone']) && P['Smartphone']) || PLATFORMS.find(platformOpen); $('sel-platform').value = first ? first.n : ''; }
   $('sel-pub').value = keep.pub && PUB[keep.pub] && pubAvailable(PUB[keep.pub]) ? keep.pub : 'Self-publish';
@@ -4033,6 +4474,7 @@ function updatePreview() {
   renderSegs();
   if (g + '|' + t !== lastGT) { lastGT = g + '|' + t; refreshTitleHint(); refreshHookOptions(); }
   renderPrio(); renderPorts();
+  if (isSoftMode()) { $('dev-preview').innerHTML = softPreviewHtml(); return; }
   const hk = HOOK[$('sel-hook') ? $('sel-hook').value : ''];
   if ($('hook-info')) {
     const hkey = hk ? hk.n + '|' + g : '', hknown = hk && hkey in STATE.hookNotes;
@@ -4056,7 +4498,7 @@ function updatePreview() {
   const si = curSize(), z = SIZES[si], ek = engineKeyOk($('sel-engine').value), efx = engineFx(ek, si);
   const cost = projectCost(g, bi, plat, ports, hk ? hk.n : '', si, ek), adv = pubAdvance(pb, g);
   const hkHp = hk ? hk.hp : 1, wk = Math.max(1, Math.round(projectWork(si, allP, bi, STATE.rank) * hkHp * efx.hp * (hasExec('producer') ? 0.9 : 1) * 0.92 / teamWeekly()));
-  const avail = STATE.team.filter(m => m.vac <= 0).length;
+  const avail = teamStaff(STATE.focus || 0).filter(m => m.vac <= 0).length;
   const ins = STATE.insights[g] || {}, nIns = Object.keys(ins).length, pe = prioEval(g, STATE.prio);
   const warn = AREAS.map((a, i) => ins[i] && STATE.prio[i] < REQ[ins[i]] ? `<span class="bad">${a} needs ${REQ[ins[i]]}</span>` : ins[i] === 'L' && STATE.prio[i] > 1 ? `<span class="bad">${a} points wasted</span>` : '').filter(Boolean);
   const fitLbl = pe.short ? (pe.short >= 3 ? '<b class="bad">Poor</b>' : '<b>Weak</b>') : pe.extra - pe.wasted >= 2 ? '<b class="gold">Excellent</b>' : '<b class="good">Good</b>';
@@ -4083,17 +4525,18 @@ function updatePreview() {
 }
 function renderDevMode() {
   const d = STATE.activeDev;
+  renderTeamBar();
   $('dev-setup').style.display = d ? 'none' : 'flex';
   $('dev-progress').style.display = d ? 'flex' : 'none';
-  $('dev-status').textContent = d ? (d.kind === 'contract' ? 'Contract: ' : 'Making: ') + d.title : 'Studio idle';
-  $('btn-boost').disabled = !(d && d.kind === 'game' && d.phase === 3 && !d.boostUsed);
+  $('dev-status').textContent = (teamCount() > 1 ? teamName(STATE.focus || 0) + ': ' : '') + (d ? (d.kind === 'contract' ? 'Contract: ' : 'Making: ') + d.title : 'idle');
+  $('btn-boost').disabled = !(d && d.kind !== 'contract' && d.phase === 3 && !d.boostUsed);
   if (!d) updatePreview();
   updateDevPanel();
   renderDevControls();
 }
 function renderDevControls() {
   const d = STATE.activeDev, el = $('dev-controls');
-  if (!d || d.kind !== 'game') { el.innerHTML = ''; return; }
+  if (!d || d.kind === 'contract') { el.innerHTML = ''; return; }
   el.innerHTML = `<div class="mini muted">Work pace</div>
     <div class="grid3">${PACE.map((p, i) => `<button class="btn-sm ${d.pace === i ? 'btn-accent' : ''}" onclick="setPace(${i})">${p.n}</button>`).join('')}</div>
     <div class="mini muted">${PACE[d.pace].d}</div>
@@ -4111,10 +4554,10 @@ function updateDevPanel() {
     $('dev-stats').innerHTML = '';
     return;
   }
-  const wl = d.work ? Math.max(0, Math.ceil(workLeft(d) / teamWeekly())) : 0;
+  const wl = d.work ? Math.max(0, Math.ceil(workLeft(d) / teamWeekly(d.team || 0))) : 0;
   $('dev-info').innerHTML = `<b>${esc(d.phaseName)}</b> · ${sizeOf(d).n} · week ${d.weeks || 0}${d.work && d.phase <= 3 ? ` · about ${wl} wk${wl === 1 ? '' : 's'} to go` : ''}<br>${esc(d.genre)} × ${esc(d.theme)} · ${platsOf(d).map(x => esc(x.n)).join(' + ')}${d.hook ? ' · ' + esc(d.hook) : ''}<br>Bugs found: <span class="${d.bugs > 6 ? 'bad' : ''}">${d.bugs}</span> · Hype ${Math.round(d.hype || 0)}${d.lead && findStaff(d.lead) ? ' · Director ' + esc(findStaff(d.lead).name) : ''}${d.phase === 3 && !d.boostUsed ? ' · <span class="gold">Boost ready!</span>' : ''}`;
   const max = Math.max(60, ...d.stats);
-  let html = STATS.map((s, i) => {
+  let html = statNames(d).map((s, i) => {
     return `<div class="statrow"><span style="color:${STAT_COLORS[i]}">${s}</span><div class="bar"><div style="background:${STAT_COLORS[i]};width:${d.stats[i] / max * 100}%"></div></div><span>${Math.round(d.stats[i])}</span></div>` +
       '';
   }).join('') + `<div class="statrow"><span style="color:#ff4d6d">Hype</span><div class="bar"><div style="background:#ff4d6d;width:${Math.min(100, (d.hype || 0))}%"></div></div><span>${Math.round(d.hype || 0)}</span></div>`;
@@ -4130,13 +4573,14 @@ function updateDevPanel() {
 }
 function renderLive() {
   const slots = liveSlots();
-  let html = `<div class="row"><span class="sec">Live Operations</span><span class="muted">${STATE.live.length}/${slots} slots</span></div>
-    <div class="note">Released games earn weekly from their players. Events boost income for 4 weeks, updates improve retention, ads bring new players.</div>`;
+  const nG = STATE.live.filter(g => g.kind !== 'app').length, nA = STATE.live.length - nG;
+  let html = `<div class="row"><span class="sec">Live Operations</span><span class="muted">Games ${nG}/${slots} · Software ${nA}/${slots}</span></div>
+    <div class="note">Released games and software earn weekly from their players. Events boost income for 4 weeks, updates improve retention, ads bring new players.</div>`;
   STATE.live.forEach(g => {
     const weekly = weeklyRev(g);
-    const lk = hasTech('liveops') ? 0.7 : 1, evCost = Math.round((2000 + g.users * 0.3) * lk), upCost = Math.round((3000 + g.updates * 1500) * lk), adCost = Math.round(5000 * (1 + 0.2 * (STATE.rank - 1)));
+    const lk = liveOpsMul(), evCost = Math.round((2000 + g.users * 0.3) * lk), upCost = Math.round((3000 + g.updates * 1500) * lk), adCost = Math.round(5000 * (1 + 0.2 * (STATE.rank - 1)));
     html += `<div class="card">
-      <div class="row"><b>${esc(g.title)}</b><span class="gold">${money(weekly)}/wk</span></div>
+      <div class="row"><b>${g.kind === 'app' ? '💾 ' : '🎮 '}${esc(g.title)}</b><span class="gold">${money(weekly)}/wk</span></div>
       <div class="muted">${(g.plats && g.plats.length > 1 ? g.plats : [g.platform]).map(esc).join(' + ')} · Score ${g.score}/40 · ${g.weeks} wks live${g.cut ? ` · publisher takes ${Math.round(g.cut * 100)}%` : ''}${g.saleWeeks > 0 ? ' · <span class="gold">On sale</span>' : ''}</div>
       <div class="muted">Players ${fmt(g.users)} (peak ${fmt(g.peak)}) · Retention ${(g.ret * 100).toFixed(1)}%${g.event > 0 ? ` · <span class="good">Event ${g.event}w</span>` : ''}</div>
       <div class="btns">
@@ -4146,7 +4590,7 @@ function renderLive() {
         <button class="btn-sm btn-danger" onclick="retireLive(${g.id})">End</button>
       </div></div>`;
   });
-  for (let i = STATE.live.length; i < slots; i++) html += `<div class="card muted" style="opacity:0.6;">Slot ${i + 1}: empty, release a game to fill it</div>`;
+  for (let i = nG; i < slots; i++) html += `<div class="card muted" style="opacity:0.6;">Game slot ${i + 1}: empty, release a game to fill it</div>`;
   $('tab-live').innerHTML = html;
 }
 
@@ -4161,12 +4605,18 @@ function renderStaff() {
       <div class="mini muted">${w.c.role}, ${STAT_AB.map((x, i) => x + ' ' + w.c.s[i]).join(' ')}, ${w.c.traits.join(', ')}, fee ${money(w.fee)}</div>
       <div class="btns"><button class="btn-sm btn-accent" onclick="walkInModal()">Review the offer</button></div></div>`;
   }
+  html += `<div class="sec">Teams (${teamCount()}/${teamSlots()})</div><div class="note mini">Each team works on its own project at the same time: a game, software or a contract. Up to ${TEAM_MAX} staff per team. Extra teams cost ${money(teamUpkeep())}/month each.</div>` +
+    STATE.teams.map((tm, t) => { const d = devOfTeam(t); return `<div class="row card" style="flex-direction:row;border-color:${teamColor(t)}"><span><b style="color:${teamColor(t)}">${esc(teamName(t))}</b> · ${teamStaff(t).length} staff<br><span class="mini muted">${d ? esc(d.title) : 'Idle'}</span></span>
+      <span class="btns"><button class="btn-sm" onclick="switchTab('dev');focusTeam(${t})">Open</button>${t ? `<button class="btn-sm btn-danger" onclick="disbandTeam(${t})">Disband</button>` : ''}</span></div>`; }).join('') +
+    (teamCount() < teamSlots() ? `<button class="btn-accent" ${STATE.gold < teamCost() ? 'disabled' : ''} onclick="foundTeam()">Found ${TEAM_NAMES[teamCount()] || 'a new team'}: ${money(teamCost())}</button>` :
+      `<div class="mini muted">${FLOORS[STATE.floor] ? 'A bigger office has room for more teams.' : 'Your office is at its team limit.'}</div>`);
   STATE.team.forEach(m => {
     const stamPct = m.stam / m.maxStam * 100, mor = Math.round(m.morale), expPct = Math.min(100, m.exp / expNeed(m.lv) * 100);
     const pend = perkPending(m) >= 0;
     const morCol = mor < 30 ? 'var(--danger)' : mor < 60 ? 'var(--gold)' : 'var(--good)';
     html += `<div class="card">
       <div class="row"><b><span style="color:${ROLES[m.role].color}">■</span> ${esc(m.name)}${m.senior ? ' ★' : ''}</b><span>Lv${m.lv}</span></div>
+      ${teamCount() > 1 ? `<div class="row mini"><span style="color:${teamColor(teamOf(m))}">● Team</span><select class="teamsel" onchange="setStaffTeam(${m.id}, this.value)">${STATE.teams.map((x, t) => `<option value="${t}" ${t === teamOf(m) ? 'selected' : ''}>${esc(teamName(t))} (${teamStaff(t).length})</option>`).join('')}</select></div>` : ''}
       <div class="mini">${staffTitle(m)}${m.vac > 0 ? ` · <span class="gold">On vacation (${m.vac}w)</span>` : ''} · Shipped ${m.shipped} · MVP ${m.mvps}${m.hits ? ' · 🏆' + m.hits : ''}</div>
       <div class="mini muted">♥ Loves ${esc(m.favG)}${gxText(m)}${m.bestT ? ' · Best: ' + esc(m.bestT) + ' (' + m.bestS + ')' : ''}</div>
       <div>${m.traits.map(t => `<span class="chip ${TRAITS[t].bad ? 'chip-bad' : ''}">${t}</span>`).join('')}${m.perks.map(pid => `<span class="chip chip-gold">${PERK_INFO[pid].n}</span>`).join('')}</div>
@@ -4195,8 +4645,11 @@ function renderStaff() {
 }
 function renderMarket() {
   const t = yearFrac();
-  const board = STATE.rivals.map(r => ({ n: r.n, fans: r.fans, best: r.yearBest || 0, me: false })).concat([{ n: 'Your studio', fans: STATE.fans, best: STATE.yearBest ? STATE.yearBest.total : 0, me: true }]).sort((a, b) => b.fans - a.fans);
-  let html = `<div class="sec">Industry Ranking</div>` + board.map((r, i) => `<div class="row mini" style="${r.me ? 'color:var(--gold);font-weight:bold;' : ''}"><span>#${i + 1} ${esc(r.n)}</span><span>${fmt(r.fans)} fans · best this year ${r.best || '-'}</span></div>`).join('') +
+  const board = STATE.rivals.map(r => ({ n: r.n, fans: r.fans, best: r.yearBest || 0, me: false, r })).concat([{ n: 'Your studio', fans: STATE.fans, best: STATE.yearBest ? STATE.yearBest.total : 0, me: true }]).sort((a, b) => b.fans - a.fans);
+  let html = `<div class="sec">Industry Ranking</div>` + board.map((x, i) => {
+    const r = x.r, can = r && !r.owned && STATE.rank >= ACQ_RANK;
+    return `<div class="row mini" style="${x.me ? 'color:var(--gold);font-weight:bold;' : ''}"><span>#${i + 1} ${esc(x.n)}${r && r.owned ? ' <span class="good">· yours</span>' : ''}</span><span>${fmt(x.fans)} fans · best ${x.best || '-'}${can ? ` <button class="btn-sm" ${STATE.fans < r.fans * 1.5 || STATE.gold < acqPrice(r) ? 'disabled' : ''} data-why="${STATE.fans < r.fans * 1.5 ? 'Their board will only sell once you have 1.5× their fans.' : ''}" onclick="acquireRival('${esc(r.n)}')">Buy ${money(acqPrice(r))}</button>` : ''}</span></div>`;
+  }).join('') + (STATE.rank >= ACQ_RANK ? '<div class="note mini">Acquired studios become subsidiaries: they pay you every month, send fans your way and stop competing for awards.</div>' : '') +
     `<div class="sec">Industry Calendar</div><div class="note">Month 4: Indie Showcase · Month 8: GameCon · Month 12: Holiday Sale · Year end: Awards${STATE.hypeBank ? `<br>Banked hype for your next project: <b class="gold">${STATE.hypeBank}</b>` : ''}${STATE.pubBonus ? `<br>🤝 Bonus advance waiting with ${esc(STATE.pubBonus)}` : ''}</div>`;
   html += hardwareHtml() + storeHtml();
   html += '<div class="sec">Platforms</div>';
@@ -4273,9 +4726,9 @@ function renderStudio() {
     <div class="note">Rank ${STATE.rank} (${Math.floor(STATE.rankExp / rankNeed() * 100)}% to next)${nextTier ? ` · becomes ${nextTier[1]} at Rank ${nextTier[0]}` : ''}<br>
     Milestones ${msDone}/${MILESTONES.length} · Game of the Year ×${STATE.awards.goty || 0} · Excellence ×${STATE.awards.excellence || 0}</div>
     <div class="sec">Office · ${esc(f.n)}</div>
-    <div class="note">${f.desks} desks · ${f.live} live-game slots · ${rslots} room slots · ${slots} decor spots<br>Rent ${money(f.rent)}/mo · room upkeep ${money(bd['Upkeep'])}/mo · <b>${money(office)}/mo</b> in total</div>`;
+    <div class="note">${esc(f.d)}<br>${f.desks} desks · ${f.teams} team${f.teams > 1 ? 's' : ''} · ${f.live} live slots · ${rslots} room slots · ${slots} decor spots<br>Rent ${money(f.rent)}/mo · room upkeep ${money(bd['Upkeep'])}/mo · <b>${money(office)}/mo</b> in total</div>`;
   html += next
-    ? `<button ${STATE.rank < next.rank || STATE.gold < next.cost ? 'disabled' : ''} data-why="${STATE.rank < next.rank ? 'The ' + next.n + ' needs studio Rank ' + next.rank + '.' : ''}" onclick="upgradeFloor()">Move to the ${next.n}: ${money(next.cost)} (Rank ${next.rank})<br><span class="muted">${next.desks} desks · ${next.live} live slots · ${next.rooms} room slots · ${next.decor} decor spots · rent ${money(next.rent)}</span></button>`
+    ? `<button ${STATE.rank < next.rank || STATE.gold < next.cost ? 'disabled' : ''} data-why="${STATE.rank < next.rank ? 'The ' + next.n + ' needs studio Rank ' + next.rank + '.' : ''}" onclick="upgradeFloor()">Move to the ${next.n}: ${money(next.cost)} (Rank ${next.rank})<br><span class="muted">${esc(next.d)} ${next.desks} desks · ${next.teams} teams · ${next.live} live slots · ${next.rooms} room slots · rent ${money(next.rent)}</span></button>`
     : '<div class="muted">You have the finest office in the industry.</div>';
   html += `<div class="sec">Rooms (${used}/${rslots} slots)</div><div class="note mini">Rooms are where the studio's real strength comes from. Each takes a slot, costs upkeep every month, and can be upgraded to Lv3.</div>`;
   const ids = Object.keys(ROOMS).sort((a, b) => (roomLv(b) > 0) - (roomLv(a) > 0));
@@ -4294,6 +4747,7 @@ function renderStudio() {
     html += `<div class="row card" style="flex-direction:row;"><span><b>${dc.n}</b><br><span class="muted">${dc.d}</span></span>
       ${own ? '<span class="good">Placed</span>' : `<button class="btn-sm btn-accent" ${STATE.decor.length >= slots || STATE.gold < dc.cost ? 'disabled' : ''} data-why="${STATE.decor.length >= slots ? 'Every decor spot in this office is used. Move to a bigger office for more.' : ''}" onclick="buyDecor('${k}')">${money(dc.cost)}</button>`}</div>`;
   }
+  html += legacyHtml();
   html += `<div class="sec">Milestones (${msDone}/${MILESTONES.length})</div>` + MILESTONES.map(m => {
     const r = m.r, rw = [r.gold ? money(r.gold) : '', r.rp ? r.rp + ' RP' : '', r.fans ? fmt(r.fans) + ' fans' : ''].filter(Boolean).join(' + ');
     return `<div class="row mini ${STATE.milestones[m.id] ? 'ms-done' : 'muted'}"><span>${STATE.milestones[m.id] ? '✅' : '⬜'} ${m.n}: ${m.d}</span><span>${rw}</span></div>`;
@@ -4320,7 +4774,7 @@ function txt(s, x, y, color, size, align) {
   ctx.fillStyle = '#000'; ctx.fillText(s, x + 1, y + 1);
   ctx.fillStyle = color || '#fff'; ctx.fillText(s, x, y);
 }
-function deskPos(i) { return i < 5 ? { x: 36 + i * 62, y: 80 } : STATE.floor >= 4 ? { x: 36 + (i - 5) * 62, y: 214 } : { x: 60 + (i - 5) * 67, y: 214 }; }
+function deskPos(i, n) { n = n || 9; return i < 5 ? { x: 36 + i * 62, y: 80 } : n >= 10 ? { x: 36 + (i - 5) * 62, y: 214 } : { x: 60 + (i - 5) * 67, y: 214 }; }
 
 const BUILDINGS = (() => {
   const out = []; let x = 0, seed = 7;
@@ -4386,14 +4840,19 @@ function drawOffice() {
     px('#3d5a80', 0, 46, 320, 194);
     for (let y = 50, r = 0; y < 240; y += 8, r++) for (let x = (r % 2) * 8; x < 320; x += 16) px('#46658f', x, y, 2, 2);
   } else if (fl >= 4) {
-    px('#1d2d44', 0, 0, 320, 44);
-    drawWindow(6, 3, 308, 36, t, '#0d1321');
-    for (let x = 6 + 44; x < 314; x += 44) px('#0d1321', x, 3, 2, 36);
-    px('#3e5c76', 0, 39, 320, 3); px('#0d1321', 0, 42, 320, 4);
-    px('#cfd8dc', 0, 46, 320, 194);
-    for (let y = 46; y < 240; y += 24) px('#b0bec5', 0, y, 320, 1);
-    for (let x = 0; x < 320; x += 40) px('#b0bec5', x, 46, 1, 194);
-    px('#00838f', 92, 112, 136, 70); px('#00acc1', 95, 115, 130, 64); px('#80deea', 95, 115, 130, 1); px('#80deea', 95, 178, 130, 1);
+    const PAL = { 4: ['#1d2d44', '#0d1321', '#3e5c76', '#cfd8dc', '#b0bec5', '#00838f', '#00acc1', '#80deea'],
+                  5: ['#10002b', '#240046', '#7b2cbf', '#2b2d42', '#3a3d5c', '#3c096c', '#5a189a', '#c77dff'],
+                  6: ['#3d2c1e', '#1b1209', '#c9a227', '#f1ece2', '#ddd3c0', '#7a5c00', '#b8860b', '#ffe08a'] }[Math.min(6, fl)];
+    px(PAL[0], 0, 0, 320, 44);
+    drawWindow(6, 3, 308, 36, t, PAL[1]);
+    for (let x = 6 + 44; x < 314; x += 44) px(PAL[1], x, 3, 2, 36);
+    px(PAL[2], 0, 39, 320, 3); px(PAL[1], 0, 42, 320, 4);
+    px(PAL[3], 0, 46, 320, 194);
+    for (let y = 46; y < 240; y += 24) px(PAL[4], 0, y, 320, 1);
+    for (let x = 0; x < 320; x += 40) px(PAL[4], x, 46, 1, 194);
+    if (fl === 5) for (let x = 20; x < 320; x += 40) px('rgba(199,125,255,0.35)', x, 46, 1, 194);
+    px(PAL[5], 92, 112, 136, 70); px(PAL[6], 95, 115, 130, 64); px(PAL[7], 95, 115, 130, 1); px(PAL[7], 95, 178, 130, 1);
+    if (fl >= 6) { px(PAL[2], 150, 138, 20, 3); px(PAL[2], 158, 130, 4, 18); }
   } else {
     px('#e9ecef', 0, 0, 320, 44);
     drawWindow(62, 2, 196, 37, t, '#adb5bd');
@@ -4496,7 +4955,7 @@ function drawBalloon(d) {
   px('#111', b.x - 26, by - b.r - 12, 52, 6);
   px('#ffd166', b.x - 25, by - b.r - 11, Math.max(0, b.hp / b.maxHp) * 50, 4);
   txt(d.phaseName, b.x, by - b.r - 16, '#fff', 9);
-  if (d.kind === 'game' && d.phase >= 2 && d.phase <= 4) {
+  if (d.kind !== 'contract' && d.phase >= 2 && d.phase <= 4) {
     const n = Math.min(8, d.phase === 4 ? Math.ceil(b.hp / 14) : d.bugs);
     for (let i = 0; i < n; i++) {
       const a = frameT / 30 + i * (Math.PI * 2 / Math.max(1, n));
@@ -4504,7 +4963,7 @@ function drawBalloon(d) {
       px('#2b2d42', bx - 2, byy - 2, 5, 4); px('#ef476f', bx - 1, byy - 1, 3, 2); px('#2b2d42', bx - 3, byy + (frameT % 10 < 5 ? 0 : 1), 1, 1); px('#2b2d42', bx + 3, byy + (frameT % 10 < 5 ? 1 : 0), 1, 1);
     }
   }
-  if (d.kind === 'game' && d.pace === 2) txt('CRUNCH!', b.x, by + b.r + 22, frameT % 30 < 15 ? '#ef476f' : '#ff8fab', 8);
+  if (d.kind !== 'contract' && d.pace === 2) txt('CRUNCH!', b.x, by + b.r + 22, frameT % 30 < 15 ? '#ef476f' : '#ff8fab', 8);
 }
 function render() {
   frameT++;
@@ -4512,9 +4971,10 @@ function render() {
   ctx.imageSmoothingEnabled = false;
   if (!MODS) computeMods();
   drawOffice();
-  const desks = deskCount(), dv = STATE.activeDev, working = !!(dv && !dv.awaiting);
+  const tm = teamStaff(STATE.focus || 0), dv = STATE.activeDev, working = !!(dv && !dv.awaiting);
+  const desks = Math.min(TEAM_MAX, Math.max(tm.length, teamCount() > 1 ? Math.min(5, tm.length + 1) : Math.min(deskCount(), TEAM_MAX)));
   for (let i = 0; i < desks; i++) {
-    const p = deskPos(i), m = STATE.team[i];
+    const p = deskPos(i, desks), m = tm[i];
     if (m && m.vac <= 0) {
       m.x = p.x; m.y = p.y; drawStaff(m, p.x, p.y, working && m.rest <= 0);
       if (dv && dv.assign) postsOf(dv, m.id).forEach((k, j) => { px('#111', p.x + 8 + j * 6, p.y - 34, 6, 6); px(STAT_COLORS[k], p.x + 9 + j * 6, p.y - 33, 4, 4); });
@@ -4529,13 +4989,14 @@ function render() {
     }
   }
   if (dv) drawBalloon(dv);
-  else txt('~ Studio Idle ~', 160, 150, '#66fcf1', 10);
+  else txt(teamCount() > 1 ? `~ ${teamName(STATE.focus || 0)} is idle ~` : '~ Studio Idle ~', 160, 150, '#66fcf1', 10);
+  if (teamCount() > 1) { px('rgba(0,0,0,0.55)', 2, 226, 70, 12); txt(teamName(STATE.focus || 0), 37, 235, teamColor(STATE.focus || 0), 8); }
   projectiles.forEach(p => { px(p.color, p.x - 2, p.y - 2, 5, 5); px('#fff', p.x - 1, p.y - 1, 2, 2); });
   const night = nightness(dayPhase());
   if (night > 0) {
     px(`rgba(12,14,40,${(0.38 * night).toFixed(3)})`, 0, 0, 320, 240);
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    STATE.team.forEach(m => { if (m.vac <= 0 && m.rest <= 0 && m.x !== undefined) px(`rgba(70,160,220,${(0.22 * night).toFixed(3)})`, m.x - 9, m.y - 19, 18, 16); });
+    tm.forEach(m => { if (m.vac <= 0 && m.rest <= 0 && m.x !== undefined) px(`rgba(70,160,220,${(0.22 * night).toFixed(3)})`, m.x - 9, m.y - 19, 18, 16); });
     if (STATE.decor.includes('aquarium')) px(`rgba(72,202,228,${(0.25 * night).toFixed(3)})`, 4, 99, 36, 22);
     if (STATE.decor.includes('arcade')) px(`rgba(247,37,133,${(0.25 * night).toFixed(3)})`, 294, 100, 22, 18);
     ctx.restore();
@@ -4555,12 +5016,13 @@ function update() {
   simTick++;
   STATE.tick++;
   if (STATE.tick >= TPW) { STATE.tick = 0; advanceWeek(); if (modalOpen) return; }
-  const d = STATE.activeDev;
   const M = computeMods();
   const regen = [1, 1.6, 2, 2.5][roomLv('break')] * M.regen;
-  STATE.team.forEach((m, i) => { const p = deskPos(i); m.x = p.x; m.y = p.y; });
-  const pace = d && d.kind === 'game' ? PACE[d.pace] : PACE[1];
+  const fm = teamStaff(STATE.focus || 0);
+  fm.forEach((m, i) => { const p = deskPos(i, fm.length); m.x = p.x; m.y = p.y; });
   for (const m of STATE.team) {
+    const d = STATE.devs[teamOf(m)];
+    const pace = d && d.kind !== 'contract' ? PACE[d.pace] : PACE[1];
     if (m.anim > 0) m.anim--;
     if (m.flash > 0) m.flash--;
     if (m.vac > 0) continue;
@@ -4573,12 +5035,12 @@ function update() {
       if (m.senior) spd *= 1.1;
       if (d.pace === 2 && m.traits.includes('Night Owl')) spd *= 1.3;
       m.cd += spd;
-      if (m.cd >= 94) { m.cd = 0; doHit(m); }
+      if (m.cd >= 94) { m.cd = 0; doHit(m, d); }
     } else {
       m.stam = Math.min(m.maxStam, m.stam + 0.27 * regen);
     }
   }
-  if (d && d.kind === 'game' && !d.awaiting && d.phase <= 3 && d.eventsFired < sizeOf(d).events && Math.random() < 1 / (TPS * 32)) devEvent(d);
+  STATE.devs.forEach(d => { if (d && d.kind === 'game' && !d.awaiting && d.phase <= 3 && d.eventsFired < sizeOf(d).events && Math.random() < 1 / (TPS * 32)) devEvent(d); });
   for (const p of projectiles) {
     p.x += (p.tx - p.x) * 0.22; p.y += (p.ty - p.y) * 0.22; p.t++;
     if (!p.done && (Math.hypot(p.tx - p.x, p.ty - p.y) < 4 || p.t > 40)) { p.done = true; onImpact(p); }
@@ -4588,6 +5050,7 @@ function update() {
   particles = particles.filter(p => p.life > 0 && p.y < 250);
   if (ticker.length) { ticker[0].life--; if (ticker[0].life <= 0) ticker.shift(); }
   if (simTick % 6 === 0) { updateDevPanel(); updateHeader(); }
+  if (simTick % 30 === 0 && teamCount() > 1) renderTeamBar();
 }
 function frame(now) {
   const dt = Math.min(250, now - lastT); lastT = now;
@@ -4673,7 +5136,7 @@ if (!STATE.history.length && !STATE.activeDev && STATE.cal.y === 1 && STATE.cal.
     Released games keep earning in Live Ops. Contract work pays the bills between releases.<br><br>
     Payday is at the end of every month. Three months in the red and it's game over. Good luck!</div>`, [{ label: "Let's go!", cls: 'btn-accent' }]);
 }
-if (STATE.activeDev && STATE.activeDev.kind === 'game' && STATE.activeDev.balloon.hp <= 0) { STATE.activeDev.awaiting = false; checkPhase(); }
+STATE.devs.forEach(d => { if (d && d.kind !== 'contract' && d.balloon.hp <= 0) { d.awaiting = false; checkPhase(d); } });
 STATE.team.forEach(m => { if (perkPending(m) >= 0) perkModal(m); });
 checkMilestones();
 if (STATE.hwProj) { const pr = STATE.hwProj; if (!pr.stage) pr.stage = pr.ready ? 'done' : 'mfg'; if (pr.stage === 'done') hwLaunchModal(); else if (pr.wait) (pr.stage === 'proto' ? hwProtoModal : hwKitModal)(); }

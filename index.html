@@ -206,6 +206,8 @@
   .bar::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 7px, rgba(12, 9, 25, 0.55) 7px 8px); pointer-events: none; }
   .statrow { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; }
   .statrow span:first-child { width: 78px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .statrow.wide span:first-child { width: 112px; }
+  .statrow.wide span:last-child { width: 48px; }
   .statrow span:last-child { width: 40px; text-align: right; font-family: var(--num); font-weight: 600; font-variant-numeric: tabular-nums; }
   .mini { font-size: 0.75rem; }
   .chip { display: inline-block; font-size: 0.68rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--sky); color: var(--sky); margin: 0 3px 3px 0; }
@@ -311,7 +313,7 @@
   .subnav { position: sticky; top: -12px; z-index: 3; display: flex; gap: 5px; margin: -12px -12px 2px; padding: 8px 12px 8px; background: var(--win);
     border-bottom: 2px solid var(--lo); overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
   .subnav::-webkit-scrollbar { display: none; }
-  .subnav button { flex: 1 1 auto; padding: 6px 5px; min-height: 34px; font-size: 0.74rem; white-space: nowrap; min-width: 0; }
+  .subnav button { flex: 1 0 auto; padding: 6px 7px; min-height: 34px; font-size: 0.74rem; white-space: nowrap; }
   .subnav button.on { background: var(--sun); color: var(--sun-ink); border-color: var(--sun-hi) var(--sun-lo) var(--sun-lo) var(--sun-hi); }
   .scard { gap: 5px; }
   .shead { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; background: none; border: 0; padding: 2px 0; text-align: left; min-height: 34px; }
@@ -348,6 +350,22 @@
   body.bigtext .note, body.bigtext .card { font-size: 0.9rem; }
   body.bigtext .mini { font-size: 0.82rem; }
   body.bigtext .statrow { font-size: 0.86rem; }
+  .kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .kpis > div { background: var(--well); border-radius: 8px; padding: 6px 7px; display: flex; flex-direction: column; min-width: 0; }
+  .kpis span { font-size: 0.66rem; color: var(--dim); line-height: 1.2; }
+  .kpis b { font-family: var(--num); font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kpis small { font-size: 0.64rem; color: var(--dim); }
+  .fin { background: var(--well); border-radius: 8px; padding: 6px 8px; display: flex; flex-direction: column; gap: 1px; }
+  .fin .fr { padding-left: 8px; }
+  .fin .ft { border-top: 1px solid #ffffff22; padding-top: 3px; margin-bottom: 4px; font-weight: 700; }
+  .fin .mini.muted { margin-top: 3px; }
+  .lchart { width: 100%; height: 70px; background: var(--well); border-radius: 8px; display: block; }
+  .ownbar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--well); margin: 4px 0; }
+  .ownbar i { display: block; height: 100%; }
+  .camprow { display: flex; flex-direction: column; gap: 3px; margin: 2px 0 4px; }
+  .seg button small { display: block; font-size: 0.6rem; opacity: 0.8; font-weight: 400; }
+  .btns { display: flex; flex-wrap: wrap; gap: 5px; }
+  #save-code, #restore-code { background: var(--well); color: var(--text); border: 1px solid var(--edge); border-radius: 6px; padding: 6px; font-family: ui-monospace, Menlo, monospace; word-break: break-all; }
 </style>
 </head>
 <body>
@@ -407,6 +425,8 @@
         <div class="fld"><label>Budget</label><div id="seg-budget" class="seg seg3"></div></div>
         <div class="fld" id="fld-aud"><label>Audience</label><div id="seg-aud" class="seg seg4"></div></div>
         <div class="fld"><label>Business model</label><div id="seg-monet" class="seg seg2"></div></div>
+        <div class="fld" id="fld-price"><label id="lbl-price">Price</label><div id="seg-price" class="seg seg5"></div><div id="price-info" class="mini muted"></div></div>
+        <div class="fld" id="fld-loc"><label>Localise for</label><div id="loc-chips" class="chips"></div><div id="loc-info" class="mini muted"></div></div>
         <div style="display:none"><select id="sel-size"></select><select id="sel-budget"></select><select id="sel-aud"></select><select id="sel-monet"></select></div>
       </div>
       <div id="prio-box" class="win" data-step="2"></div>
@@ -815,7 +835,7 @@ function staffWeekly(m) {
   const M = MODS || computeMods(), R = ROLES[m.role] || ROLES['Planner'];
   let f = [1, 1.08, 1.14, 1.2][roomLv('tech')] * (0.85 + m.morale * 0.003) * (M.spd || 1) * (m.senior ? 1.1 : 1);
   if (m.traits.includes('Slacker')) f *= 0.85; if (m.traits.includes('Perfectionist')) f *= 0.9;
-  return staffWeeklyRaw(m.spd, m.lv, (m.s[R.main] + m.s[R.sub]) / 2) * f;
+  return staffWeeklyRaw(m.spd, m.lv, (m.s[R.main] + m.s[R.sub]) / 2) * f * (1 + DEPT_LV[deptLv(m.role)].spd);
 }
 function teamWeekly(t) { t = t === undefined ? (STATE.focus || 0) : t; return teamStaff(t).filter(m => m.vac <= 0).reduce((a, m) => a + staffWeekly(m), 0) * 0.85 || 1; }
 function projectWork(size, plats, budget, rank) {
@@ -1337,7 +1357,7 @@ function newGame() {
   ];
   team.forEach((m, i) => { m.id = i + 1; m.skin = SKINS[i]; m.hs = i % 4; });
   return {
-    v: 8, gold: 30000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
+    v: 9, gold: 30000, fans: 250, rank: 1, rankExp: 0, rp: 5, floor: 1,
     cal: { y: 1, m: 1, w: 1 }, tick: 0, speed: 1,
     settings: { sound: true },
     team, nextId: 6,
@@ -1354,9 +1374,1128 @@ function newGame() {
     awards: { goty: 0, excellence: 0 }, platformsUsed: [], investor: null, platDeal: null,
     prio: [2, 2, 2, 2, 2, 2], insights: {}, ownPlats: [], hwProj: null, execs: {}, policy: { hours: 0, benefits: 1, bonus: 0 },
     loans: [], merch: [], book: {}, plHist: [], taxPaid: 0, legends: {}, legendHints: {}, store: null, walkIn: null, rpBought: 0,
-    rivals: RIVAL_DEFS.map(r => ({ n: r.n, fans: r.fans, growth: r.growth, skill: r.skill, best: 0, yearBest: 0 }))
+    rivals: RIVAL_DEFS.map(r => ({ n: r.n, fans: r.fans, growth: r.growth, skill: r.skill, best: 0, yearBest: 0 })),
+    demand: demandInit(), rivalPipe: [], rivalRecent: [], eq: newEq(), label: newLabel(), offices: {}, depts: {}, roleDem: roleDemInit(), wageIdx: 1, auto: {}, wealth: 0, lastBundle: -99, lastBackup: 0
   };
 }
+/* ---------- Business sim: unlocks ---------- */
+const BIZ_UNLOCKS = [
+  { r: 1, k: 'price', n: 'Pricing', d: 'Set the price of paid games, or how hard free games push spending.' },
+  { r: 1, k: 'reports', n: 'Financial reports', d: 'Profit and loss, balance sheet and cash flow in Biz > Reports.' },
+  { r: 1, k: 'camp', n: 'Marketing campaigns', d: 'Run social media and influencer campaigns while a game is in development.' },
+  { r: 1, k: 'demand', n: 'Market demand', d: 'Demand for each genre rises, saturates and shifts. See Market > Demand.' },
+  { r: 2, k: 'storeads', n: 'App store ads', d: 'A campaign channel that suits mobile and free-to-play games.' },
+  { r: 2, k: 'pay', n: 'Salary market', d: 'Staff compare their pay with the market rate for their role. Underpaid staff lose morale.' },
+  { r: 3, k: 'tv', n: 'TV and billboards', d: 'An expensive, broad campaign channel for big games.' },
+  { r: 3, k: 'dlc', n: 'DLC and ports', d: 'Make expansions for released games and port them to new platforms (Live > Catalogue).' },
+  { r: 3, k: 'contracts', n: 'Staff contracts', d: 'Staff sign contracts and negotiate pay when they run out.' },
+  { r: 3, k: 'depts', n: 'Department budgets', d: 'Fund training and tools for each role (Staff > Payroll).' },
+  { r: 4, k: 'sub', n: 'Subscriptions', d: 'A monthly subscription business model for games.' },
+  { r: 4, k: 'press', n: 'Press previews', d: 'A campaign channel that core and hardcore players follow.' },
+  { r: 4, k: 'seed', n: 'Seed funding', d: 'Sell shares to investors for cash. They will set goals (Biz > Funding).' },
+  { r: 5, k: 'intl', n: 'International release', d: 'Localise games for regions around the world (Market > World).' },
+  { r: 6, k: 'remaster', n: 'Remasters and bundles', d: 'Bring back old hits and sell collections of your back catalogue.' },
+  { r: 6, k: 'seriesA', n: 'Series A', d: 'A bigger funding round.' },
+  { r: 7, k: 'label', n: 'Publishing label', d: "Sign and publish other studios' games (Biz > Deals)." },
+  { r: 7, k: 'offices', n: 'Regional offices', d: 'Open offices abroad to grow sales in a region.' },
+  { r: 8, k: 'seriesB', n: 'Series B', d: 'A late-stage funding round.' },
+  { r: 9, k: 'ipo', n: 'Stock market listing', d: 'Take the company public, then manage shares and dividends.' }
+];
+const BIZK = Object.fromEntries(BIZ_UNLOCKS.map(u => [u.k, u]));
+function bizOn(k) { const u = BIZK[k]; return !u || STATE.rank >= u.r; }
+function bizRank(k) { return BIZK[k] ? BIZK[k].r : 1; }
+function monthIdx() { return STATE.cal.y * 12 + STATE.cal.m; }
+function histT(h) { return h.t || (h.y * 12 + 6); }
+function bizUnlockNews(rank) {
+  const u = BIZ_UNLOCKS.filter(x => x.r === rank);
+  if (!u.length) return;
+  news(`Business unlocked: ${u.map(x => x.n).join(', ')}`, '#ffd166');
+  if (u.some(x => x.k === 'contracts')) STATE.team.forEach(m => { if (m.ctr === undefined) m.ctr = ri(4, 24); });
+}
+
+/* ---------- Pricing and business models ---------- */
+const MOBILE_P = new Set(['Feature Phone', 'Web Browser', 'Smartphone', 'Tablet']);
+const FAIR_PRICE = [2.99, 4.99, 14.99, 29.99, 59.99];
+const PRICE_STEPS = [0.5, 0.75, 1, 1.25, 1.5];
+const F2P_STEPS = [
+  { n: 'Gentle', live: 0.75, ret: 0.008, rev: 0.15, dl: 1.06, d: 'Generous and fair. Players stay longer and critics approve.' },
+  { n: 'Balanced', live: 1, ret: 0, rev: 0, dl: 1, d: 'A standard shop and offers.' },
+  { n: 'Aggressive', live: 1.35, ret: -0.012, rev: -0.35, dl: 0.95, d: 'Constant offers and paywalls. More money, fewer players stay.' }
+];
+const SUB_STEPS = [
+  { n: '$4.99/mo', live: 0.7, ret: 0.01, dl: 1.15, d: 'Cheap: more subscribers who stay longer.' },
+  { n: '$9.99/mo', live: 1, ret: 0, dl: 1, d: 'The standard price.' },
+  { n: '$14.99/mo', live: 1.3, ret: -0.01, dl: 0.85, d: 'Premium: fewer subscribers paying more.' }
+];
+const ELASTIC = [1.15, 1.25, 0.9, 0.65];
+const SUB_GOOD = ['MMO', 'RPG', 'Sports', 'Strategy', 'Survival', 'Sandbox', 'Battle Royale', 'Fitness'];
+const SUB_BAD = ['Minigames', 'Quiz', 'Puzzle', 'Pinball', 'Idle Clicker', 'Text Adventure', 'Escape Game', 'Visual Novel'];
+MONET.push({ n: 'Subscription', launch: 0.35, live: 1.7, dl: 0.75, rev: 0.1, ret: 0.015, fans: 1.1, rank: 4, desc: 'monthly fee: a slow launch, then loyal income. Suits MMO, RPG and Sports' });
+function fairPrice(size, platN) { return FAIR_PRICE[size === undefined ? 1 : size] * (MOBILE_P.has(platN) ? 0.35 : 1); }
+const PRICE_LADDER = [0.99, 1.49, 1.99, 2.49, 2.99, 3.99, 4.99, 5.99, 6.99, 7.99, 9.99, 12.99, 14.99, 17.99, 19.99, 24.99, 29.99, 34.99, 39.99, 44.99, 49.99, 59.99, 69.99, 79.99, 89.99, 99.99];
+function priceLabels(size, platN) {
+  let prev = -1;
+  return PRICE_STEPS.map(st => { const v = fairPrice(size, platN) * st; let i = 0; PRICE_LADDER.forEach((x, j) => { if (Math.abs(x - v) < Math.abs(PRICE_LADDER[i] - v)) i = j; }); if (i <= prev) i = Math.min(PRICE_LADDER.length - 1, prev + 1); prev = i; return '$' + PRICE_LADDER[i].toFixed(2); });
+}
+function priceTag(v) { let i = 0; PRICE_LADDER.forEach((x, j) => { if (Math.abs(x - v) < Math.abs(PRICE_LADDER[i] - v)) i = j; }); return '$' + PRICE_LADDER[i].toFixed(2); }
+function priceKind(monet) { return monet === 0 ? 'paid' : monet === 4 ? 'sub' : 'f2p'; }
+function priceOpts(monet, size, platN) {
+  const k = priceKind(monet);
+  if (k === 'paid') { const L = priceLabels(size, platN); return PRICE_STEPS.map((s, i) => ({ n: L[i], d: ['Bargain price: many more players, less per sale.', 'Below the usual price.', 'The usual price for a game like this.', 'Above the usual price.', 'Premium price: fewer buyers and critics may grumble.'][i] })); }
+  return k === 'sub' ? SUB_STEPS : F2P_STEPS;
+}
+function priceDefault(monet) { return priceKind(monet) === 'paid' ? 2 : 1; }
+function priceFx(monet, pi, size, platN, aud, genre) {
+  const out = { dl: 1, rev: 1, review: 0, live: 1, ret: 0, label: '', note: '' };
+  if (!bizOn('price')) return out;
+  const k = priceKind(monet);
+  if (k === 'paid') {
+    const s = PRICE_STEPS[pi] === undefined ? 1 : PRICE_STEPS[pi], e = ELASTIC[aud] === undefined ? 1 : ELASTIC[aud];
+    let dl = Math.pow(s, -e); if (s < 1) dl = 1 + (dl - 1) * 0.6;
+    out.dl = dl; out.rev = s; out.live = s; out.review = s >= 1.5 ? -0.35 : s >= 1.25 ? -0.12 : s <= 0.75 ? 0.1 : 0;
+    out.label = priceLabels(size, platN)[pi] || priceTag(fairPrice(size, platN) * s);
+    out.note = s >= 1.5 ? '<span class="bad">critics felt it was overpriced</span>' : s <= 0.75 ? '<span class="good">players loved the low price</span>' : 'a fair price';
+  } else {
+    const st = (k === 'sub' ? SUB_STEPS : F2P_STEPS)[pi] || (k === 'sub' ? SUB_STEPS : F2P_STEPS)[1];
+    out.dl = st.dl; out.live = st.live; out.ret = st.ret; out.review = st.rev || 0; out.label = st.n;
+    out.note = (st.rev || 0) < 0 ? '<span class="bad">players complained about the paywalls</span>' : (st.rev || 0) > 0 ? '<span class="good">players praised how fair it is</span>' : '';
+  }
+  if (k === 'sub' && genre) {
+    if (SUB_GOOD.includes(genre)) { out.dl *= 1.15; out.ret += 0.01; }
+    else if (SUB_BAD.includes(genre)) { out.dl *= 0.75; out.review -= 0.3; out.note = '<span class="bad">few players want a subscription for this kind of game</span>'; }
+  }
+  return out;
+}
+let priceSel = -1, locSel = [];
+function curPrice() { const mi = isNaN(+$('sel-monet').value) ? 1 : +$('sel-monet').value; const n = priceOpts(mi, curSize(), $('sel-platform').value).length; return priceSel >= 0 && priceSel < n ? priceSel : priceDefault(mi); }
+function setPrice(i) { priceSel = i; playSound('click'); updatePreview(); }
+
+/* ---------- Marketing campaigns ---------- */
+const CHANNELS = [
+  { k: 'social', n: 'Social media', cost: 300, hype: 1.3, aud: [1, 1.3, 1, 0.8], u: 'camp', d: 'Cheap and steady. Casual players respond best.' },
+  { k: 'infl', n: 'Influencers', cost: 900, hype: 3.6, aud: [1.2, 0.9, 1.3, 1.4], u: 'camp', d: 'Streamers and creators. Strong with core and hardcore players.' },
+  { k: 'ads', n: 'App store ads', cost: 700, hype: 2.4, aud: [1.1, 1.3, 0.9, 0.6], u: 'storeads', d: 'Best for mobile and free-to-play games.' },
+  { k: 'tv', n: 'TV and billboards', cost: 2600, hype: 7, aud: [1.4, 1.3, 0.9, 0.6], u: 'tv', d: 'Expensive and broad. Best for big games and family audiences.' },
+  { k: 'press', n: 'Press previews', cost: 800, hype: 2.8, aud: [0.6, 0.7, 1.2, 1.5], u: 'press', d: 'Hands-on previews for the gaming press.' }
+];
+const CAMP_LV = [{ n: 'Off', c: 0, h: 0 }, { n: 'Low', c: 1, h: 1 }, { n: 'Mid', c: 2.2, h: 1.8 }, { n: 'High', c: 4, h: 2.5 }];
+const HYPE_NEED = [70, 85, 100, 125, 160];
+const HYPE_DECAY = 0.04;
+function campFit(d, ch) {
+  let f = ch.aud[d.audience === undefined ? 2 : d.audience] || 1;
+  if (ch.k === 'ads') f *= (MOBILE_P.has(d.platform) ? 1.4 : 0.5) * (d.monet >= 1 && d.monet <= 3 ? 1.25 : 1);
+  if (ch.k === 'tv') f *= [0.6, 0.75, 1, 1.15, 1.3][d.size === undefined ? 1 : d.size];
+  return f;
+}
+function campWeekCost(i, lv) { return Math.round(CHANNELS[i].cost * CAMP_LV[lv].c * rankK() * (hasExec('cmo') ? 0.75 : 1) * (hasTech('mkt2') ? 0.75 : 1) / 50) * 50; }
+function campGain(d, i, lv) { return CHANNELS[i].hype * CAMP_LV[lv].h * campFit(d, CHANNELS[i]); }
+function campCost(d) { return (d.camp || []).reduce((a, lv, i) => a + (lv && bizOn(CHANNELS[i].u) ? campWeekCost(i, lv) : 0), 0); }
+function campRate(d) { return (d.camp || []).reduce((a, lv, i) => a + (lv && bizOn(CHANNELS[i].u) ? campGain(d, i, lv) : 0), 0); }
+function hypeTotal(d) { return (d.hype || 0) + (d.campHype || 0); }
+function hypeNeed(d) { return HYPE_NEED[d && d.size !== undefined ? d.size : 1] || 100; }
+function hypeMulFor(hype, d) { return 1 + Math.min(1, Math.max(0, hype) / hypeNeed(d)) * 0.67; }
+function campAuto(d) {
+  if (!d || d.kind === 'contract' || !(STATE.auto && STATE.auto.camp) || !hasExec('cmo')) return;
+  const wl = workLeft(d) / teamWeekly(d.team || 0);
+  const lvl = wl > 12 ? 0 : [1, 1, 2, 2, 3][d.size === undefined ? 1 : d.size];
+  d.camp = CHANNELS.map(() => 0);
+  if (!lvl || STATE.gold < monthlyCost() * 2) return;
+  CHANNELS.map((ch, i) => ({ i, ok: bizOn(ch.u), f: campFit(d, ch) * ch.hype / ch.cost })).filter(x => x.ok).sort((a, b) => b.f - a.f).slice(0, 2).forEach(x => { d.camp[x.i] = lvl; });
+}
+function campaignWeek(d) {
+  if (!d || d.kind === 'contract') return;
+  if (!Array.isArray(d.camp)) d.camp = CHANNELS.map(() => 0);
+  campAuto(d);
+  d.campHype = (d.campHype || 0) * (1 - HYPE_DECAY);
+  if (d.awaiting) return;
+  const cost = campCost(d);
+  if (!cost) return;
+  if (STATE.gold < cost) { d.camp = d.camp.map(() => 0); news(`Marketing for ${d.title} paused: not enough cash.`, '#ef476f'); return; }
+  charge(cost, 'Marketing'); d.campSpent = (d.campSpent || 0) + cost;
+  d.campHype += campRate(d);
+}
+function setCamp(i, lv) {
+  const d = STATE.activeDev; if (!d || d.kind === 'contract') return;
+  if (!Array.isArray(d.camp)) d.camp = CHANNELS.map(() => 0);
+  d.camp[i] = lv; if (STATE.auto) STATE.auto.camp = false;
+  playSound('click'); renderDevControls(); updateDevPanel();
+}
+function toggleAuto(k) { STATE.auto = STATE.auto || {}; STATE.auto[k] = !STATE.auto[k]; playSound('click'); renderActiveTab(); if (k === 'camp') { const d = STATE.activeDev; if (d) campAuto(d); renderDevControls(); } save(); }
+
+/* ---------- Market demand and rival pipeline ---------- */
+function demandInit() { return Object.fromEntries(GENRES.map(g => [g.n, { v: 1, t: +rnd(0.85, 1.2).toFixed(3) }])); }
+function demandOf(g) { const x = STATE.demand && STATE.demand[g]; return x && bizOn('demand') ? x.v : 1; }
+function demandHit(g, amt) { const x = STATE.demand && STATE.demand[g]; if (x) x.v = Math.max(0.5, x.v - amt); }
+function demandLabel(v) { return v >= 1.2 ? '<b class="good">Hot</b>' : v >= 1.05 ? '<span class="good">High</span>' : v >= 0.92 ? 'Normal' : v >= 0.75 ? '<span class="bad">Soft</span>' : '<b class="bad">Saturated</b>'; }
+function demandMonth() {
+  if (!STATE.demand) STATE.demand = demandInit();
+  for (const g in STATE.demand) { const x = STATE.demand[g]; x.v = clamp(x.v + (x.t - x.v) * 0.08 + rnd(-0.015, 0.015), 0.5, 1.6); }
+  if (STATE.cal.m === 1) {
+    const moved = [];
+    Object.entries(STATE.demand).forEach(([g, x]) => { if (Math.random() < 0.3) { const o = x.t; x.t = +rnd(0.7, 1.4).toFixed(3); if (x.t - o > 0.3 && STATE.unlocked.g.includes(g)) moved.push(g); } });
+    if (moved.length) news(`Analysts expect demand to grow for ${moved.slice(0, 3).join(', ')}`, '#66fcf1');
+  }
+}
+function rivalRelease(x) {
+  const r = STATE.rivals.find(y => y.n === x.r); if (!r) return;
+  const score = clamp(Math.round(r.skill + rnd(-6, 6) + (x.big ? 2 : 0) + (STATE.engine && STATE.engine.lic ? Math.min(2, STATE.engine.lic.studios * 0.15) : 0)), 6, 40);
+  r.yearBest = Math.max(r.yearBest || 0, score); r.best = Math.max(r.best || 0, score);
+  r.last = `${x.th} ${x.g}`;
+  demandHit(x.g, x.big ? 0.04 : 0.02);
+  STATE.rivalRecent = (STATE.rivalRecent || []).filter(y => monthIdx() - y.t < 2);
+  STATE.rivalRecent.push({ r: r.n, g: x.g, t: monthIdx(), score, big: x.big });
+  if (x.big || Math.random() < 0.5) news(`${r.n} released ${r.last} (${score}/40)`, '#9aa5b1');
+}
+function rivalPipeMonth() {
+  const now = monthIdx();
+  STATE.rivalPipe = STATE.rivalPipe || [];
+  STATE.rivalPipe.filter(x => x.t <= now).forEach(rivalRelease);
+  STATE.rivalPipe = STATE.rivalPipe.filter(x => x.t > now);
+  STATE.rivals.forEach(r => {
+    if (r.owned || STATE.rivalPipe.some(x => x.r === r.n) || Math.random() > 0.3) return;
+    const x = { r: r.n, g: pick(GENRES).n, th: pick(THEMES).n, t: now + ri(1, 3), big: Math.random() < 0.3 };
+    STATE.rivalPipe.push(x);
+    if (x.big) news(`${r.n} announced a big ${x.g} game for ${x.t - now === 1 ? 'next month' : 'in ' + (x.t - now) + ' months'}`, '#9aa5b1');
+  });
+}
+function rivalClash(genre) {
+  const now = monthIdx();
+  const hit = (STATE.rivalRecent || []).filter(x => x.g === genre && now - x.t <= 1).concat((STATE.rivalPipe || []).filter(x => x.g === genre && x.t - now <= 1));
+  if (!hit.length) return null;
+  const big = hit.some(x => x.big);
+  return { mul: big ? 0.75 : 0.85, who: hit[0].r, big };
+}
+
+/* ---------- International regions ---------- */
+const REGIONS = [
+  { k: 'na', n: 'North America', share: 0.30, arpu: 1.2, loc: 0, home: true, aff: { m: 1, c: 1.15, pc: 1 }, like: ['Shooter', 'Sports', 'Action', 'Racing', 'Battle Royale'], dislike: ['Visual Novel', 'Dating Sim'] },
+  { k: 'eu', n: 'Europe', share: 0.25, arpu: 1.0, loc: 0, home: true, aff: { m: 0.95, c: 1, pc: 1.2 }, like: ['Strategy', 'Management Sim', 'City Builder', 'Racing', 'Sports'], dislike: ['Idle Clicker'] },
+  { k: 'jp', n: 'Japan', share: 0.12, arpu: 1.15, loc: 0.6, aff: { m: 1.1, c: 1.3, pc: 0.6 }, like: ['RPG', 'Visual Novel', 'Rhythm', 'Dating Sim', 'Card Game', 'Platformer'], dislike: ['Shooter', 'Sports', 'Battle Royale'] },
+  { k: 'ap', n: 'Asia-Pacific', share: 0.18, arpu: 0.65, loc: 0.5, aff: { m: 1.35, c: 0.7, pc: 1.1 }, like: ['MMO', 'Card Game', 'Strategy', 'Battle Royale', 'Idle Clicker'], dislike: ['Visual Novel', 'Text Adventure'] },
+  { k: 'la', n: 'Latin America', share: 0.08, arpu: 0.5, loc: 0.3, aff: { m: 1.3, c: 0.8, pc: 0.9 }, like: ['Sports', 'Fighting', 'Action', 'Quiz', 'Battle Royale'], dislike: ['Strategy', 'City Builder'] },
+  { k: 'me', n: 'Middle East & Africa', share: 0.07, arpu: 0.55, loc: 0.35, aff: { m: 1.4, c: 0.8, pc: 0.9 }, like: ['Sports', 'Racing', 'Board Game', 'Card Game', 'Puzzle'], dislike: ['Dating Sim'] }
+];
+const REG = Object.fromEntries(REGIONS.map(r => [r.k, r]));
+const UNLOC_REACH = 0.15;
+function affKind(platN) { return MOBILE_P.has(platN) ? 'm' : platN === 'PC' ? 'pc' : 'c'; }
+function hasOffice(k) { return !!(STATE.offices && STATE.offices[k]); }
+function regionTaste(r, genre) { return r.like.includes(genre) ? 1.25 : r.dislike.includes(genre) ? 0.75 : 1; }
+function regionFx(genre, platN, loc) {
+  if (!bizOn('intl')) return { dl: 1, rev: 1 };
+  let dl = 0, rev = 0, dl0 = 0, rev0 = 0;
+  REGIONS.forEach(r => {
+    const reach = r.home || (loc || []).includes(r.k) ? 1 : UNLOC_REACH, base = r.home ? 1 : UNLOC_REACH;
+    const x = r.share * reach * regionTaste(r, genre) * (r.aff[affKind(platN)] || 1) * (hasOffice(r.k) ? 1.2 : 1);
+    dl += x; rev += x * r.arpu; dl0 += r.share * base; rev0 += r.share * base * r.arpu;
+  });
+  return { dl: dl / dl0, rev: (rev / dl) / (rev0 / dl0) };
+}
+function locCost(k, size) {
+  const r = REG[k]; if (!r || r.home) return 0;
+  return Math.round(6000 * (1 + r.loc) * (SIZES[size === undefined ? 1 : size] || SIZES[1]).cost * Math.sqrt(rankK()) * (hasExec('intl') ? 0.7 : 1) * (hasOffice(k) ? 0.5 : 1) / 500) * 500;
+}
+function locTotal(locs, size) { return (locs || []).reduce((a, k) => a + locCost(k, size), 0); }
+function toggleLoc(k) { const i = locSel.indexOf(k); if (i >= 0) locSel.splice(i, 1); else locSel.push(k); playSound('click'); updatePreview(); }
+function suggestLoc() {
+  const g = $('sel-genre').value, p = $('sel-platform').value, size = curSize();
+  locSel = REGIONS.filter(r => !r.home && (hasOffice(r.k) || regionTaste(r, g) > 1 || (r.share >= 0.12 && regionTaste(r, g) >= 1 && size >= 2) || (r.aff[affKind(p)] >= 1.3 && regionTaste(r, g) >= 1))).map(r => r.k);
+  playSound('click'); updatePreview();
+}
+function renderLoc() {
+  const box = $('loc-chips'); if (!box) return;
+  const fld = $('fld-loc'); if (fld) fld.style.display = !isSoftMode() && bizOn('intl') ? '' : 'none';
+  if (!bizOn('intl')) return;
+  locSel = locSel.filter(k => REG[k] && !REG[k].home);
+  const g = $('sel-genre').value, size = curSize();
+  box.innerHTML = REGIONS.filter(r => !r.home).map(r => `<button class="${locSel.includes(r.k) ? 'on' : ''}" onclick="toggleLoc('${r.k}')">${esc(r.n)}${regionTaste(r, g) > 1 ? ' ♥' : regionTaste(r, g) < 1 ? ' ✕' : ''}<br><small>${money(locCost(r.k, size))}</small></button>`).join('') +
+    `<button onclick="suggestLoc()">${hasExec('intl') ? 'Director’s pick' : 'Suggest'}</button>`;
+  const fx = regionFx(g, $('sel-platform').value, locSel);
+  $('loc-info').innerHTML = `North America and Europe are always included. Unlocalised regions still buy about ${Math.round(UNLOC_REACH * 100)}%. With this plan: downloads ×${fx.dl.toFixed(2)}, revenue per player ×${fx.rev.toFixed(2)}. ♥ likes this genre, ✕ dislikes it.`;
+}
+function officeCost() { return Math.round(300000 * Math.sqrt(rankK()) / 10000) * 10000; }
+function officeUpkeep() { return Math.round(12000 * Math.sqrt(rankK()) / 500) * 500; }
+function openOffice(k) {
+  const r = REG[k]; if (!r || r.home || hasOffice(k) || !bizOn('offices')) return;
+  if (Object.keys(STATE.offices).length >= 4) { toast('You can run up to four regional offices.', '#ff6b7d'); return; }
+  const c = officeCost();
+  showModal(`<h3>Open an office in ${esc(r.n)}?</h3><div class="note">Costs <b class="gold">${money(c)}</b> to set up and <b>${money(officeUpkeep())}</b> a month.<br>Downloads in ${esc(r.n)} +20%, localisation there costs half, and the local team sends research ideas (+1 RP a quarter).</div>`,
+    [{ label: `Open for ${money(c)}`, cls: 'btn-accent', disabled: STATE.gold < c, action: () => { if (!spend(c, 'Office')) return; STATE.offices[k] = { since: monthIdx() }; playSound('fanfare'); news(`Your ${r.n} office is open!`, '#06d6a0'); checkMilestones(); renderMarket(); save(); } }, { label: 'Not now' }]);
+}
+function closeOffice(k) {
+  if (!hasOffice(k)) return;
+  showModal(`<h3>Close the ${esc(REG[k].n)} office?</h3><div class="note">Saves ${money(officeUpkeep())} a month. The setup cost is not refunded.</div>`,
+    [{ label: 'Close it', cls: 'btn-danger', action: () => { delete STATE.offices[k]; renderMarket(); save(); } }, { label: 'Keep it' }]);
+}
+
+/* ---------- Staff economy ---------- */
+const DEPT_LV = [{ n: 'None', c: 0, exp: 0, mor: 0, spd: 0 }, { n: 'Basic', c: 150, exp: 1, mor: 1, spd: 0 }, { n: 'Good', c: 400, exp: 2, mor: 2, spd: 0.03 }, { n: 'Elite', c: 900, exp: 3, mor: 4, spd: 0.06 }];
+function roleDemInit() { return Object.fromEntries(ROLE_NAMES.map(r => [r, 1])); }
+function marketRate(m) {
+  const base = (300 + m.s.reduce((a, b) => a + b, 0) * 1.67 + m.spd * 4) * (0.9 + 0.04 * (m.tal || 3)) + (m.lv - 1) * (30 + 10 * (m.tal || 3));
+  return Math.round(base * (m.senior ? 1.4 : 1) * ((STATE.roleDem && STATE.roleDem[m.role]) || 1) * (STATE.wageIdx || 1) / 50) * 50;
+}
+function payRatio(m) { return m.salary / Math.max(100, marketRate(m)); }
+function payMorale(m) { return bizOn('pay') ? clamp((payRatio(m) - 1) * 25, -6, 4) : 0; }
+function deptLv(role) { return bizOn('depts') ? ((STATE.depts && STATE.depts[role]) || 0) : 0; }
+function deptStaffCost(lv) { return Math.round(DEPT_LV[lv].c * Math.sqrt(rankK()) / 10) * 10; }
+function deptCost() { return ROLE_NAMES.reduce((a, r) => a + deptStaffCost(deptLv(r)) * STATE.team.filter(m => m.role === r).length, 0); }
+function setDept(role, lv) { STATE.depts = STATE.depts || {}; STATE.depts[role] = lv; playSound('click'); renderStaff(); save(); }
+function deptWeek() {
+  if (!bizOn('depts')) return;
+  STATE.team.forEach(m => { const L = DEPT_LV[deptLv(m.role)]; if (L.exp && m.vac <= 0) gainExp(m, L.exp); });
+}
+function wagesYear() {
+  STATE.wageIdx = +((STATE.wageIdx || 1) * rnd(1.02, 1.04)).toFixed(4);
+  STATE.roleDem = STATE.roleDem || roleDemInit();
+  let top = null;
+  ROLE_NAMES.forEach(r => { const o = STATE.roleDem[r] || 1; const v = clamp(o + (1 - o) * 0.3 + rnd(-0.08, 0.08), 0.85, 1.2); STATE.roleDem[r] = +v.toFixed(3); if (!top || v - o > top.d) top = { r, d: v - o }; });
+  if (bizOn('pay')) news(`Industry wages rose this year.${top && top.d > 0.04 ? ` ${top.r}s are in short supply.` : ''}`, '#9aa5b1');
+}
+function renewAsk(m) {
+  let k = 1 + (m.morale < 40 ? 0.08 : 0) + (m.mvps >= 3 ? 0.04 : 0) + (m.traits.includes('Rockstar') ? 0.08 : 0) - (m.traits.includes('Penny Pincher') ? 0.05 : 0);
+  return Math.round(Math.max(m.salary * 1.03, marketRate(m) * k) / 50) * 50;
+}
+function counterChance(m, offer, ask) {
+  const gap = (ask - offer) / Math.max(1, m.salary);
+  return clamp(0.35 + m.morale / 250 + (m.traits.includes('Loyal') ? 0.3 : 0) + (hasExec('hrm') ? 0.15 : 0) - gap * 2, 0.05, 0.9);
+}
+function contractsMonth() {
+  if (!bizOn('contracts')) return;
+  STATE.team.forEach(m => { if (m.ctr === undefined) m.ctr = ri(4, 24); else m.ctr--; });
+  STATE.team.filter(m => m.ctr <= 0).forEach(m => {
+    const ask = renewAsk(m);
+    if (STATE.auto && STATE.auto.renew && hasExec('hrm')) {
+      const mid = Math.round((m.salary + ask) / 2 / 50) * 50;
+      if (ask > m.salary && Math.random() < counterChance(m, mid, ask)) { m.salary = mid; news(`HR renewed ${m.name}'s contract at ${money(mid)}/mo after negotiating.`, '#66fcf1'); }
+      else { m.salary = ask; news(`HR renewed ${m.name}'s contract at ${money(ask)}/mo.`, '#66fcf1'); }
+      m.ctr = 24; m.morale = Math.min(100, m.morale + 4);
+    } else { m.ctr = 0.5; renewModal(m.id); }
+  });
+}
+function renewModal(id) {
+  const m = findStaff(id); if (!m) return;
+  const ask = renewAsk(m), ask3 = Math.round(ask * 1.05 / 50) * 50, mid = Math.round((m.salary + ask) / 2 / 50) * 50, mr = marketRate(m);
+  const close = () => { renderStaff(); save(); };
+  showModal(`<h3>Contract: ${esc(m.name)}</h3><div class="note">${esc(m.name)} (${staffTitle(m)}, Lv${m.lv}) has reached the end of their contract.<br>
+    Now paid <b>${money(m.salary)}</b>/mo · market rate <b>${money(mr)}</b>/mo · morale ${Math.round(m.morale)}<br>They are asking for <b class="gold">${money(ask)}</b>/mo.</div>
+    <div class="note mini">A 3-year contract costs a little more but rivals can't poach them while more than a year is left.${hasExec('hrm') ? ' Your HR Manager can handle renewals automatically (Biz > Management).' : ''}</div>`, [
+    { label: `Renew 1 year at ${money(ask)}`, cls: 'btn-accent', action: () => { const x = findStaff(id); if (!x) return; x.salary = ask; x.ctr = 12; x.morale = Math.min(100, x.morale + 5); news(`${x.name} signed for another year.`, '#06d6a0'); close(); } },
+    { label: `Renew 3 years at ${money(ask3)}`, action: () => { const x = findStaff(id); if (!x) return; x.salary = ask3; x.ctr = 36; x.morale = Math.min(100, x.morale + 8); news(`${x.name} signed a 3-year contract.`, '#06d6a0'); close(); } },
+    ...(ask > m.salary + 50 ? [{ label: `Offer ${money(mid)}`, action: () => {
+      const x = findStaff(id); if (!x) return;
+      if (Math.random() < counterChance(x, mid, ask)) { x.salary = mid; x.ctr = 12; news(`${x.name} accepted ${money(mid)}/mo.`, '#06d6a0'); close(); return; }
+      x.morale = Math.max(0, x.morale - 8);
+      showModal(`<h3>${esc(x.name)} won't budge</h3><div class="note">${esc(x.name)} turned down ${money(mid)} and is sticking to ${money(ask)}/mo.</div>`, [
+        { label: `Accept ${money(ask)}`, cls: 'btn-accent', action: () => { const y = findStaff(id); if (!y) return; y.salary = ask; y.ctr = 12; close(); } },
+        { label: 'Let them go', cls: 'btn-danger', action: () => { const y = findStaff(id); if (y && STATE.team.length > 1) removeStaff(y, `${y.name} left when their contract ran out.`); else if (y) { y.salary = ask; y.ctr = 12; } close(); } }]);
+    } }] : []),
+    { label: 'Let them go', cls: 'btn-danger', action: () => { const x = findStaff(id); if (x && STATE.team.length > 1) removeStaff(x, `${x.name} left when their contract ran out.`); else if (x) { x.salary = ask; x.ctr = 12; } close(); } }]);
+}
+function hireOdds() { return clamp(0.4 + STATE.rank * 0.02 + (hasExec('hrm') ? 0.1 : 0), 0.3, 0.75); }
+function negotiateHire(i) {
+  const c = STATE.candidates[i]; if (!c || c.neg) return;
+  closeModal();
+  if (Math.random() < hireOdds()) { c.salary = Math.round(c.salary * 0.9 / 50) * 50; c.neg = true; playSound('coin'); news(`${c.name} accepted ${money(c.salary)}/mo.`, '#06d6a0'); }
+  else { STATE.candidates.splice(i, 1); playSound('error'); news(`${c.name} took a better offer elsewhere.`, '#ef476f'); }
+  openCandidates();
+}
+
+/* ---------- Funding, board and stock market ---------- */
+['Share issue', 'Dividends', 'Buybacks', 'Acquisitions'].forEach(c => FIN_CATS.add(c));
+const ROUNDS = [
+  { k: 'seed', n: 'Seed round', minVal: 1.5e6, prem: 1.3, sells: [0.1, 0.15, 0.2], vc: ['Sprout Ventures', 'Pixel Angels', 'First Level Capital'] },
+  { k: 'seriesA', n: 'Series A', minVal: 8e6, prem: 1.45, sells: [0.1, 0.15, 0.2], vc: ['Lantern Capital', 'Boss Fight Partners', 'Northstar Growth'] },
+  { k: 'seriesB', n: 'Series B', minVal: 3e7, prem: 1.6, sells: [0.08, 0.12, 0.16], vc: ['Meridian Global', 'Apex Crossover Fund', 'Summit Equity'] }
+];
+const IPO_VALUE = 25e6, PUBLIC = 'Public shareholders';
+const DIV_OPTS = [{ n: 'None', r: 0 }, { n: '10% of profit', r: 0.1 }, { n: '25% of profit', r: 0.25 }];
+function newEq() { return { founder: 1, inv: [], conf: 60, goal: null, rounds: {}, pub: false, shares: 0, sent: 1, peak: 0, hist: [], div: 0, qExp: 0, qLog: [], secCd: 0, buyCd: 0, act: 0 }; }
+function eqx() { if (!STATE.eq) STATE.eq = newEq(); return STATE.eq; }
+function hasInvestors() { return eqx().inv.some(x => x.share > 0.0001); }
+function marketCap() { const e = eqx(); return e.pub ? Math.round(companyValue() * e.sent) : companyValue(); }
+function priceStr(p) { return '$' + (p >= 1000 ? fmt(p) : p.toFixed(2)); }
+function sharePrice() { const e = eqx(); return e.pub && e.shares ? marketCap() / e.shares : 0; }
+function stakeValue() { return Math.round(marketCap() * eqx().founder); }
+function fansAgo(n) { const h = STATE.plHist[STATE.plHist.length - n]; return h && h.fans ? h.fans : null; }
+function fanGrowth() { const f = fansAgo(12) || fansAgo(STATE.plHist.length) || STATE.fans; return STATE.fans / Math.max(100, f); }
+function roundVal(R) { const e = eqx(); return Math.round(Math.max(R.minVal, companyValue()) * R.prem * clamp(fanGrowth(), 0.9, 1.5) * (0.8 + e.conf / 250) / 10000) * 10000; }
+function eqIssue(frac, holder) {
+  const e = eqx();
+  e.founder *= (1 - frac); e.inv.forEach(x => { x.share *= (1 - frac); });
+  const ex = e.inv.find(x => x.n === holder);
+  if (ex) ex.share += frac; else e.inv.push({ n: holder, share: frac });
+  if (e.pub) e.shares = Math.round(e.shares / (1 - frac));
+}
+function makeGoal() {
+  const now = monthIdx(), recent = STATE.plHist.slice(-12), avg = recent.length ? recent.reduce((a, x) => a + opProfit(x), 0) / recent.length : 0;
+  const opts = [
+    () => { const t = Math.round(STATE.fans * 1.6); return { k: 'fans', n: `Grow to ${fmt(t)} fans`, target: t, due: now + 24 }; },
+    () => { const t = Math.round(Math.max(100000 * rankK(), avg * 12 * 1.25) / 10000) * 10000; return { k: 'profit', n: `Make ${money(t)} operating profit in 12 months`, target: t, acc: 0, due: now + 12 }; },
+    () => ({ k: 'hit', n: 'Release a game scoring 30 or more', target: 30, due: now + 18 }),
+    () => { const t = Math.round(companyValue() * 1.8 / 100000) * 100000; return { k: 'value', n: `Reach a company value of ${money(t)}`, target: t, due: now + 30 }; }
+  ];
+  return pick(opts)();
+}
+function goalProgress(g) {
+  if (!g) return 0;
+  if (g.k === 'fans') return STATE.fans / g.target;
+  if (g.k === 'profit') return Math.max(0, g.acc) / g.target;
+  if (g.k === 'value') return companyValue() / g.target;
+  return g.met ? 1 : 0;
+}
+function goalCheck(hitScore) {
+  const e = eqx(), g = e.goal; if (!g) return;
+  if (hitScore !== undefined) { if (g.k === 'hit' && hitScore >= g.target) g.met = true; else return; }
+  if (goalProgress(g) >= 1) { e.conf = Math.min(100, e.conf + 20); e.goal = null; playSound('fanfare'); news(`Investor goal met: ${g.n}! Board confidence up.`, '#06d6a0'); }
+  else if (monthIdx() >= g.due) { e.conf = Math.max(0, e.conf - 25); e.goal = null; news(`Investor goal missed: ${g.n}. The board is unhappy.`, '#ef476f'); }
+}
+function raiseRound(k, si) {
+  const R = ROUNDS.find(x => x.k === k), e = eqx(); if (!R || e.rounds[k] || e.pub || !bizOn(k)) return;
+  const sell = R.sells[si], val = roundVal(R), cash = Math.round(val * sell / 1000) * 1000, vc = pick(R.vc);
+  const goal = makeGoal();
+  showModal(`<h3>${R.n}</h3><div class="note">${esc(vc)} values the studio at <b class="gold">${money(val)}</b> and will invest <b class="gold">${money(cash)}</b> for ${Math.round(sell * 100)}% of the company.<br><br>
+    Your stake falls from ${Math.round(e.founder * 100)}% to ${Math.round(e.founder * (1 - sell) * 100)}%.<br>Their condition: <b>${esc(goal.n)}</b> (within ${goal.due - monthIdx()} months).</div>
+    <div class="note mini">Investors join the board. They meet every quarter, and missing their goals lowers confidence. Very low confidence means trouble.</div>`, [
+    { label: `Take ${money(cash)}`, cls: 'btn-accent', action: () => {
+      eqIssue(sell, vc); e.rounds[k] = { y: STATE.cal.y, val, cash, vc }; if (!e.goal) e.goal = goal;
+      earn(cash, 'Share issue'); playSound('fanfare'); news(`${R.n} closed: +${money(cash)} from ${vc}`, '#ffd166'); checkMilestones(); renderBiz(); updateHeader(); save(); } },
+    { label: 'Not now' }]);
+}
+function buyBackInvestor(n) {
+  const e = eqx(), x = e.inv.find(y => y.n === n); if (!x || e.pub) return;
+  const price = Math.round(companyValue() * x.share * 1.2 / 1000) * 1000;
+  showModal(`<h3>Buy out ${esc(n)}?</h3><div class="note">Buy back their ${(x.share * 100).toFixed(1)}% stake for <b class="gold">${money(price)}</b> (a 20% premium). Your stake rises to ${((e.founder + x.share) * 100).toFixed(1)}%.</div>`, [
+    { label: `Buy for ${money(price)}`, cls: 'btn-accent', disabled: STATE.gold < price, action: () => {
+      if (!spend(price, 'Buybacks')) return; e.founder += x.share; e.inv = e.inv.filter(y => y !== x); if (!hasInvestors()) e.goal = null;
+      playSound('coin'); news(`You bought out ${n}.`, '#06d6a0'); renderBiz(); save(); } },
+    { label: 'Cancel' }]);
+}
+function ipoModal() {
+  const e = eqx(); if (e.pub || !bizOn('ipo')) return;
+  const v = companyValue();
+  if (v < IPO_VALUE) { toast(`Banks want a company value of at least ${money(IPO_VALUE)} before a listing.`, '#ff6b7d'); return; }
+  const price = v * 0.2 * (0.85 + e.conf / 250), fee = Math.round(price * 0.05);
+  showModal(`<h3>🔔 List on the stock market?</h3><div class="note">Sell 20% of the company in new shares. At today's value the banks expect about <b class="gold">${money(Math.round(price - fee))}</b> after fees.<br><br>
+    After the listing your share price moves every month with results. Every quarter you report earnings against analysts' expectations, and you can pay dividends, sell some of your own shares, buy shares back or raise more money.</div>`, [
+    { label: 'Ring the bell', cls: 'btn-accent', action: () => {
+      const got = Math.round(price * rnd(0.92, 1.1) - fee);
+      e.pub = true; e.shares = 1e8; e.sent = 1; e.goal = null;
+      eqIssue(0.2, PUBLIC); e.ipo = { y: STATE.cal.y, cash: got };
+      earn(got, 'Share issue');
+      e.peak = sharePrice(); e.hist = [+sharePrice().toFixed(2)];
+      const q = STATE.plHist.slice(-3).reduce((a, x) => a + opProfit(x), 0); e.qExp = Math.max(0, q) * 1.05;
+      playSound('fanfare'); news(`Listed! The IPO raised ${money(got)}.`, '#ffd166'); checkMilestones(); checkLegacy(); renderBiz(); updateHeader(); save(); } },
+    { label: 'Not yet' }]);
+}
+function setDividend(i) { eqx().div = i; playSound('click'); renderBiz(); save(); }
+function sellFounderShares() {
+  const e = eqx(); if (!e.pub || e.founder <= 0.15) { toast('You want to keep at least 10% of your own company.', '#ff6b7d'); return; }
+  const got = Math.round(marketCap() * 0.05 * 0.97);
+  showModal(`<h3>Sell some of your shares?</h3><div class="note">Sell 5% of the company from your own stake for about <b class="gold">${money(got)}</b>. The money goes to your personal fortune, not the company. Your stake falls to ${((e.founder - 0.05) * 100).toFixed(1)}%. Investors may read it as a lack of confidence.</div>`, [
+    { label: 'Sell 5%', cls: 'btn-accent', action: () => { e.founder -= 0.05; const pu = e.inv.find(x => x.n === PUBLIC); if (pu) pu.share += 0.05; STATE.wealth = (STATE.wealth || 0) + got; e.sent *= 0.98; playSound('coin'); news(`You sold shares worth ${money(got)}.`, '#ffd166'); checkLegacy(); renderBiz(); save(); } },
+    { label: 'Cancel' }]);
+}
+function secondaryOffer() {
+  const e = eqx(); if (!e.pub) return;
+  if (e.secCd > 0) { toast(`Investors need ${e.secCd} more months before another share sale.`, '#ff6b7d'); return; }
+  const got = Math.round(marketCap() * 0.05 * 0.95);
+  showModal(`<h3>Raise money with new shares?</h3><div class="note">Issue 5% new shares for about <b class="gold">${money(got)}</b> of company cash. Every shareholder, you included, is diluted and the share price usually dips.</div>`, [
+    { label: 'Issue shares', cls: 'btn-accent', action: () => { eqIssue(0.05, PUBLIC); earn(got, 'Share issue'); e.sent *= 0.97; e.secCd = 12; playSound('coin'); news(`Share sale raised ${money(got)}.`, '#ffd166'); renderBiz(); save(); } },
+    { label: 'Cancel' }]);
+}
+function buybackShares() {
+  const e = eqx(), pu = e.inv.find(x => x.n === PUBLIC); if (!e.pub || !pu || pu.share < 0.03) return;
+  if (e.buyCd > 0) { toast(`The last buyback was recent. Try again in ${e.buyCd} months.`, '#ff6b7d'); return; }
+  const f = 0.02, cost = Math.round(marketCap() * f * 1.02);
+  showModal(`<h3>Buy back shares?</h3><div class="note">Spend <b class="gold">${money(cost)}</b> of company cash buying back 2% of the shares. Your stake rises and the market usually likes it.</div>`, [
+    { label: `Buy back for ${money(cost)}`, cls: 'btn-accent', disabled: STATE.gold < cost, action: () => {
+      if (!spend(cost, 'Buybacks')) return; pu.share -= f; const tot = 1 - f; e.founder /= tot; e.inv.forEach(x => { x.share /= tot; }); e.shares = Math.round(e.shares * tot); e.sent *= 1.02; e.buyCd = 6;
+      playSound('coin'); news('Share buyback completed.', '#06d6a0'); renderBiz(); save(); } },
+    { label: 'Cancel' }]);
+}
+function boardMonth() {
+  const e = eqx();
+  if (e.secCd > 0) e.secCd--; if (e.buyCd > 0) e.buyCd--;
+  if (e.goal && e.goal.k === 'profit') { const last = STATE.plHist[STATE.plHist.length - 1]; if (last) e.goal.acc = (e.goal.acc || 0) + opProfit(last); }
+  goalCheck();
+  if (e.pub) {
+    e.sent = clamp(e.sent * 0.97 + 0.03 + rnd(-0.03, 0.03) + (hasExec('ir') ? 0.004 : 0), 0.45, 2.2);
+    const p = sharePrice(); e.hist.push(+p.toFixed(2)); if (e.hist.length > 36) e.hist.shift();
+    e.peak = Math.max(e.peak * 0.995, p);
+    if (p < e.peak * 0.6 && STATE.cal.y - (e.act || 0) >= 2) { e.act = STATE.cal.y; activistEvent(); }
+  }
+  if (STATE.cal.m % 3 !== 0 || !hasInvestors()) return;
+  const q = STATE.plHist.slice(-3), qp = q.reduce((a, x) => a + opProfit(x), 0), f0 = q.length && q[0].fans ? q[0].fans : STATE.fans;
+  let dc = (qp > 0 ? 4 : -6) + (STATE.fans > f0 * 1.05 ? 3 : 0) + (hasExec('ir') ? 5 : 0) + (e.goal && goalProgress(e.goal) > 0.6 ? 2 : 0);
+  const lines = [`Operating profit this quarter: <b class="${qp >= 0 ? 'good' : 'bad'}">${money(qp)}</b>`];
+  let paid = 0;
+  if (e.pub) {
+    const exp = e.qExp || 0, diff = exp > 0 ? (qp - exp) / exp : (qp > 0 ? 1 : -1), r = diff >= 0.03 ? 'beat' : diff < -0.03 ? 'miss' : 'line', ir = hasExec('ir') ? 0.015 : 0;
+    e.sent = clamp(e.sent * (r === 'beat' ? 1.05 + ir : r === 'miss' ? 0.95 + ir : 1 + ir / 2), 0.45, 2.2);
+    lines.push(`Analysts expected ${money(exp)}: <b class="${r === 'beat' ? 'good' : r === 'miss' ? 'bad' : ''}">${r === 'beat' ? 'beat' : r === 'miss' ? 'missed' : 'in line'}</b>. Share price now ${priceStr(sharePrice())}.`);
+    e.qLog.unshift({ y: STATE.cal.y, q: STATE.cal.m / 3, p: qp, exp, r }); if (e.qLog.length > 8) e.qLog.length = 8;
+    e.qExp = qp > 0 ? qp * 1.02 : exp * 0.9;
+    dc += r === 'beat' ? 3 : r === 'miss' ? -3 : 0;
+    const dv = DIV_OPTS[e.div] || DIV_OPTS[0];
+    if (dv.r && qp > 0) {
+      paid = Math.round(qp * (1 - taxRate()) * dv.r);
+      if (paid > 0 && STATE.gold > paid) { charge(paid, 'Dividends'); STATE.wealth = (STATE.wealth || 0) + Math.round(paid * e.founder); e.sent = Math.min(2.2, e.sent * 1.015); lines.push(`Dividend paid: ${money(paid)} (${money(Math.round(paid * e.founder))} to you).`); }
+    }
+  }
+  e.conf = clamp(e.conf + dc, 0, 100);
+  if (!e.goal && !e.pub) e.goal = makeGoal();
+  lines.push(`Board confidence: <b>${Math.round(e.conf)}</b> (${dc >= 0 ? '+' : ''}${dc})`);
+  if (e.goal) lines.push(`Current goal: ${esc(e.goal.n)} · ${Math.round(Math.min(1, goalProgress(e.goal)) * 100)}% · ${Math.max(0, e.goal.due - monthIdx())} months left`);
+  if (e.conf <= 0) {
+    const cut = e.founder * 0.1; e.founder -= cut; const top = e.inv.slice().sort((a, b) => b.share - a.share)[0]; if (top) top.share += cut;
+    e.conf = 40; STATE.team.forEach(m => { m.morale = Math.max(0, m.morale - 10); });
+    playSound('error');
+    showModal(`<h3>Boardroom revolt</h3><div class="note">${lines.join('<br>')}<br><br><span class="bad">The investors forced through a share issue at a knock-down price. Your stake fell to ${(e.founder * 100).toFixed(1)}% and the team is rattled.</span></div>`);
+    return;
+  }
+  const btns = [{ label: 'Close', cls: 'btn-accent' }];
+  if (e.conf < 30) {
+    const sp = Math.round(companyValue() * 0.03 / 1000) * 1000;
+    lines.push('<span class="bad">The board is losing patience and wants action.</span>');
+    btns.length = 0;
+    btns.push({ label: `Special dividend ${money(sp)}`, cls: 'btn-accent', disabled: STATE.gold < sp, action: () => { if (!spend(sp, 'Dividends')) return; STATE.wealth = (STATE.wealth || 0) + Math.round(sp * e.founder); e.conf = Math.min(100, e.conf + 20); news('The special dividend calmed the board.', '#06d6a0'); } },
+      { label: 'Promise cost cuts', action: () => { e.conf = Math.min(100, e.conf + 10); STATE.team.forEach(m => { m.morale = Math.max(0, m.morale - 6); }); news('Cost cuts announced. The team is worried.', '#ef476f'); } },
+      { label: 'Hold firm', action: () => { e.conf = Math.max(0, e.conf - 8); } });
+  }
+  showModal(`<h3>📊 Board meeting · Q${Math.ceil(STATE.cal.m / 3)} Y${STATE.cal.y}</h3><div class="note">${lines.join('<br>')}</div>`, btns);
+}
+function activistEvent() {
+  const e = eqx();
+  showModal(`<h3>Activist investor</h3><div class="note">A hedge fund has bought a large stake after the share price slump. It demands you return cash to shareholders.</div>`, [
+    { label: 'Pay 25% dividends', cls: 'btn-accent', action: () => { e.div = 2; e.sent = Math.min(2.2, e.sent * 1.05); news('Dividend policy raised. The activist backs off.', '#06d6a0'); } },
+    { label: 'Refuse', action: () => { e.conf = Math.max(0, e.conf - 15); e.sent *= 0.97; news('The activist went public with its criticism.', '#ef476f'); } }]);
+}
+
+/* ---------- Financial statements ---------- */
+const CAT_GROUP = {
+  'Game sales': 'rev', 'Live ops': 'rev', 'Software sales': 'rev', 'Catalogue': 'rev', 'DLC': 'rev', 'Ports': 'rev', 'Remasters': 'rev', 'Bundles': 'rev', 'Contracts': 'rev',
+  'Merch': 'rev', 'Royalties': 'rev', 'Engine licences': 'rev', 'Subsidiaries': 'rev', 'Label': 'rev', 'Awards': 'rev', 'Publisher': 'rev',
+  'Development': 'cos', 'Licences': 'cos', 'Marketing': 'cos', 'Localisation': 'cos', 'Engine support': 'cos', 'Label advances': 'cos',
+  'Hardware': 'rev', 'Storefront': 'rev',
+  'Salaries': 'opx', 'Executives': 'opx', 'Benefits': 'opx', 'Bonuses': 'opx', 'Rent': 'opx', 'Upkeep': 'opx', 'Teams': 'opx', 'Staff': 'opx', 'Office': 'opx',
+  'Research': 'opx', 'Events': 'opx', 'Departments': 'opx', 'Regional offices': 'opx', 'Engine': 'opx', 'Other': 'opx',
+  'Tax': 'tax', 'Acquisitions': 'inv',
+  'Loans in': 'fin', 'Loan repayments': 'fin', 'Investment': 'fin', 'Share issue': 'fin', 'Dividends': 'fin', 'Buybacks': 'fin'
+};
+const GROUP_NAME = { rev: 'Revenue', cos: 'Direct costs', ven: 'Hardware and store (net)', opx: 'Operating costs', tax: 'Tax', inv: 'Investing', fin: 'Financing' };
+function catGroup(k) { return CAT_GROUP[k] || (/sales|income/i.test(k) ? 'rev' : 'opx'); }
+function mergeCats(list) { const o = {}; list.forEach(c => { for (const k in c) o[k] = (o[k] || 0) + c[k]; }); return o; }
+function periodCats(p) {
+  const y = STATE.cal.y, H = STATE.plHist;
+  if (p === 'month') return { cats: STATE.book, label: 'This month so far', open: H.length ? H[H.length - 1].cash : null };
+  if (p === 'last') { const e = H[H.length - 1], b = H[H.length - 2]; return { cats: e ? e.cats : {}, label: e ? `Y${e.y} M${e.m}` : 'Last month', open: b ? b.cash : null, close: e ? e.cash : null }; }
+  if (p === 'ytd') { const es = H.filter(e => e.y === y), b = H[H.length - es.length - 1]; return { cats: mergeCats(es.map(e => e.cats).concat([STATE.book])), label: `Year ${y} to date`, open: b ? b.cash : null }; }
+  const es = H.filter(e => e.y === y - 1), i0 = H.indexOf(es[0]), b = i0 > 0 ? H[i0 - 1] : null;
+  return { cats: mergeCats(es.map(e => e.cats)), label: `Year ${y - 1}`, open: b ? b.cash : null, close: es.length ? es[es.length - 1].cash : null, partial: es.length < 12 };
+}
+function groupSums(cats) {
+  const g = {}; for (const k in cats) { const gr = catGroup(k); (g[gr] = g[gr] || { t: 0, rows: [] }).t += cats[k]; g[gr].rows.push([k, cats[k]]); }
+  Object.values(g).forEach(x => x.rows.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])));
+  return g;
+}
+function catalogueMonthly() { const live = new Set(STATE.live.map(g => g.title)), now = monthIdx(); return STATE.history.reduce((a, h) => a + catIncome(h, now, live), 0); }
+function balanceSheet() {
+  const A = [], L = [];
+  A.push(['Cash', Math.max(0, STATE.gold)]);
+  const wip = STATE.devs.reduce((a, d) => a + (d && d.cost ? d.cost : 0), 0); if (wip) A.push(['Projects in development', wip]);
+  const cat = STATE.live.reduce((a, g) => a + weeklyRev(g) * 20, 0) + catalogueMonthly() * 12; if (cat) A.push(['Games and software catalogue', Math.round(cat)]);
+  const ven = STATE.ownPlats.reduce((a, op) => a + (op.disc ? 0 : op.installed * 30), 0) + (storeLive() ? STATE.store.users * 20 : 0); if (ven) A.push(['Hardware and storefront', ven]);
+  if (engReady()) A.push(['Game engine', Math.round(engVerCost(STATE.engine.v || 1) * 0.6)]);
+  const subs = STATE.rivals.filter(r => r.owned).reduce((a, r) => a + acqIncome(r) * 30, 0); if (subs) A.push(['Subsidiaries', subs]);
+  const lab = (STATE.label && STATE.label.signed || []).reduce((a, p) => a + p.adv, 0); if (lab) A.push(['Label advances', lab]);
+  const off = Object.keys(STATE.offices || {}).length * officeCost() * 0.5; if (off) A.push(['Regional offices', Math.round(off)]);
+  A.push(['Brand and fanbase', STATE.fans * 2]);
+  if (STATE.gold < 0) L.push(['Overdraft', -STATE.gold]);
+  if (loanOwed()) L.push(['Bank loans', loanOwed()]);
+  const ytd = periodCats('ytd'), prof = opProfit({ cats: ytd.cats }); if (prof > 0) L.push(['Tax due at year end', Math.round(prof * taxRate())]);
+  const ta = A.reduce((a, x) => a + x[1], 0), tl = L.reduce((a, x) => a + x[1], 0);
+  return { A, L, ta, tl, eq: ta - tl };
+}
+
+/* ---------- Back catalogue, DLC, ports, remasters, bundles ---------- */
+function catIncome(h, now, live) {
+  if (live.has(h.title)) return 0;
+  const age = now - histT(h); if (age < 1) return 0;
+  const paid = h.monet === 0 ? 1 : h.monet === 4 ? 0 : 0.3;
+  return (h.rev || h.dl * 2) * 0.008 * Math.pow(0.95, age) * paid * ((h.total || 20) / 25);
+}
+function catalogueMonth() {
+  const live = new Set(STATE.live.map(g => g.title)), now = monthIdx();
+  let tot = 0;
+  STATE.history.forEach(h => { const x = catIncome(h, now, live); if (x >= 1) { tot += x; h.catRev = (h.catRev || 0) + x; } });
+  if (tot >= 1) earn(Math.round(tot), 'Catalogue');
+  const L = STATE.label;
+  if (L && L.tail && L.tail.length) { let t = 0; L.tail.forEach(x => { t += x.amt; L.rev += x.amt; x.amt *= 0.85; x.months--; }); L.tail = L.tail.filter(x => x.months > 0 && x.amt >= 20); if (t >= 1) earn(Math.round(t), 'Label'); }
+}
+function findHist(title, t) { return STATE.history.find(h => h.title === title && histT(h) === t); }
+function histCost(h) { return h.cost || Math.round(devCost(h.genre, 1) * (SIZES[h.size === undefined ? 1 : h.size] || SIZES[1]).cost); }
+function histAge(h) { return monthIdx() - histT(h); }
+const JOBS = {
+  dlc: { n: 'DLC', icon: '🧩', u: 'dlc', color: '#c77dff' },
+  port: { n: 'Port', icon: '🔁', u: 'dlc', color: '#4cc9f0' },
+  remaster: { n: 'Remaster', icon: '✨', u: 'remaster', color: '#ffd166' }
+};
+function jobWeeks(h, type) { const w = (SIZES[h.size === undefined ? 1 : h.size] || SIZES[1]).weeks; return type === 'dlc' ? Math.max(3, Math.round(w * 0.3)) : type === 'port' ? Math.max(2, Math.round(w * 0.2)) : Math.max(6, Math.round(w * 0.5)); }
+function jobCost(h, type, platN) {
+  const c = histCost(h);
+  if (type === 'dlc') return Math.round(c * 0.3 * (1 + 0.15 * (h.dlc || 0)) / 100) * 100;
+  if (type === 'port') { const p = P[platN]; return Math.round(((p ? p.fee : 5000) * ((SIZES[h.size === undefined ? 1 : h.size] || SIZES[1]).fee || 1) + c * 0.2) / 100) * 100; }
+  return Math.round(c * 0.6 / 100) * 100;
+}
+function jobWhy(h, type) {
+  if (!bizOn(JOBS[type].u)) return `${JOBS[type].n}s unlock at studio Rank ${bizRank(JOBS[type].u)}.`;
+  if (type === 'dlc') { if ((h.dlc || 0) >= 3) return 'This game already has three DLC packs.'; if (histAge(h) > 48) return 'This game is too old for new DLC. Try a remaster.'; }
+  if (type === 'remaster') { if (h.remastered || h.remasterOf) return 'This game has already been remastered.'; if (histAge(h) < 60) return 'Remasters need a game at least five years old.'; if ((h.total || 0) < 26) return 'Only games scoring 26 or more are worth remastering.'; }
+  if (type === 'port' && !portTargets(h).length) return 'There are no new platforms you hold a licence for.';
+  return '';
+}
+function portTargets(h) { const have = new Set([...(h.plats || [h.platform]), ...(h.ports || [])]); return PLATFORMS.filter(p => platformOpen(p) && !p.store && !have.has(p.n)); }
+let jobCtx = null;
+function jobModalIdx(k, type) { const h = STATE.history[k]; if (h) jobModal(h.title, histT(h), type); }
+function jobTeam() {
+  const ok = t => !STATE.devs[t] && teamStaff(t).some(m => m.vac <= 0), f = STATE.focus || 0;
+  if (ok(f)) return f;
+  for (let t = 0; t < teamCount(); t++) if (ok(t)) return t;
+  return -1;
+}
+function jobModal(title, t, type) {
+  const h = findHist(title, t); if (!h) return;
+  jobCtx = { title: h.title, t };
+  const why = jobWhy(h, type); if (why) { toast(why, '#ff6b7d'); return; }
+  const tm = jobTeam();
+  if (tm < 0) { toast(teamCount() > 1 ? 'Every team is busy. Wait for one to finish its project.' : 'Your team is busy. Wait for the current project to finish.', '#ff6b7d'); return; }
+  const w = jobWeeks(h, type);
+  const info = { dlc: `An expansion pack for ${esc(h.title)}. Sells to its existing players${STATE.live.some(g => g.title === h.title) ? ' and brings players back to the live game' : ''}. Pack ${(h.dlc || 0) + 1} of 3: each one sells a little less.`,
+    remaster: `A modern remaster of ${esc(h.title)} (${h.total}/40, ${Math.floor(histAge(h) / 12)} years old). Nostalgia and your bigger fanbase help it sell. Critics judge it on your team's craft.`,
+    port: `Bring ${esc(h.title)} to a new platform. Sales depend on the platform's market and how good the game was.` }[type];
+  if (type === 'port') {
+    const rows = portTargets(h).map(p => `<button onclick="closeModal();startJob(jobCtx.title,jobCtx.t,'port','${p.n}')">${esc(p.n)} · ${money(jobCost(h, 'port', p.n))}<br><span class="mini muted">market ${marketNow(p).toFixed(1)}${p.fav.includes(h.genre) ? ' · favours ' + esc(h.genre) : ''}</span></button>`).join('');
+    showModal(`<h3>🔁 Port ${esc(h.title)}</h3><div class="note">${info}<br>${teamName(tm)} · about ${w} weeks.</div><div style="display:flex;flex-direction:column;gap:6px;">${rows}</div>`, [{ label: 'Cancel' }]);
+    return;
+  }
+  const c = jobCost(h, type);
+  showModal(`<h3>${JOBS[type].icon} ${JOBS[type].n}: ${esc(h.title)}</h3><div class="note">${info}<br><br>Cost <b class="gold">${money(c)}</b> · ${teamName(tm)} · about ${w} weeks</div>`, [
+    { label: `Start (${money(c)})`, cls: 'btn-accent', disabled: STATE.gold < c, action: () => startJob(h.title, t, type) }, { label: 'Cancel' }]);
+}
+function startJob(title, t, type, platN) {
+  const h = findHist(title, t), tm = jobTeam(); if (!h || tm < 0) return;
+  if (tm !== (STATE.focus || 0)) focusTeam(tm);
+  const c = jobCost(h, type, platN);
+  if (!spend(c, 'Development')) return;
+  const w = jobWeeks(h, type), hp = Math.max(30, Math.round(w * teamWeekly(tm)));
+  const nm = type === 'remaster' ? `${h.title} Remastered` : type === 'dlc' ? `${h.title} DLC ${(h.dlc || 0) + 1}` : `${h.title} for ${platN}`;
+  STATE.activeDev = { kind: 'contract', job: { type, title: h.title, t, plat: platN || '' }, team: tm, id: STATE.nextDevId++, title: nm, pay: 0, cost: c, phase: 1, phaseName: JOBS[type].n,
+    rank: STATE.rank, hits: 0, gainSum: 0, stats: [0, 0, 0, 0], bugs: 0, weeks: 0,
+    balloon: { x: 160, y: 146, r: 18, hp, maxHp: hp, color: JOBS[type].color } };
+  playSound('click'); news(`${JOBS[type].n} started: ${nm}`, '#66fcf1');
+  renderDevMode(); renderLive(); save();
+}
+function jobQuality(t) {
+  const crew = teamStaff(t).filter(m => m.vac <= 0); if (!crew.length) return 1;
+  const sk = crew.reduce((a, m) => { const R = ROLES[m.role] || ROLES.Planner; return a + (m.s[R.main] + m.s[R.sub]) / 2; }, 0) / crew.length;
+  return clamp(0.6 + 0.4 * sk / targetSkill(STATE.rank), 0.6, 1.4);
+}
+function finishJob(d) {
+  const j = d.job, h = findHist(j.title, j.t), qf = jobQuality(d.team || 0);
+  STATE.devs[d.team || 0] = null; projectiles = projectiles.filter(x => x.devId !== d.id);
+  if (!h) { news(`${d.title} was finished, but the original game is no longer on record.`, '#9aa5b1'); renderDevMode(); renderAll(); save(); return; }
+  const age = histAge(h), fresh = Math.pow(0.97, Math.max(0, age)), g = STATE.live.find(x => x.title === h.title), base = h.rev || h.dl * 2;
+  let html = '', rev = 0, fans = 0;
+  if (j.type === 'dlc') {
+    const pf = h.monet === 0 ? 0.25 : h.monet === 4 ? 0.1 : 0.12;
+    rev = Math.round(base * pf * ((h.total || 20) / 28) * qf * Math.pow(fresh, 0.7) * Math.pow(0.75, h.dlc || 0) * demandOf(h.genre));
+    fans = Math.round(h.dl * 0.01 * qf);
+    h.dlc = (h.dlc || 0) + 1;
+    if (g) { g.users = Math.round(g.users * 1.1); g.cap = Math.round((g.cap || g.users) * 1.12); g.ret = Math.min(0.985, g.ret + 0.005); g.event = Math.max(g.event || 0, 3); g.peak = Math.max(g.peak, g.users); }
+    earn(rev, 'DLC');
+    html = `<h3>🧩 ${esc(d.title)} is out</h3><div class="note">Sales: <b class="gold">${money(rev)}</b> · +${fmt(fans)} fans${g ? '<br>Players flocked back to the live game.' : ''}<br><span class="muted">Quality ×${qf.toFixed(2)} · ${h.dlc}/3 packs released</span></div>`;
+  } else if (j.type === 'port') {
+    const p = P[j.plat] || P.Smartphone, mo = MONET[h.monet === undefined ? 1 : h.monet] || MONET[1];
+    const pdl = Math.round(h.dl * 0.3 * clamp(marketNow(p), 0.3, 3) / 1.5 * Math.pow((h.total || 20) / 28, 1.3) * Math.pow(fresh, 0.5) * qf * (p.fav.includes(h.genre) ? 1.2 : 1));
+    rev = Math.round(pdl * p.arpu * 1.5 * mo.launch * 0.6);
+    fans = Math.round(pdl * 0.03);
+    h.ports = h.ports || []; h.ports.push(p.n); h.dl += pdl;
+    if (g) { g.plats = (g.plats || [g.platform]).concat([p.n]); g.users += Math.round(pdl * 0.3); g.cap = (g.cap || g.users) + Math.round(pdl * 0.5); }
+    if (!STATE.platformsUsed.includes(p.n)) STATE.platformsUsed.push(p.n);
+    earn(rev, 'Ports');
+    html = `<h3>🔁 ${esc(h.title)} on ${esc(p.n)}</h3><div class="note">${fmt(pdl)} new downloads · <b class="gold">${money(rev)}</b> · +${fmt(fans)} fans</div>`;
+  } else {
+    const score = clamp(Math.round(h.total - 1 + (qf - 1) * 8 + rnd(-1, 2)), 8, 40);
+    const nost = 1 + Math.min(1, age / 120), fanK = clamp(Math.pow((STATE.fans + 1000) / ((h.fansAt || STATE.fans) + 1000), 0.35), 1, 3);
+    const rdl = Math.round(h.dl * 0.45 * nost * Math.pow(score / Math.max(1, h.total), 2) * demandOf(h.genre) * fanK);
+    const plats = (h.plats || [h.platform]).map(n => P[n]).filter(p => p && platLive(p));
+    const arpu = plats.length ? plats.reduce((a, p) => a + p.arpu, 0) / plats.length : 3, mo = MONET[h.monet === undefined ? 1 : h.monet] || MONET[1];
+    rev = Math.round(rdl * arpu * 1.5 * mo.launch * 0.8 * (SIZES[h.size === undefined ? 1 : h.size] || SIZES[1]).rev);
+    fans = Math.round(rdl * 0.04);
+    h.remastered = true;
+    const entry = { title: d.title, genre: h.genre, theme: h.theme, platform: plats.length ? plats[0].n : h.platform, plats: plats.length ? plats.map(p => p.n) : (h.plats || [h.platform]), size: h.size, weeks: d.weeks || 0,
+      total: score, dl: rdl, y: STATE.cal.y, t: monthIdx(), pub: 'Self-publish', hook: h.hook, audience: h.audience, sequelOf: '', seqN: 1, rev, monet: h.monet, remasterOf: h.title, dlc: 0, ports: [], fansAt: STATE.fans, cost: d.cost };
+    STATE.history.unshift(entry); if (STATE.history.length > 40) STATE.history.length = 40;
+    addLive({ id: d.id, title: d.title, genre: h.genre, platform: entry.platform, plats: entry.plats, users: rdl, peak: rdl, arpu: +arpu.toFixed(2), ret: clamp(0.84 + 0.1 * score / 40 + mo.ret, 0.78, 0.97), score, weeks: 0, event: 0,
+      revTotal: rev, updates: 0, cap: Math.round(rdl * 2), cut: 0, liveMul: mo.live, monet: h.monet, saleWeeks: 0, saleMul: 1 });
+    earn(rev, 'Remasters'); addRankExp(Math.round(8 + score / 2));
+    html = `<h3>✨ ${esc(d.title)}</h3><div class="big">${score} / 40</div><div class="note">Original: ${h.total}/40 · ${fmt(rdl)} downloads · <b class="gold">${money(rev)}</b> · +${fmt(fans)} fans<br><span class="muted">Nostalgia ×${nost.toFixed(2)} · team quality ×${qf.toFixed(2)}</span></div>`;
+  }
+  STATE.fans += fans; STATE.rp += 1; addRankExp(5);
+  playSound('coin'); showModal(html, [{ label: 'Great', cls: 'btn-accent' }]);
+  renderDevMode(); renderAll(); save();
+}
+let bundleSel = [];
+function bundleOk() { return bizOn('remaster') && monthIdx() - (STATE.lastBundle || -99) >= 6; }
+function bundleList() { return STATE.history.filter(h => histAge(h) >= 6 && monthIdx() - (h.bundledAt || -99) >= 12); }
+function bundleValue(sel) {
+  const hs = sel.map(k => STATE.history[k]).filter(Boolean);
+  return Math.round(hs.reduce((a, h) => a + (h.rev || h.dl * 2) * 0.07 * ((h.total || 20) / 28) * Math.pow(0.98, histAge(h)), 0) * (1 + 0.12 * Math.max(0, hs.length - 2)));
+}
+function bundleModal() {
+  if (!bizOn('remaster')) { toast(`Bundles unlock at studio Rank ${bizRank('remaster')}.`, '#ff6b7d'); return; }
+  if (!bundleOk()) { toast(`You can run one bundle every six months. Next in ${6 - (monthIdx() - STATE.lastBundle)} months.`, '#ff6b7d'); return; }
+  bundleSel = bundleSel.filter(k => STATE.history[k]);
+  const list = bundleList();
+  const rows = list.slice(0, 14).map(h => { const k = STATE.history.indexOf(h); return `<button class="${bundleSel.includes(k) ? 'btn-accent' : ''}" onclick="bundlePick(${k})">${bundleSel.includes(k) ? '✓ ' : ''}${esc(h.title)} <span class="mini muted">${h.total}/40 · ${Math.floor(histAge(h) / 12)}y</span></button>`; }).join('');
+  const v = bundleValue(bundleSel);
+  showModal(`<h3>📦 Make a bundle</h3><div class="note">Pick 2 to 5 older games to sell together for a few weeks. Strong, recent games sell best.${bundleSel.length >= 2 ? `<br>Expected sales: <b class="gold">${money(v)}</b>` : ''}</div><div style="display:flex;flex-direction:column;gap:5px;">${rows || '<span class="muted">No games are ready for a bundle yet.</span>'}</div>`, [
+    { label: bundleSel.length >= 2 ? `Launch bundle (${money(v)})` : 'Pick at least 2', cls: 'btn-accent', disabled: bundleSel.length < 2, action: () => {
+      const hs = bundleSel.map(k => STATE.history[k]).filter(Boolean); earn(v, 'Bundles'); STATE.lastBundle = monthIdx();
+      hs.forEach(h => { h.bundledAt = monthIdx(); }); STATE.fans += Math.round(hs.reduce((a, h) => a + h.dl * 0.005, 0)); bundleSel = [];
+      playSound('coin'); news(`Bundle launched: +${money(v)}`, '#ffd166'); renderLive(); save(); } },
+    { label: 'Cancel', action: () => { bundleSel = []; } }]);
+}
+function bundlePick(k) { const i = bundleSel.indexOf(k); if (i >= 0) bundleSel.splice(i, 1); else if (bundleSel.length < 5) bundleSel.push(k); closeModal(); bundleModal(); }
+function liveDiscount(id) {
+  const g = findLive(id); if (!g || g.saleWeeks > 0) return;
+  if (!bizOn('price')) return;
+  if ((g.saleCd || 0) > 0) { toast(`Players expect a break between sales. Next in ${g.saleCd} weeks.`, '#ff6b7d'); return; }
+  const paid = g.monet === 0, n = g.sales || 0, mul = (paid ? 1.8 : 1.4) * Math.pow(0.85, n);
+  g.saleWeeks = 4; g.saleMul = Math.max(1.05, mul); g.saleCd = 16; g.sales = n + 1;
+  g.users = Math.round(g.users * (paid ? 1.08 : 1.04)); g.peak = Math.max(g.peak, g.users); g.cap = Math.max(g.cap || 0, g.users);
+  playSound('coin'); news(`${g.title} is on sale for 4 weeks${n ? ' (players are getting used to discounts)' : ''}.`, '#ffd166'); renderLive(); save();
+}
+
+/* ---------- Publishing label ---------- */
+const INDIE_PRE = ['Moss', 'Tiny', 'Paper', 'Glow', 'Velvet', 'Rusty', 'Little', 'Brave', 'Hollow', 'Lucky', 'Static', 'Quiet', 'Copper', 'Maple'];
+const INDIE_SUF = ['Fox Games', 'Lantern', 'Pixel Co.', 'Owl Studio', 'Kite Works', 'Garden', 'Bytes', 'Island', 'Lab', 'Collective'];
+function newLabel() { return { open: false, rep: 30, pitches: [], signed: [], tail: [], log: [], done: 0, hits: 0, rev: 0, nextId: 1 }; }
+function labelx() { if (!STATE.label) STATE.label = newLabel(); return STATE.label; }
+function labelCost() { return Math.round(250000 * Math.sqrt(rankK()) / 10000) * 10000; }
+function labelExpect(p, q) {
+  const pl = P[p.plat] || P.Smartphone;
+  const dl = (400 + 25 * Math.pow(STATE.fans, 0.6)) * 0.45 * Math.pow((q === undefined ? p.q : q) / 20, 1.7) * SIZES[p.size].dl * clamp(marketNow(pl), 0.4, 3) * demandOf(p.genre) * (pl.fav.includes(p.genre) ? 1.2 : 1);
+  return { dl, gross: dl * pl.arpu * 1.5 * SIZES[p.size].rev };
+}
+function openLabel() {
+  const L = labelx(); if (L.open || !bizOn('label')) return;
+  const c = labelCost();
+  showModal(`<h3>Start a publishing label?</h3><div class="note">Costs <b class="gold">${money(c)}</b> to set up. Independent studios will pitch their games to you every month. You pay an advance, take a share of sales, and can add marketing. Pick well and your label's reputation attracts better games.</div>`, [
+    { label: `Start the label (${money(c)})`, cls: 'btn-accent', disabled: STATE.gold < c, action: () => { if (!spend(c, 'Office')) return; L.open = true; labelPitch(); labelPitch(); playSound('fanfare'); news('Your publishing label is open for pitches!', '#06d6a0'); renderBiz(); save(); } },
+    { label: 'Not now' }]);
+}
+function labelPitch() {
+  const L = labelx(), mean = 16 + L.rep * 0.15;
+  const q = clamp(Math.round(mean + rnd(-7, 7)), 8, 38);
+  const size = L.rep >= 80 && Math.random() < 0.15 ? 3 : L.rep >= 50 && Math.random() < 0.3 ? 2 : Math.random() < 0.5 ? 1 : 0;
+  const pls = PLATFORMS.filter(p => platLive(p) && !p.own), plat = pick(pls).n;
+  const p = { id: L.nextId++, studio: pick(INDIE_PRE) + ' ' + pick(INDIE_SUF), genre: pick(GENRES).n, theme: pick(THEMES).n, plat, size, q,
+    months: Math.max(2, Math.round(SIZES[size].weeks / 4.33 * rnd(0.8, 1.3))), exp: monthIdx() + 2 };
+  const w = hasExec('bizdev') ? 3 : 6; p.lo = clamp(Math.round(q - rnd(0, w)), 6, 40); p.hi = Math.min(40, p.lo + w);
+  p.title = suggestTitle(p.genre, p.theme);
+  p.adv = Math.max(2000, Math.round(labelExpect(p).gross * rnd(0.25, 0.4) / 500) * 500);
+  p.share = +clamp(0.62 - (q - 20) * 0.01 + rnd(-0.05, 0.05), 0.35, 0.7).toFixed(2);
+  if (STATE.auto && STATE.auto.pitch && hasExec('bizdev') && p.hi < 22) return;
+  L.pitches.push(p);
+}
+function labelMonth() {
+  const L = labelx(); if (!L.open) return;
+  const now = monthIdx();
+  L.pitches = L.pitches.filter(p => p.exp > now);
+  const n = 1 + (Math.random() < 0.5 ? 1 : 0) + (hasExec('bizdev') && Math.random() < 0.5 ? 1 : 0);
+  for (let i = 0; i < n && L.pitches.length < 4; i++) labelPitch();
+  L.signed.forEach(p => {
+    if (p.due <= now) return;
+    const r = Math.random();
+    if (r < 0.06) { p.due += ri(1, 2); news(`${p.studio} delayed ${p.title}.`, '#9aa5b1'); }
+    else if (r < 0.1 && !p.asked) {
+      p.asked = true; const ask = Math.round(p.adv * 0.2 / 500) * 500 + 500;
+      showModal(`<h3>${esc(p.studio)} needs money</h3><div class="note">${esc(p.studio)} has run over budget on <b>${esc(p.title)}</b> and asks for <b class="gold">${money(ask)}</b> more to finish it properly.</div>`, [
+        { label: `Pay ${money(ask)}`, cls: 'btn-accent', disabled: STATE.gold < ask, action: () => { if (!spend(ask, 'Label advances')) return; p.adv += ask; news(`You topped up ${p.studio}'s budget.`, '#06d6a0'); } },
+        { label: 'Refuse', action: () => { p.q = Math.max(6, p.q - 4); news(`${p.studio} will cut corners on ${p.title}.`, '#ef476f'); } }]);
+    }
+  });
+  L.signed.filter(p => p.due <= now).forEach(labelRelease);
+  L.signed = L.signed.filter(p => p.due > now);
+}
+function labelRelease(p) {
+  const L = labelx(), score = clamp(Math.round(p.q + rnd(-3, 3)), 6, 40);
+  const clash = rivalClash(p.genre), ex = labelExpect(p, score);
+  const dl = Math.round(ex.dl * hypeMulFor(p.hype || 0, p) * rnd(0.85, 1.15) * (clash ? clash.mul : 1)), gross = dl * (P[p.plat] || P.Smartphone).arpu * 1.5 * SIZES[p.size].rev;
+  const mine = Math.round(gross * p.share);
+  earn(mine, 'Label'); L.rev += mine; L.done++;
+  L.tail.push({ title: p.title, amt: Math.round(gross * p.share * 0.05), months: 12 });
+  STATE.fans += Math.round(dl * 0.01); demandHit(p.genre, 0.02);
+  L.rep = clamp(L.rep + (score >= 32 ? 10 : score >= 27 ? 5 : score < 18 ? -8 : score < 22 ? -3 : 1), 0, 100);
+  if (score >= 32) { L.hits++; addRankExp(10); }
+  L.log.unshift({ title: p.title, studio: p.studio, score, dl, mine, y: STATE.cal.y }); if (L.log.length > 12) L.log.length = 12;
+  news(`Label release: ${p.title} by ${p.studio} scored ${score}/40 · +${money(mine)}`, score >= 30 ? '#ffd166' : '#66fcf1');
+  checkMilestones(); checkLegacy();
+}
+function pitchFind(id) { return labelx().pitches.find(p => p.id === id); }
+function pitchSign(id, mk) {
+  const L = labelx(), p = pitchFind(id); if (!p) return;
+  const mkt = [0, Math.round(p.adv * 0.3 / 500) * 500, Math.round(p.adv * 0.7 / 500) * 500][mk];
+  if (STATE.gold < p.adv + mkt) { toast('Not enough cash for the advance and marketing.', '#ff6b7d'); return; }
+  spend(p.adv, 'Label advances'); if (mkt) spend(mkt, 'Marketing');
+  p.hype = [10, 45, 80][mk]; p.due = monthIdx() + p.months; p.mkt = mkt;
+  L.signed.push(p); L.pitches = L.pitches.filter(x => x !== p);
+  playSound('fanfare'); news(`Signed ${p.title} from ${p.studio}. Release in about ${p.months} months.`, '#06d6a0'); renderBiz(); save();
+}
+function pitchHaggle(id, kind) {
+  const L = labelx(), p = pitchFind(id); if (!p || p.haggled) return;
+  const ch = clamp(0.3 + L.rep / 250 + (hasExec('bizdev') ? 0.15 : 0) - (kind === 'share' ? 0.05 : 0), 0.1, 0.8);
+  p.haggled = true;
+  if (Math.random() < ch) {
+    if (kind === 'adv') p.adv = Math.round(p.adv * 0.8 / 500) * 500; else p.share = +Math.min(0.85, p.share + 0.1).toFixed(2);
+    playSound('coin'); news(`${p.studio} accepted your terms.`, '#06d6a0');
+  } else if (Math.random() < 0.5) { L.pitches = L.pitches.filter(x => x !== p); playSound('error'); news(`${p.studio} walked away and signed elsewhere.`, '#ef476f'); }
+  else news(`${p.studio} is holding firm on its terms.`, '#9aa5b1');
+  renderBiz(); save();
+}
+function pitchPass(id) { const L = labelx(); L.pitches = L.pitches.filter(x => x.id !== id); renderBiz(); save(); }
+
+/* ---------- Save backup ---------- */
+function saveCode() {
+  const data = JSON.stringify({ app: 'pocketDevStudio', v: STATE.v, s: STATE, legacy: loadLegacy() });
+  return btoa(unescape(encodeURIComponent(data)));
+}
+function backupModal() {
+  const code = saveCode();
+  STATE.lastBackup = Date.now(); save();
+  showModal(`<h3>💾 Back up your save</h3><div class="note mini">Keep a copy somewhere safe, such as Notes or Files. Safari can clear website data you haven't opened for a while, and this code brings your studio back on any device.</div>
+    <textarea id="save-code" readonly rows="5" style="width:100%;font-size:0.7rem;">${code}</textarea>`, [
+    { label: 'Copy code', cls: 'btn-accent', action: () => { copySaveCode(); return 'keep'; } },
+    { label: 'Download file', action: () => { downloadSave(code); return 'keep'; } },
+    { label: 'Done' }]);
+}
+function copySaveCode() {
+  const el = $('save-code'), txt = el ? el.value : saveCode();
+  const ok = () => toast('Save code copied.', '#06d6a0');
+  try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(txt).then(ok, () => { if (el) { el.select(); document.execCommand('copy'); ok(); } }); return; } } catch (e) {}
+  if (el) { el.focus(); el.select(); try { document.execCommand('copy'); ok(); } catch (e) { toast('Select the code and copy it.', '#ff6b7d'); } }
+}
+function downloadSave(code) {
+  try {
+    const blob = new Blob([code], { type: 'text/plain' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `pocket-dev-studio-Y${STATE.cal.y}M${STATE.cal.m}.txt`;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  } catch (e) { toast('Download is not available here. Copy the code instead.', '#ff6b7d'); }
+}
+function restoreModal() {
+  showModal(`<h3>Restore a save</h3><div class="note mini">Paste a save code, or choose a save file. This replaces the studio you are playing now.</div>
+    <textarea id="restore-code" rows="5" style="width:100%;font-size:0.7rem;" placeholder="Paste your save code here"></textarea>
+    <input id="restore-file" type="file" accept=".txt,.json,text/plain,application/json" style="margin-top:6px;" onchange="restoreFile(this)">`, [
+    { label: 'Restore', cls: 'btn-danger', action: () => { const el = $('restore-code'); return restoreFrom(el ? el.value : ''); } },
+    { label: 'Cancel' }]);
+}
+function restoreFile(inp) { const f = inp.files && inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const el = $('restore-code'); if (el) el.value = String(r.result || '').trim(); }; r.readAsText(f); }
+function parseSaveCode(txt) {
+  txt = String(txt || '').trim(); if (!txt) return null;
+  let obj = null;
+  try { obj = JSON.parse(txt); } catch (e) { try { obj = JSON.parse(decodeURIComponent(escape(atob(txt.replace(/\s+/g, ''))))); } catch (e2) { return null; } }
+  if (obj && obj.app === 'pocketDevStudio' && obj.s) return obj;
+  if (obj && obj.v && obj.team && obj.cal) return { s: obj };
+  return null;
+}
+function restoreFrom(txt) {
+  const obj = parseSaveCode(txt);
+  if (!obj || !(obj.s.v >= 1 && obj.s.v <= 9)) { toast("That doesn't look like a save code from this game.", '#ff6b7d'); return 'keep'; }
+  try {
+    const s = migrate(Object.assign(newGame(), obj.s));
+    if (obj.legacy) saveLegacy(Object.assign(loadLegacy(), obj.legacy));
+    while (modalOpen) closeModal(); modalQueue.length = 0;
+    STATE = attachDevs(s); afterReset(); save();
+    playSound('fanfare'); toast(`Restored: Year ${STATE.cal.y}, ${fmt(STATE.fans)} fans.`, '#06d6a0');
+  } catch (e) { toast('That save could not be loaded.', '#ff6b7d'); return 'keep'; }
+}
+function backupAge() {
+  if (!STATE.lastBackup) return 'never';
+  const d = Math.floor((Date.now() - STATE.lastBackup) / 86400000);
+  return d <= 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`;
+}
+
+/* ---------- Business sim: screens ---------- */
+EXECS.intl = { n: 'Localisation Director', sal: 4000, rank: 5, d: 'Localisation 30% cheaper, and picks the best regions for each game' };
+EXECS.ir = { n: 'Investor Relations', sal: 5000, rank: 9, d: '+5 board confidence a quarter, a steadier share price and softer earnings misses' };
+const EXEC_AUTO = { cmo: ['camp', 'Plan marketing campaigns'], hrm: ['renew', 'Handle contract renewals'], bizdev: ['pitch', 'Screen out weak label pitches'], cfo: ['loans', 'Repay loans when cash is healthy'] };
+function cfoAutoLoans() {
+  if (!(STATE.auto && STATE.auto.loans) || !hasExec('cfo') || !STATE.loans.length) return;
+  const safe = monthlyCost() * 6;
+  for (let i = STATE.loans.length - 1; i >= 0; i--) { const l = STATE.loans[i], pay = Math.round(l.left * 0.95); if (STATE.gold - pay > safe) { charge(pay, 'Loan repayments'); STATE.loans.splice(i, 1); news('Your CFO repaid a loan early.', '#06d6a0'); } }
+}
+function kv(a, b, cls) { return `<div class="row mini"><span>${a}</span><span class="${cls || ''}">${b}</span></div>`; }
+function signed(v) { return `<span class="${v >= 0 ? 'good' : 'bad'}">${v >= 0 ? '+' : ''}${money(Math.round(v))}</span>`; }
+function lineChart(series, h) {
+  h = h || 70; const all = series.flatMap(s => s.vals); if (all.length < 2) return '<div class="muted mini">Not enough history yet.</div>';
+  const n = Math.max(...series.map(s => s.vals.length)), w = 300, lo = Math.min(0, ...all), hi = Math.max(1, ...all), sc = v => (h - 4 - (v - lo) / ((hi - lo) || 1) * (h - 8)).toFixed(1);
+  const zero = lo < 0 ? `<line x1="0" x2="${w}" y1="${sc(0)}" y2="${sc(0)}" stroke="#ffffff33" stroke-dasharray="3 3"/>` : '';
+  const lines = series.map(s => `<polyline points="${s.vals.map((v, i) => `${(i / Math.max(1, n - 1) * w).toFixed(1)},${sc(v)}`).join(' ')}" fill="none" stroke="${s.color}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`).join('');
+  const key = series.length > 1 ? `<div class="mini muted">${series.map(s => `<span style="color:${s.color}">■</span> ${s.name}`).join(' · ')}</div>` : '';
+  return `<svg class="lchart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="${esc(series.map(s => s.name).join(' and '))} chart">${zero}${lines}</svg>${key}`;
+}
+function segBtns(items, cur, fn) { return items.map((x, i) => `<button class="${i === cur ? 'on' : ''}" onclick="${fn}(${typeof x.k === 'string' ? `'${x.k}'` : i})">${x.n}</button>`).join(''); }
+function setRep(k) { UIP.rep = k; saveUi(); playSound('click'); renderBiz(); }
+function setPer(k) { UIP.per = k; saveUi(); playSound('click'); renderBiz(); }
+
+function bizOverviewHtml() {
+  const H = STATE.plHist, last = H[H.length - 1], ytd = periodCats('ytd'), ytdP = opProfit({ cats: ytd.cats });
+  const lastG = last ? groupSums(last.cats) : {}, revL = lastG.rev ? lastG.rev.t : 0, costL = last ? opProfit(last) - revL : 0;
+  const burn = monthlyCost(), runway = burn > 0 ? STATE.gold / burn : 99, e = eqx();
+  let h = `<div class="sec">Company</div><div class="kpis">
+    <div><span>Cash</span><b class="gold">${fmtShort(STATE.gold)}</b></div>
+    <div><span>${e.pub ? 'Market value' : 'Company value'}</span><b>${fmtShort(marketCap())}</b></div>
+    <div><span>Your stake</span><b>${(e.founder * 100).toFixed(e.founder < 0.995 ? 1 : 0)}%</b><small>${fmtShort(stakeValue())}</small></div>
+    <div><span>Revenue last month</span><b class="good">${fmtShort(revL)}</b></div>
+    <div><span>Costs last month</span><b class="bad">${fmtShort(Math.max(0, -costL))}</b></div>
+    <div><span>Profit this year</span><b class="${ytdP >= 0 ? 'good' : 'bad'}">${fmtShort(ytdP)}</b></div></div>
+    <div class="note mini">Next payday <b class="bad">${money(burn)}</b> · cash covers ${runway >= 24 ? 'over 2 years' : runway.toFixed(1) + ' months'} · tax ${Math.round(taxRate() * 100)}% of yearly profit${STATE.wealth ? ` · your personal fortune <b class="gold">${money(STATE.wealth)}</b>` : ''}${STATE.investor && STATE.investor.weeks > 0 ? `<br>Angel investor takes 15% of game income for ${STATE.investor.weeks} more weeks` : ''}</div>`;
+  const hist = H.slice(-12), profits = hist.map(opProfit), maxAbs = Math.max(1, ...profits.map(Math.abs));
+  h += `<div class="sec">Monthly operating profit</div>` + (hist.length ? `<div class="pl-chart">${hist.map((x, i) => {
+    const v = profits[i], hh = Math.max(1, Math.round(Math.abs(v) / maxAbs * 40));
+    return `<div class="pl-col"><div class="pl-up">${v >= 0 ? `<i style="height:${hh}px;background:var(--good)"></i>` : ''}</div><div class="pl-dn">${v < 0 ? `<i style="height:${hh}px;background:var(--danger)"></i>` : ''}</div><span>${x.m}</span></div>`;
+  }).join('')}</div>` : '<div class="muted mini">No completed months yet.</div>');
+  const cashH = H.filter(x => x.cash !== undefined).slice(-24).map(x => x.cash);
+  if (cashH.length >= 2) h += `<div class="sec">Cash over ${cashH.length} months</div>` + lineChart([{ name: 'Cash', color: '#ffd166', vals: cashH }]);
+  const on = BIZ_UNLOCKS.filter(u => bizOn(u.k)), next = BIZ_UNLOCKS.filter(u => !bizOn(u.k)).slice(0, 4);
+  h += `<div class="sec">Business roadmap</div><div class="note mini">${next.length ? `Running now: ${on.map(u => u.n).join(', ')}.` : 'Every business system is unlocked: pricing, campaigns, demand, payroll, contracts, DLC and remasters, funding, international offices, your label and the stock market.'}</div>` +
+    next.map(u => `<div class="row card" style="flex-direction:row;"><span><b>${u.n}</b><br><span class="muted">${u.d}</span></span><span class="muted" style="white-space:nowrap">🔒 Rank ${u.r}</span></div>`).join('');
+  return h;
+}
+function finRows(rows, neg) { return rows.filter(r => Math.round(r[1])).map(([k, v]) => `<div class="row mini fr"><span>${esc(k)}</span><span>${signed(v)}</span></div>`).join(''); }
+function reportsHtml() {
+  const rep = UIP.rep || 'pl', per = UIP.per || 'last';
+  let h = `<div class="seg seg3" style="margin-top:6px;">${segBtns([{ k: 'pl', n: 'Profit & loss' }, { k: 'bs', n: 'Balance sheet' }, { k: 'cf', n: 'Cash flow' }], ['pl', 'bs', 'cf'].indexOf(rep), 'setRep')}</div>`;
+  if (rep !== 'bs') h += `<div class="seg seg4" style="margin-top:4px;">${segBtns([{ k: 'month', n: 'This month' }, { k: 'last', n: 'Last month' }, { k: 'ytd', n: 'This year' }, { k: 'lasty', n: 'Last year' }], ['month', 'last', 'ytd', 'lasty'].indexOf(per), 'setPer')}</div>`;
+  if (rep === 'bs') {
+    const b = balanceSheet(), e = eqx();
+    h += `<div class="sec">Balance sheet · today</div><div class="fin">${b.A.map(([k, v]) => kv(esc(k), money(v))).join('')}<div class="row mini ft"><span>Total assets</span><span>${money(b.ta)}</span></div>
+      ${b.L.map(([k, v]) => kv(esc(k), money(-v), 'bad')).join('')}<div class="row mini ft"><span>Total liabilities</span><span class="bad">${money(-b.tl)}</span></div>
+      <div class="row ft"><span>Net assets</span><span class="${b.eq >= 0 ? 'good' : 'bad'}">${money(b.eq)}</span></div></div>
+      <div class="note mini">Owned ${(e.founder * 100).toFixed(1)}% by you${e.inv.filter(x => x.share > 0.0001).map(x => `, ${(x.share * 100).toFixed(1)}% by ${esc(x.n)}`).join('')}. ${e.pub ? 'Market value' : 'The valuation investors use'} is <b>${money(marketCap())}</b>, which also prices in your recent profits.</div>`;
+    return h;
+  }
+  const pc = periodCats(per), g = groupSums(pc.cats), t = k => (g[k] ? g[k].t : 0), rows = k => (g[k] ? g[k].rows : []);
+  if (rep === 'pl') {
+    const gross = t('rev') + t('cos') + t('ven'), op = gross + t('opx'), estTax = -Math.max(0, Math.round(op * taxRate())), net = op + estTax;
+    h += `<div class="sec">Profit and loss · ${esc(pc.label)}${pc.partial ? ' (part year)' : ''}</div><div class="fin">
+      <div class="mini muted">Revenue</div>${finRows(rows('rev'))}<div class="row mini ft"><span>Total revenue</span>${signed(t('rev'))}</div>
+      <div class="mini muted">Direct costs</div>${finRows(rows('cos').concat(rows('ven')))}<div class="row mini ft"><span>Gross profit</span>${signed(gross)}</div>
+      <div class="mini muted">Operating costs</div>${finRows(rows('opx'))}<div class="row mini ft"><span>Operating profit</span>${signed(op)}</div>
+      ${estTax ? `<div class="row mini fr"><span>Tax at ${Math.round(taxRate() * 100)}% (estimated)</span>${signed(estTax)}</div>` : ''}<div class="row ft"><span>Net profit</span>${signed(net)}</div></div>
+      <div class="note mini">Margin ${t('rev') > 0 ? Math.round(op / t('rev') * 100) + '%' : 'n/a'}. Tax is billed once a year on the year's profit; the cash flow shows when it is actually paid. Loans, share sales and dividends are financing, so they appear there too.</div>`;
+    const H = STATE.plHist.slice(-24);
+    if (H.length >= 2) h += `<div class="sec">Revenue and costs by month</div>` + lineChart([{ name: 'Revenue', color: '#06d6a0', vals: H.map(x => { const gg = groupSums(x.cats); return gg.rev ? gg.rev.t : 0; }) },
+      { name: 'Costs', color: '#ef476f', vals: H.map(x => { const gg = groupSums(x.cats); return -((gg.cos ? gg.cos.t : 0) + (gg.ven ? gg.ven.t : 0) + (gg.opx ? gg.opx.t : 0)); }) }]);
+    return h;
+  }
+  const opc = t('rev') + t('cos') + t('ven') + t('opx'), net = opc + t('tax') + t('inv') + t('fin');
+  h += `<div class="sec">Cash flow · ${esc(pc.label)}</div><div class="fin">
+    ${kv('Cash from operations', signed(opc))}${t('tax') ? kv('Tax paid', signed(t('tax'))) : ''}
+    <div class="mini muted">Investing</div>${finRows(rows('inv')) || '<div class="mini muted fr">None</div>'}
+    <div class="mini muted">Financing</div>${finRows(rows('fin')) || '<div class="mini muted fr">None</div>'}
+    <div class="row ft"><span>Net change in cash</span>${signed(net)}</div>
+    ${pc.open !== null && pc.open !== undefined ? kv('Opening cash', money(pc.open)) + kv(per === 'month' || per === 'ytd' ? 'Cash now' : 'Closing cash', money(per === 'month' || per === 'ytd' ? STATE.gold : (pc.close !== undefined && pc.close !== null ? pc.close : pc.open + net))) : ''}</div>`;
+  return h;
+}
+function fundingHtml() {
+  const e = eqx(), holders = [{ n: 'You', share: e.founder, c: '#ffd166' }].concat(e.inv.filter(x => x.share > 0.0001).map((x, i) => ({ n: x.n, share: x.share, c: x.n === PUBLIC ? '#4cc9f0' : ['#c77dff', '#06d6a0', '#ff9f1c', '#f72585'][i % 4] })));
+  let h = `<div class="sec">Ownership</div><div class="ownbar">${holders.map(x => `<i style="width:${(x.share * 100).toFixed(2)}%;background:${x.c}"></i>`).join('')}</div>` +
+    holders.map(x => `<div class="row mini"><span><span style="color:${x.c}">■</span> ${esc(x.n)}</span><span>${(x.share * 100).toFixed(1)}% · ${fmtShort(marketCap() * x.share)}${x.n !== 'You' && x.n !== PUBLIC && !e.pub ? ` <button class="btn-sm" onclick="buyBackInvestor(this.dataset.n)" data-n="${esc(x.n)}">Buy out</button>` : ''}</span></div>`).join('');
+  if (e.pub) {
+    const p = sharePrice(), first = e.hist[0] || p;
+    h += `<div class="sec">Shares</div><div class="kpis"><div><span>Share price</span><b class="gold">${priceStr(p)}</b><small class="${p >= first ? 'good' : 'bad'}">${p >= first ? '+' : ''}${Math.round((p / first - 1) * 100)}% since listing</small></div>
+      <div><span>Market value</span><b>${fmtShort(marketCap())}</b></div><div><span>Next quarter</span><b>${fmtShort(e.qExp || 0)}</b><small>analysts expect</small></div></div>` +
+      lineChart([{ name: 'Share price', color: '#4cc9f0', vals: e.hist }]) +
+      `<div class="mini muted">Dividends (paid each quarter from profit)</div><div class="grid3">${DIV_OPTS.map((d, i) => `<button class="btn-sm ${e.div === i ? 'btn-accent' : ''}" onclick="setDividend(${i})">${d.n}</button>`).join('')}</div>
+      <div class="btns"><button class="btn-sm" onclick="sellFounderShares()">Sell 5% of my shares</button><button class="btn-sm" ${e.secCd > 0 ? 'disabled' : ''} data-why="Investors need ${e.secCd} more months before another share sale." onclick="secondaryOffer()">Issue new shares</button><button class="btn-sm" ${e.buyCd > 0 ? 'disabled' : ''} data-why="The last buyback was recent." onclick="buybackShares()">Buy back 2%</button></div>` +
+      (e.qLog.length ? `<div class="mini muted">Recent earnings</div>` + e.qLog.slice(0, 4).map(q => kv(`Y${q.y} Q${q.q}`, `${money(q.p)} vs ${money(q.exp)} · ${q.r === 'beat' || q.beat ? '<span class="good">beat</span>' : q.r === 'line' ? 'in line' : '<span class="bad">miss</span>'}`)).join('') : '');
+  }
+  if (hasInvestors()) {
+    h += `<div class="sec">Board</div><div class="statrow"><span>Confidence</span><div class="bar"><div style="background:${e.conf < 30 ? 'var(--danger)' : 'var(--good)'};width:${e.conf}%"></div></div><span>${Math.round(e.conf)}</span></div>` +
+      (e.goal ? `<div class="note mini">Investor goal: <b>${esc(e.goal.n)}</b><br>${Math.round(Math.min(1, goalProgress(e.goal)) * 100)}% done · ${Math.max(0, e.goal.due - monthIdx())} months left</div>` : `<div class="note mini">${e.pub ? 'As a listed company, beating analyst expectations keeps the board happy.' : 'The board will set a new goal at the next quarterly meeting.'}</div>`);
+  }
+  if (!e.pub) {
+    h += `<div class="sec">Funding rounds</div><div class="note mini">Sell part of the company for cash. Valuations rise with your company value, fan growth and board confidence.</div>` + ROUNDS.map(R => {
+      const done = e.rounds[R.k];
+      if (done) return `<div class="row card" style="flex-direction:row;"><span><b>${R.n}</b><br><span class="muted">Raised ${money(done.cash)} from ${esc(done.vc)} in Year ${done.y}</span></span><span class="good">Done</span></div>`;
+      if (!bizOn(R.k)) return `<div class="row card" style="flex-direction:row;"><span><b>${R.n}</b></span><span class="muted">🔒 Rank ${bizRank(R.k)}</span></div>`;
+      const v = roundVal(R);
+      return `<div class="card"><div class="row"><b>${R.n}</b><span class="muted">valued at ${fmtShort(v)}</span></div><div class="grid3">${R.sells.map((s, i) => `<button class="btn-sm" onclick="raiseRound('${R.k}',${i})">Sell ${Math.round(s * 100)}%<br>${fmtShort(v * s)}</button>`).join('')}</div></div>`;
+    }).join('');
+    const v = companyValue();
+    h += `<div class="sec">Stock market</div>` + (!bizOn('ipo') ? `<div class="note mini">Listing on the stock market unlocks at studio Rank ${bizRank('ipo')}.</div>`
+      : `<div class="card"><div class="row"><b>🔔 Initial public offering</b><span class="muted">${v >= IPO_VALUE ? '<span class="good">Banks are interested</span>' : 'needs ' + fmtShort(IPO_VALUE) + ' value'}</span></div>
+        <div class="muted mini">Sell 20% of the company to the public. You get a share price, quarterly earnings reports and dividends.</div>
+        <button class="btn-sm btn-accent" ${v < IPO_VALUE ? 'disabled' : ''} data-why="Banks want a company value of at least ${money(IPO_VALUE)} first." onclick="ipoModal()">Plan the listing</button></div>`);
+  }
+  h += `<div class="sec">Bank loans</div><div class="note mini">Credit limit ${money(creditLimit())} · owed ${money(loanOwed())} · ${Math.round(loanRate() * 100)}% interest, repaid monthly over a year.</div>` +
+    STATE.loans.map((l, i) => `<div class="row card" style="flex-direction:row;"><span>Loan of ${money(l.amt)}<br><span class="muted">${money(l.pay)}/mo · ${money(l.left)} left</span></span><button class="btn-sm" onclick="repayLoan(${i})">Repay ${money(Math.round(l.left * 0.95))}</button></div>`).join('') +
+    `<div class="grid3">${LOAN_SIZES.map((L, i) => { const a = loanAmt(i); return `<button class="btn-sm" ${loanOwed() + a * (1 + loanRate()) > creditLimit() ? 'disabled' : ''} data-why="That loan would take you over your ${money(creditLimit())} credit limit." onclick="takeLoan(${i})">${L.n}<br>${money(a)}</button>`; }).join('')}</div>`;
+  return h;
+}
+function mgmtHtml() {
+  let h = `<div class="sec">Executive team</div><div class="note mini">Executives don't use desks. They draw a monthly salary (signing fee: 2 months' pay) and boost the whole company. Some can take routine decisions off your hands.</div>` +
+    Object.entries(EXECS).map(([k, e]) => {
+      const hired = hasExec(k), au = EXEC_AUTO[k], on = au && STATE.auto && STATE.auto[au[0]];
+      const btn = STATE.rank < e.rank ? `<span class="muted">🔒 Rank ${e.rank}</span>` : hired ? `<button class="btn-sm btn-danger" onclick="fireExec('${k}')">Let go</button>`
+        : `<button class="btn-sm btn-accent" ${STATE.gold < execHireSal(k) * 2 ? 'disabled' : ''} onclick="hireExec('${k}')">Hire ${money(execHireSal(k) * 2)}</button>`;
+      return `<div class="card"><div class="row"><span><b>${e.n}</b>${hired ? ` · <span class="good">${money(STATE.execs[k])}/mo</span>` : ` · ${money(execHireSal(k))}/mo`}</span>${btn}</div><div class="muted mini">${e.d}</div>
+        ${hired && au ? `<button class="btn-sm ${on ? 'btn-accent' : ''}" onclick="toggleAuto('${au[0]}')">${on ? '✓ ' : ''}${au[1]}: ${on ? 'on' : 'off'}</button>` : ''}</div>`;
+    }).join('');
+  h += `<div class="sec">Company policies</div>` + Object.entries(POLICIES).map(([k, arr]) => `<div class="mini muted">${POLICY_LABEL[k]}</div>
+    <div class="grid3">${arr.map((po, i) => `<button class="btn-sm ${STATE.policy[k] === i ? 'btn-accent' : ''}" onclick="setPolicy('${k}',${i})">${po.n}</button>`).join('')}</div>
+    <div class="mini muted">${arr[STATE.policy[k]].d}</div>`).join('');
+  return h;
+}
+function sizeN(i) { return SIZES[i] ? SIZES[i].n : 'Small'; }
+function dealsHtml() {
+  const L = labelx();
+  let h = `<div class="sec">Publishing label</div>`;
+  if (!bizOn('label')) h += `<div class="note mini">Run your own label and publish other studios' games. Unlocks at studio Rank ${bizRank('label')}.</div>`;
+  else if (!L.open) h += `<div class="card"><div class="row"><b>Start a label</b><span class="gold">${money(labelCost())}</span></div><div class="muted mini">Indie studios pitch games every month. Pay an advance, take a share of sales, and build a reputation that attracts better games.</div><button class="btn-sm btn-accent" onclick="openLabel()">Start the label</button></div>`;
+  else {
+    h += `<div class="statrow"><span>Reputation</span><div class="bar"><div style="background:var(--gold);width:${L.rep}%"></div></div><span>${Math.round(L.rep)}</span></div>
+      <div class="note mini">${L.done} released · ${L.hits} hits (32+) · ${money(L.rev)} earned${hasExec('bizdev') ? ' · your Business Developer narrows the score estimates' : ''}</div>`;
+    h += `<div class="mini muted">Pitches (${L.pitches.length})</div>` + (L.pitches.map(p => {
+      const lo = labelExpect(p, p.lo).gross * p.share, hi = labelExpect(p, p.hi).gross * p.share, mk1 = Math.round(p.adv * 0.3 / 500) * 500;
+      return `<div class="card"><div class="row"><b>${esc(p.title)}</b><span class="muted">${esc(p.studio)}</span></div>
+        <div class="muted mini">${esc(p.genre)} × ${esc(p.theme)} · ${esc(p.plat)} · ${sizeN(p.size)} · ready in ~${p.months} months</div>
+        <div class="mini">Expected score <b>${p.lo}–${p.hi}</b> · demand ${demandLabel(demandOf(p.genre))}<br>Advance <b class="gold">${money(p.adv)}</b> · you take <b>${Math.round(p.share * 100)}%</b> · your sales about ${fmtShort(lo)}–${fmtShort(hi)}</div>
+        <div class="btns"><button class="btn-sm btn-accent" ${STATE.gold < p.adv ? 'disabled' : ''} onclick="pitchSign(${p.id},0)">Sign</button><button class="btn-sm" ${STATE.gold < p.adv + mk1 ? 'disabled' : ''} onclick="pitchSign(${p.id},1)">+ marketing ${fmtShort(mk1)}</button>
+        ${p.haggled ? '' : `<button class="btn-sm" onclick="pitchHaggle(${p.id},'adv')">Advance −20%</button><button class="btn-sm" onclick="pitchHaggle(${p.id},'share')">Share +10%</button>`}<button class="btn-sm" onclick="pitchPass(${p.id})">Pass</button></div></div>`;
+    }).join('') || '<div class="muted mini">No pitches this month.</div>');
+    if (L.signed.length) h += `<div class="mini muted">Signed</div>` + L.signed.map(p => kv(`${esc(p.title)} <span class="muted">${esc(p.studio)}</span>`, `out in ${Math.max(0, p.due - monthIdx())} mo`)).join('');
+    if (L.log.length) h += `<div class="mini muted">Recent releases</div>` + L.log.slice(0, 5).map(x => kv(`${esc(x.title)} <span class="muted">${x.score}/40</span>`, `+${money(x.mine)}`, 'good')).join('');
+  }
+  const elig = STATE.history.filter(x => x.total >= 28 && !x.merch);
+  h += `<div class="sec">Merchandise</div><div class="note mini">Games scoring 28+ can be licensed for toys, shirts and plushies. Pay once, then earn monthly royalties for two years (fading over time).</div>` +
+    STATE.merch.map(mc => `<div class="row mini"><span>${esc(mc.title)}</span><span class="good">+${money(mc.amt)}/mo · ${mc.months} mo left</span></div>`).join('') +
+    (elig.map(x => `<div class="row card" style="flex-direction:row;"><span><b>${esc(x.title)}</b><br><span class="muted">${x.total}/40 · ${fmt(x.dl)} downloads</span></span><button class="btn-sm btn-accent" ${STATE.gold < merchCost() ? 'disabled' : ''} onclick="licenseMerch(this.dataset.t)" data-t="${esc(x.title)}">License ${money(merchCost())}</button></div>`).join('') || '<div class="muted mini">No eligible games right now.</div>');
+  return h;
+}
+function renderBiz() {
+  $('tab-biz').innerHTML = subPane('biz', '<!--sub:overview-->' + bizOverviewHtml() + '<!--sub:reports-->' + reportsHtml() + '<!--sub:funding-->' + fundingHtml() + '<!--sub:people-->' + mgmtHtml() + '<!--sub:deals-->' + dealsHtml());
+}
+
+function demandHtml() {
+  const now = monthIdx();
+  const rows = STATE.unlocked.g.filter(g => G[g] && STATE.demand && STATE.demand[g]).map(g => ({ g, x: STATE.demand[g] })).sort((a, b) => b.x.v - a.x.v);
+  let h = `<div class="sec">Market demand</div><div class="note mini">Demand changes every month. Each release in a genre, yours or a rival's, saturates it for a while, and tastes shift each year. Demand multiplies downloads.${STATE.trend ? `<br>Trending this month: <b class="gold">${esc(STATE.trend.n)}</b>` : ''}</div>`;
+  h += rows.map(({ g, x }) => {
+    const mine = STATE.history.find(hh => hh.genre === g), ago = mine ? now - histT(mine) : null;
+    return `<div class="statrow wide"><span>${esc(g)}${ago !== null && ago <= 6 ? ' •' : ''}</span><div class="bar"><div style="background:${x.v >= 1.05 ? 'var(--good)' : x.v < 0.85 ? 'var(--danger)' : 'var(--accent)'};width:${Math.min(100, x.v / 1.6 * 100)}%"></div></div><span>${x.t > x.v + 0.03 ? '▲' : x.t < x.v - 0.03 ? '▼' : '·'}${x.v.toFixed(2)}</span></div>` +
+      '';
+  }).join('') + '<div class="mini muted">• you released one in the last six months · ▲ rising · ▼ falling</div>';
+  const pipe = (STATE.rivalPipe || []).slice().sort((a, b) => a.t - b.t);
+  h += `<div class="sec">Upcoming rival releases</div><div class="note mini">Launching in the same genre within a month of a rival costs you sales, especially against a big release.</div>` +
+    (pipe.map(x => kv(`${esc(x.r)} · ${esc(x.g)}${x.big ? ' <b class="bad">big</b>' : ''}`, x.t - now <= 1 ? 'next month' : `in ${x.t - now} months`)).join('') || '<div class="muted mini">No announcements right now.</div>');
+  return h;
+}
+function worldHtml() {
+  if (!bizOn('intl')) return '';
+  const AFF = { m: 'mobile', c: 'consoles', pc: 'PC' };
+  let h = `<div class="sec">World markets</div><div class="note mini">North America and Europe are your home markets. Localise a game for other regions in the Release step of a new project. Without it, about ${Math.round(UNLOC_REACH * 100)}% of players there still buy it.${bizOn('offices') ? ` Offices cost ${money(officeCost())} to open and ${money(officeUpkeep())} a month.` : ` Regional offices unlock at Rank ${bizRank('offices')}.`}</div>`;
+  h += REGIONS.map(r => {
+    const best = Object.entries(r.aff).sort((a, b) => b[1] - a[1])[0][0];
+    const off = hasOffice(r.k), btn = r.home ? '<span class="good">Home market</span>' : !bizOn('offices') ? '' : off ? `<button class="btn-sm btn-danger" onclick="closeOffice('${r.k}')">Close office</button>` : `<button class="btn-sm btn-accent" ${STATE.gold < officeCost() || Object.keys(STATE.offices || {}).length >= 4 ? 'disabled' : ''} data-why="${Object.keys(STATE.offices || {}).length >= 4 ? 'You can run up to four regional offices.' : 'Not enough cash for the office yet.'}" onclick="openOffice('${r.k}')">Open office</button>`;
+    return `<div class="card"><div class="row"><b>${esc(r.n)}${off ? ' · 🏢' : ''}</b>${btn}</div>
+      <div class="muted mini">${Math.round(r.share * 100)}% of players · spend ×${r.arpu.toFixed(2)} · prefers ${AFF[best]}${r.home ? '' : ` · localising a Medium game ${money(locCost(r.k, 2))}`}</div>
+      <div class="mini">♥ ${r.like.map(esc).join(', ')}${r.dislike.length ? `<br><span class="muted">✕ ${r.dislike.map(esc).join(', ')}</span>` : ''}</div></div>`;
+  }).join('');
+  return h;
+}
+function payrollHtml() {
+  const tot = STATE.team.reduce((a, m) => a + m.salary, 0);
+  let h = `<div class="sec">Payroll</div><div class="note mini">Salaries ${money(tot)}/mo for ${STATE.team.length} staff${bizOn('pay') ? ` · industry wages ×${(STATE.wageIdx || 1).toFixed(2)} since you started` : ''}.${bizOn('pay') ? ' Staff paid well below the market rate lose morale and are easier to poach.' : ` The salary market opens at Rank ${bizRank('pay')}.`}</div>`;
+  if (bizOn('pay')) h += `<div class="mini muted">Role demand: ${ROLE_NAMES.map(r => { const v = (STATE.roleDem && STATE.roleDem[r]) || 1; return `${r} <span class="${v > 1.04 ? 'bad' : v < 0.96 ? 'good' : ''}">×${v.toFixed(2)}</span>`; }).join(' · ')}</div>`;
+  if (bizOn('depts')) {
+    h += `<div class="sec">Department budgets</div><div class="note mini">Training and tools per person in each role, charged monthly. Staff learn faster (extra experience every week), feel valued and, at higher levels, work faster.</div>` +
+      ROLE_NAMES.map(r => {
+        const n = STATE.team.filter(m => m.role === r).length, lv = deptLv(r);
+        return `<div class="camprow"><span><b>${r}</b> <span class="muted">${n} staff${lv ? ' · ' + money(deptStaffCost(lv) * n) + '/mo' : ''}</span></span><div class="seg seg4">${DEPT_LV.map((L, i) => `<button class="${lv === i ? 'on' : ''}" onclick="setDept('${r}',${i})">${i ? L.n + '<br><small>' + money(deptStaffCost(i)) + '</small>' : 'None'}</button>`).join('')}</div></div>`;
+      }).join('') + `<div class="mini muted">Basic: +1 exp/week, +1 morale · Good: +2 exp, +2 morale, 3% faster · Elite: +3 exp, +4 morale, 6% faster</div>`;
+  } else h += `<div class="note mini">Department budgets unlock at Rank ${bizRank('depts')}.</div>`;
+  h += `<div class="sec">Pay and contracts</div>` + STATE.team.slice().sort((a, b) => (bizOn('pay') ? payRatio(a) - payRatio(b) : b.salary - a.salary)).map(m => {
+    const r = payRatio(m);
+    return `<div class="row mini"><span><b>${esc(m.name)}</b> <span class="muted">${staffTitle(m)} Lv${m.lv}</span></span><span>${money(m.salary)}${bizOn('pay') ? ` · <span class="${r < 0.92 ? 'bad' : r > 1.08 ? 'good' : ''}">${Math.round(r * 100)}%</span>` : ''}${bizOn('contracts') && m.ctr !== undefined ? ` · ${Math.max(0, Math.ceil(m.ctr))} mo` : ''}</span></div>`;
+  }).join('') + (bizOn('pay') ? `<div class="mini muted">% is pay compared with the market rate.${bizOn('contracts') ? ' Months show how long each contract has left.' : ''}</div>` : '');
+  return h;
+}
+function catalogueHtml() {
+  const now = monthIdx(), live = new Set(STATE.live.map(g => g.title)), cm = catalogueMonthly();
+  let h = `<div class="sec">Back catalogue</div><div class="note mini">Games that have left Live still sell a little every month, paid games most of all.${bizOn('dlc') ? ' An idle team can make DLC for recent games or port them to new platforms.' : ` DLC and ports unlock at Rank ${bizRank('dlc')}.`}${bizOn('remaster') ? ' Hits older than five years can be remastered.' : ''}<br>Catalogue sales: about <b class="gold">${money(cm)}</b> a month.</div>`;
+  if (bizOn('remaster')) h += `<button class="btn-sm" ${bundleOk() ? '' : 'disabled'} data-why="You can run one bundle every six months." onclick="bundleModal()">📦 Make a bundle</button>`;
+  const busy = jobTeam() < 0;
+  h += STATE.history.slice(0, 24).map((x, k) => {
+    const age = now - histT(x), inc = catIncome(x, now, live);
+    const b = type => { const why = busy ? (teamCount() > 1 ? 'Every team is busy. Wait for one to finish its project.' : 'Your team is busy. Wait for the current project to finish.') : jobWhy(x, type); if (!bizOn(JOBS[type].u) && type !== 'dlc') return '';
+      return `<button class="btn-sm" ${why ? 'disabled' : ''} data-why="${esc(why)}" onclick="jobModalIdx(${k},'${type}')">${JOBS[type].icon} ${JOBS[type].n}${type === 'dlc' ? ` ${x.dlc || 0}/3` : ''}${why ? '' : ' ' + fmtShort(jobCost(x, type, (portTargets(x)[0] || {}).n))}</button>`; };
+    return `<div class="card"><div class="row"><b>${esc(x.title)}${x.remasterOf ? ' <span class="chip chip-gold">Remaster</span>' : ''}</b><span>${x.total}/40</span></div>
+      <div class="muted mini">${esc(x.genre)} × ${esc(x.theme)} · Year ${x.y} · ${fmt(x.dl)} downloads${x.ports && x.ports.length ? ' · ported to ' + x.ports.map(esc).join(', ') : ''}${live.has(x.title) ? ' · <span class="good">live</span>' : inc >= 1 ? ` · <span class="gold">${money(inc)}/mo</span>` : ''}${age < 1 ? ' · new' : ''}</div>
+      ${bizOn('dlc') ? `<div class="btns">${b('dlc')}${b('port')}${b('remaster')}</div>` : ''}</div>`;
+  }).join('') || '<div class="muted mini">Release a game to start your catalogue.</div>';
+  return h;
+}
+
+/* Dev controls: campaigns and pricing */
+function fitStars(f) { return f >= 1.25 ? '★★★' : f >= 0.95 ? '★★' : '★'; }
+function campaignHtml(d) {
+  if (!Array.isArray(d.camp)) d.camp = CHANNELS.map(() => 0);
+  const auto = !!(STATE.auto && STATE.auto.camp && hasExec('cmo'));
+  const rows = CHANNELS.map((ch, i) => bizOn(ch.u) ? `<div class="camprow"><span><b>${ch.n}</b> <span class="gold" title="How well this channel suits the game">${fitStars(campFit(d, ch))}</span></span><div class="seg seg4">${CAMP_LV.map((L, lv) => `<button class="${(d.camp[i] || 0) === lv ? 'on' : ''}" onclick="setCamp(${i},${lv})">${lv ? L.n + '<br><small>' + fmtShort(campWeekCost(i, lv)) + '/wk</small>' : 'Off'}</button>`).join('')}</div></div>` : '').join('');
+  const locked = CHANNELS.filter(ch => !bizOn(ch.u)).map(ch => `${ch.n} (Rank ${bizRank(ch.u)})`);
+  return `<div class="mini muted">Marketing campaign <span id="camp-sum">${campSumText(d)}</span></div>${rows}
+    ${locked.length ? `<div class="mini muted">Later: ${locked.join(', ')}</div>` : ''}
+    ${hasExec('cmo') ? `<button class="btn-sm ${auto ? 'btn-accent' : ''}" onclick="toggleAuto('camp')">${auto ? '✓ ' : ''}Marketing Director plans it: ${auto ? 'on' : 'off'}</button>` : ''}
+    <div class="mini muted">Campaign hype fades about 4% a week, so spending in the last 8 to 10 weeks counts most. ★ shows how well a channel suits this ${d.kind === 'soft' ? 'product' : 'game'}.</div>`;
+}
+function campSumText(d) {
+  const c = campCost(d), r = campRate(d);
+  return `· ${c ? `${money(c)}/wk, +${r.toFixed(1)} hype/wk` : 'off'} · hype <b>${Math.round(hypeTotal(d))}</b> of ${hypeNeed(d)} for full effect${d.campSpent ? ` · spent ${fmtShort(d.campSpent)}` : ''}`;
+}
+function renderMonetSeg() {
+  if (isSoftMode()) return false;
+  let cur = isNaN(+$('sel-monet').value) ? 1 : +$('sel-monet').value;
+  if (MONET[cur] && STATE.rank < (MONET[cur].rank || 1)) { cur = 1; $('sel-monet').value = '1'; }
+  $('seg-monet').innerHTML = MONET.map((x, i) => `<button class="${i === cur ? 'on' : ''}" ${STATE.rank < (x.rank || 1) ? 'disabled' : ''} data-why="${esc(x.n)} unlocks at studio Rank ${x.rank || 1}." onclick="setSeg('sel-monet',${i})">${x.n}</button>`).join('');
+  return true;
+}
+function renderPriceSeg() {
+  const fld = $('fld-price'); if (!fld) return;
+  const show = !isSoftMode() && bizOn('price'); fld.style.display = show ? '' : 'none'; if (!show) return;
+  const mi = isNaN(+$('sel-monet').value) ? 1 : +$('sel-monet').value, size = curSize(), pl = $('sel-platform').value;
+  const opts = priceOpts(mi, size, pl), cur = curPrice(), k = priceKind(mi);
+  $('lbl-price').textContent = k === 'paid' ? 'Price' : k === 'sub' ? 'Monthly fee' : 'Monetisation';
+  $('seg-price').className = 'seg ' + (opts.length === 5 ? 'seg5' : 'seg3');
+  $('seg-price').innerHTML = opts.map((o, i) => `<button class="${i === cur ? 'on' : ''}" onclick="setPrice(${i})">${o.n}</button>`).join('');
+  const ai = isNaN(+$('sel-aud').value) ? 2 : +$('sel-aud').value, pf = priceFx(mi, cur, size, pl, ai, $('sel-genre').value);
+  $('price-info').innerHTML = `${esc(opts[cur].d)} ` + (k === 'paid' ? `Sales ×${pf.dl.toFixed(2)}, launch revenue ×${(pf.dl * pf.rev).toFixed(2)}.${ai === 3 ? ' Hardcore players care less about price.' : ai <= 1 ? ' Casual players and kids are price-sensitive.' : ''}`
+    : `Players ×${pf.dl.toFixed(2)}, live income ×${pf.live.toFixed(2)}${pf.ret ? `, retention ${pf.ret > 0 ? '+' : ''}${(pf.ret * 100).toFixed(1)}%` : ''}.`) + (pf.review ? ` Reviews ${pf.review > 0 ? '+' : ''}${pf.review.toFixed(2)}.` : '');
+}
+function bizPreviewLines(g, plat, si, mi, ai, wk, locC) {
+  const out = [], dem = demandOf(g);
+  out.push(`Demand for ${esc(g)}: ${demandLabel(dem)} (×${dem.toFixed(2)})`);
+  const months = Math.ceil(wk / 4.33), now = monthIdx();
+  const riv = (STATE.rivalPipe || []).filter(x => x.g === g && Math.abs(x.t - (now + months)) <= 1);
+  if (riv.length) out.push(`<span class="bad">⚠ ${esc(riv[0].r)} plans ${riv[0].big ? 'a big' : 'a'} ${esc(g)} game around your launch</span>`);
+  if (bizOn('price')) { const o = priceOpts(mi, si, plat.n)[curPrice()]; if (o) out.push(`Price: <b>${esc(o.n)}</b>`); }
+  if (locC) out.push(`Localisation: <b class="gold">${money(locC)}</b> for ${locSel.length} region${locSel.length > 1 ? 's' : ''}`);
+  out.push(`<span class="muted">Hype for the full launch effect: ${HYPE_NEED[si]}. Plan a campaign once production starts.</span>`);
+  return '<br>' + out.join('<br>');
+}
+
 function save() { try { if (STATE && !STATE.over) localStorage.setItem(SAVE_KEY, JSON.stringify(STATE)); } catch (e) {} }
 function migrate(s) {
   attachDevs(s);
@@ -1420,13 +2559,29 @@ function migrate(s) {
   s.devs.forEach((d, t) => { if (d) { d.team = t; normDev(d); } });
   if (!(s.focus >= 0 && s.focus < s.teams.length)) s.focus = 0;
   s.team.forEach(normStaff);
-  s.v = 8;
+  if (!s.demand) s.demand = demandInit();
+  GENRES.forEach(g => { if (!s.demand[g.n]) s.demand[g.n] = { v: 1, t: 1 }; });
+  if (!Array.isArray(s.rivalPipe)) s.rivalPipe = [];
+  if (!Array.isArray(s.rivalRecent)) s.rivalRecent = [];
+  if (!s.eq) s.eq = newEq();
+  if (!s.label) s.label = newLabel();
+  if (!s.offices) s.offices = {};
+  if (!s.depts) s.depts = {};
+  if (!s.roleDem) s.roleDem = roleDemInit();
+  ROLE_NAMES.forEach(r => { if (!s.roleDem[r]) s.roleDem[r] = 1; });
+  if (!s.wageIdx) s.wageIdx = 1;
+  if (!s.auto) s.auto = {};
+  if (!s.wealth) s.wealth = 0;
+  if (s.lastBundle === undefined) s.lastBundle = -99;
+  s.history.forEach(h => { if (h.rev === undefined) h.rev = Math.round(h.dl * 2); if (h.monet === undefined) h.monet = 1; if (h.dlc === undefined) h.dlc = 0; if (!Array.isArray(h.ports)) h.ports = []; });
+  if (s.v < 9 && s.rank >= 3) s.team.forEach(m => { if (m.ctr === undefined) m.ctr = ri(4, 24); });
+  s.v = 9;
   return s;
 }
 function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) { const s = JSON.parse(raw); if (s && s.v >= 1 && s.v <= 8) return migrate(Object.assign(newGame(), s)); }
+    if (raw) { const s = JSON.parse(raw); if (s && s.v >= 1 && s.v <= 9) return migrate(Object.assign(newGame(), s)); }
   } catch (e) {}
   return null;
 }
@@ -1461,9 +2616,10 @@ function updateStrip() {
 const SUBTABS = {
   studio: [['office', 'Office'], ['rooms', 'Rooms'], ['decor', 'Decor'], ['goals', 'Goals'], ['more', 'Records']],
   lab: [['research', 'Research'], ['unlock', 'Unlocks'], ['engine', 'Engine'], ['notes', 'Notebook']],
-  market: [['industry', 'Industry'], ['platforms', 'Platforms'], ['pubs', 'Publishers'], ['hardware', 'Console'], ['store', 'Store']],
-  biz: [['finance', 'Finances'], ['people', 'Management'], ['deals', 'Loans & merch']],
-  staff: [['staff', 'Staff'], ['teams', 'Teams'], ['recruit', 'Recruit']]
+  market: [['industry', 'Industry'], ['demand', 'Demand'], ['world', 'World'], ['platforms', 'Platforms'], ['pubs', 'Publishers'], ['ventures', 'Ventures']],
+  biz: [['overview', 'Overview'], ['reports', 'Reports'], ['funding', 'Funding'], ['people', 'Management'], ['deals', 'Deals']],
+  staff: [['staff', 'Staff'], ['teams', 'Teams'], ['pay', 'Payroll'], ['recruit', 'Recruit']],
+  live: [['live', 'Live'], ['cat', 'Catalogue']]
 };
 function subPane(tab, html) {
   const defs = SUBTABS[tab], chunks = {};
@@ -1475,8 +2631,9 @@ function subPane(tab, html) {
   const body = (chunks[cur] || '').trim();
   return nav + (body || `<div class="empty">${SUB_EMPTY[tab + ':' + cur] || 'Nothing here yet.'}</div>`);
 }
-const SUB_EMPTY = { 'market:hardware': `Building your own console unlocks at studio Rank ${HW_RANK}.`, 'market:store': 'Opening your own game store unlocks at studio Rank 6.', 'biz:deals': 'Nothing here yet.' };
+const SUB_EMPTY = { 'market:ventures': `Opening your own game store unlocks at studio Rank 6, and building your own console at Rank ${HW_RANK}.`, 'market:world': 'International releases unlock at studio Rank 5.', 'biz:deals': 'Nothing here yet.' };
 function subBadge(tab, k) {
+  if (tab === 'biz' && k === 'deals') { const n = STATE.label && STATE.label.open ? STATE.label.pitches.length : 0; return n ? ` <span class="gold">●${n}</span>` : ''; }
   if (tab === 'staff' && k === 'staff') { const n = STATE.team.filter(m => perkPending(m) >= 0).length + (STATE.walkIn ? 1 : 0); return n ? ` <span class="gold">●${n}</span>` : ''; }
   if (tab === 'lab' && k === 'unlock' && labAffordable()) return ' <span class="gold">●</span>';
   return '';
@@ -1516,7 +2673,8 @@ function renderSteps() {
     const rows = soft
       ? [['Product', $('inp-title').value || $('inp-title').placeholder], ['Type', g], ['Market', t], ['Platforms', [p, ...portSel].join(', ')], ['Size', SIZES[curSize()].n], ['Budget', BUDGETS[curBudget()].n], ['Model', (SOFT_MODELS[+$('sel-monet').value] || SOFT_MODELS[1]).n]]
       : [['Title', $('inp-title').value || $('inp-title').placeholder], ['Genre', g], ['Theme', t], ['Hook', $('sel-hook').value || 'none'], ['Platforms', [p, ...portSel].join(', ')], ['Publisher', $('sel-pub').value],
-         ['Size', SIZES[curSize()].n], ['Engine', ($('sel-engine').selectedOptions[0] || {}).textContent || ''], ['Budget', BUDGETS[curBudget()].n], ['Audience', AUDIENCES[isNaN(+$('sel-aud').value) ? 2 : +$('sel-aud').value].n], ['Model', (MONET[+$('sel-monet').value] || MONET[1]).n]];
+         ['Size', SIZES[curSize()].n], ['Engine', ($('sel-engine').selectedOptions[0] || {}).textContent || ''], ['Budget', BUDGETS[curBudget()].n], ['Audience', AUDIENCES[isNaN(+$('sel-aud').value) ? 2 : +$('sel-aud').value].n], ['Model', (MONET[+$('sel-monet').value] || MONET[1]).n],
+         ...(bizOn('price') ? [['Price', (priceOpts(+$('sel-monet').value || 0, curSize(), p)[curPrice()] || {}).n]] : []), ...(bizOn('intl') ? [['Regions', ['North America', 'Europe', ...locSel.map(k => REG[k] ? REG[k].n : k)].join(', ')]] : [])];
     $('plan-detail').innerHTML = rows.map(([a, b]) => `<span>${a}</span><span>${esc(b || '-')}</span>`).join('');
   }
 }
@@ -1525,7 +2683,9 @@ function openGuide() {
     <h4>Make games</h4><p>On the Dev tab, work through the four steps: choose a genre, theme and hook, pick platforms and a size, spend design points on what the genre needs, then start. Staff then work on it in phases while you make decisions as they come up.</p>
     <h4>Get good reviews</h4><p>Some genre and theme pairs fit far better than others, and each genre needs different stats. Reviews teach you both: check the Lab's Notebook. Assign your best people to each post when a project starts.</p>
     <h4>Earn and grow</h4><p>Released games keep earning in Live. Spend on staff training, rooms in the Studio and research in the Lab. Contracts pay the bills between projects.</p>
-    <h4>Bigger plans</h4><p>Later you can run several teams at once, make software, build your own engine, console and store, buy rivals and chase legacy goals.</p>
+    <h4>Run the business</h4><p>Set a price in the Release step and plan a marketing campaign while the game is in development. Market &gt; Demand shows which genres players want right now and which rivals are about to launch. Biz has your accounts (Reports), funding and the stock market (Funding), executives who can automate routine decisions (Management), and your publishing label (Deals). New business systems unlock as your studio ranks up: Biz &gt; Overview shows what's next.</p>
+    <h4>Bigger plans</h4><p>Later you can run several teams at once, make software, DLC, ports and remasters of old hits (Live &gt; Catalogue), localise games for the world, build your own engine, console and store, go public, buy rivals and chase legacy goals.</p>
+    <h4>Keep your save safe</h4><p>Back up your save from Studio &gt; Records now and then. Safari can clear website data you haven't opened for a while.</p>
     <h4>Handy tips</h4><p>Tap the money, fans, RP or rank at the top to jump to the right tab. Red dots on the tabs mean something needs you. Hide the studio view on any tab to get more room, and tap the bar to bring it back. Greyed-out buttons explain themselves when tapped.</p></div>`,
     [{ label: 'Got it', cls: 'btn-accent' }]);
 }
@@ -1619,7 +2779,7 @@ function closeModal() {
     el.textContent = b.label;
     if (b.cls) el.className = b.cls;
     if (b.disabled) el.disabled = true;
-    el.onclick = () => { playSound('click'); if (b.action) b.action(); closeModal(); };
+    el.onclick = () => { playSound('click'); if (b.action && b.action() === 'keep') return; closeModal(); };
     box.appendChild(el);
   });
   $('modal').classList.add('show');
@@ -1636,14 +2796,14 @@ function spend(n, cat) {
   charge(n, cat); updateHeader(); return true;
 }
 function earn(n, cat) { STATE.gold += n; STATE.ledger.inc += n; if (!FIN_CATS.has(cat)) STATE.totalRevenue += n; bookAdd(cat, n); }
-function opProfit(e) { return Object.entries(e.cats || {}).reduce((a, [k, v]) => FIN_CATS.has(k) ? a : a + v, 0); }
+function opProfit(e) { return Object.entries(e.cats || {}).reduce((a, [k, v]) => FIN_CATS.has(k) || k === 'Tax' ? a : a + v, 0); }
 function rankNeed() { return 50 + 30 * STATE.rank + 3 * STATE.rank * STATE.rank; }
 function addRankExp(n) {
   STATE.rankExp += n;
   while (STATE.rankExp >= rankNeed()) {
     const before = studioTier();
     STATE.rankExp -= rankNeed(); STATE.rank++;
-    playSound('level'); news(`Studio reached Rank ${STATE.rank}!`, '#ffd166');
+    playSound('level'); news(`Studio reached Rank ${STATE.rank}!`, '#ffd166'); bizUnlockNews(STATE.rank);
     PLATFORMS.forEach(p => { if (p.rank === STATE.rank && platLive(p)) news(`Licence now available: ${p.n}`, '#66fcf1'); });
     PUBLISHERS.forEach(pb => { if (pb.adv && pb.rank === STATE.rank) news(`${pb.n} will now take your calls`, '#66fcf1'); });
     const after = studioTier();
@@ -1794,12 +2954,6 @@ function checkMilestones() {
 function rivalsTick() {
   STATE.rivals.forEach(r => {
     r.fans = Math.round(r.fans * (1 + r.growth * rnd(0.4, 1.6) * (r.owned ? 0.6 : 1)));
-    if (Math.random() < 0.3) {
-      const score = clamp(Math.round(r.skill + rnd(-6, 6) + (STATE.engine && STATE.engine.lic ? Math.min(2, STATE.engine.lic.studios * 0.15) : 0)), 6, 40);
-      r.yearBest = Math.max(r.yearBest || 0, score); r.best = Math.max(r.best || 0, score);
-      r.last = `${pick(THEMES).n} ${pick(GENRES).n}`;
-      if (Math.random() < 0.5) news(`${r.n} released ${r.last} (${score}/40)`, '#9aa5b1');
-    }
   });
 }
 function deskCount() { return FLOORS[STATE.floor - 1].desks; }
@@ -1812,7 +2966,9 @@ function costBreakdown() {
     'Upkeep': roomUpkeep(),
     'Teams': Math.max(0, teamCount() - 1) * teamUpkeep(),
     'Executives': Object.values(STATE.execs).reduce((a, v) => a + v, 0),
-    'Benefits': (pol.cost || 0) * STATE.team.length
+    'Benefits': (pol.cost || 0) * STATE.team.length,
+    'Departments': deptCost(),
+    'Regional offices': Object.keys(STATE.offices || {}).length * officeUpkeep()
   };
 }
 function monthlyCost() {
@@ -2136,7 +3292,7 @@ function setDevKind(k) {
 }
 function applyKindUI() {
   const soft = isSoftMode();
-  ['fld-hook', 'hook-info', 'fld-seq', 'fld-pub', 'fld-engine', 'fld-aud'].forEach(id => { const el = $(id); if (el) el.style.display = soft ? 'none' : ''; });
+  ['fld-hook', 'hook-info', 'fld-seq', 'fld-pub', 'fld-engine', 'fld-aud', 'fld-price', 'fld-loc'].forEach(id => { const el = $(id); if (el) el.style.display = soft ? 'none' : ''; });
   $('lbl-genre').textContent = soft ? 'Software type' : 'Genre'; $('lbl-theme').textContent = soft ? 'Market' : 'Theme';
   $('lbl-size').textContent = soft ? 'Project size' : 'Game size';
   $('seg-kind').innerHTML = `<button class="${soft ? '' : 'on'}" onclick="setDevKind('game')">🎮 Game</button><button class="${soft ? 'on' : ''}" onclick="setDevKind('soft')">💾 Software</button>`;
@@ -2172,13 +3328,14 @@ function startSoftware() {
   clampPrio();
   const cost = projectCost(type, budget, plat, ports, '', size, '');
   if (!spend(cost, 'Development')) return;
+  const softCost = cost;
   const title = ($('inp-title').value || '').trim() || ($('inp-title').placeholder || '').trim() || softTitle(type);
   const M = computeMods(), pr = STATE.prio.slice(), pe = prioEval(type, pr);
   const d = normDev({
     kind: 'soft', team: STATE.focus || 0, id: STATE.nextDevId++, title, genre: type, theme: market, platform: plat.n, plats: [plat.n, ...ports.map(x => x.n)], rank: STATE.rank,
     size, weeks: 0, work: projectWork(size, [plat, ...ports], budget, STATE.rank), engine: 'none',
     phase: 1, phaseName: '', mult: (1 + 0.03 * lvlOf('g', type)) * BUDGETS[budget].q, bugs: 0, hits: 0, gainSum: 0, boostUsed: false,
-    stats: [0, 0, 0, 0, 0, 0], budget, monet, audience: 2, prio: pr, prioMul: pe.statMul, hype: Math.round(M.hype * 0.5),
+    stats: [0, 0, 0, 0, 0, 0], budget, monet, audience: 2, prio: pr, prioMul: pe.statMul, hype: Math.round(M.hype * 0.5), cost: softCost, camp: CHANNELS.map(() => 0), campHype: 0,
     balloon: { x: 160, y: 146, r: 20, hp: 1, maxHp: 1, color: '#4cc9f0' }
   });
   if (hasExec('producer')) d.mods.hpMul *= 0.9;
@@ -2211,7 +3368,7 @@ function completeSoftware(d) {
   const focusAdj = SOFT_FOCUS.map(f => clamp(((rel[f[0]] + rel[f[1]]) / 2 - 1) * 1.2, -0.6, 0.6));
   const scores = SOFT_REVIEWERS.map((r, i) => clamp(Math.round(capped + REVIEW_BIAS[i] + focusAdj[i] + rnd(-1, 1)), 1, 10));
   const total = scores.reduce((a, b) => a + b, 0);
-  const hypeMul = 1 + Math.min(d.hype || 0, 100) / 150;
+  const hypeMul = hypeMulFor(hypeTotal(d), d);
   const dl = Math.round((400 + 25 * Math.pow(STATE.fans, 0.6)) * Math.pow(total / 20, 1.7) * shTot * MK.size * SOFT_FIT_DL[fitC] * (mo.dl || 1) * (pfit ? 1.15 : 1) *
     hypeMul * sizeOf(d).dl * (d.discount ? 1.25 : 1) * rnd(0.85, 1.15));
   const arpu = ST.arpu * MK.arpu * 2;
@@ -2289,7 +3446,9 @@ function startDevelopment() {
   if (STATE.rank < z.rank) { playSound('error'); toast(`${z.n} games unlock at studio Rank ${z.rank}.`, '#ff6b7d'); return; }
   const engKey = engineKeyOk($('sel-engine') ? $('sel-engine').value : 'none');
   const cost = projectCost(genre, budget, plat, ports, hk ? hk.n : '', size, engKey);
-  if (!spend(cost, 'Development')) return;
+  const locs = bizOn('intl') ? locSel.filter(k => REG[k] && !REG[k].home) : [], locC = locTotal(locs, size);
+  if (STATE.gold < cost + locC) { playSound('error'); news('Not enough money!', '#ef476f'); return; }
+  spend(cost, 'Development'); if (locC) spend(locC, 'Localisation');
   const adv = pubAdvance(pb, genre);
   if (adv) {
     earn(adv, 'Publisher'); news(`${pb.n} paid a ${money(adv)} advance`, '#ffd166');
@@ -2305,7 +3464,7 @@ function startDevelopment() {
   const pr = STATE.prio.slice(), pe = prioEval(genre, pr);
   const d = normDev({
     kind: 'game', team: STATE.focus || 0, id: STATE.nextDevId++, title, genre, theme, platform, plats: [platform, ...ports.map(x => x.n)], hook: hk ? hk.n : '', rank: STATE.rank,
-    size, weeks: 0, work: projectWork(size, [plat, ...ports], budget, STATE.rank), engine: engKey,
+    size, weeks: 0, work: projectWork(size, [plat, ...ports], budget, STATE.rank) * (1 + 0.04 * locs.length), engine: engKey, cost: cost + locC, loc: locs, price: curPrice(), camp: CHANNELS.map(() => 0), campHype: 0,
     phase: 1, phaseName: '', mult, bugs: 0, hits: 0, gainSum: 0, boostUsed: false,
     stats: [0, 0, 0, 0, 0, 0], budget, focus: -1, monet, pub: pb.n, adv, audience, prio: pr, prioMul: pe.statMul,
     hype: STATE.hypeBank + M.hype + 8 * teamStaff(STATE.focus || 0).filter(x => x.vac <= 0 && x.perks.includes('pitch')).length, sequelOf: seq ? seq.title : '',
@@ -2319,13 +3478,15 @@ function startDevelopment() {
   STATE.hypeBank = 0;
   d.decisions.push(`${z.n} game`, `Engine: ${efx.n}`, `${BUDGETS[budget].n} budget`, `Priorities ${AREA_AB.map((a, i) => a + pr[i]).join(' ')}`, MONET[monet].n, `${AUDIENCES[audience].n} audience`);
   if (seq) d.decisions.push(`Sequel to ${seq.title}`);
+  if (bizOn('price')) d.decisions.push(`Price: ${(priceOpts(monet, size, platform)[d.price] || {}).n}`);
+  if (locs.length) d.decisions.push(`Localised: ${locs.map(k => REG[k].n).join(', ')}`);
   if (pb.adv) d.decisions.push(`Signed with ${pb.n}`);
   if (hk) d.decisions.push(`Hook: ${hk.n}`);
   if (ports.length) d.decisions.push(`Multi-platform: ${d.plats.join(', ')}`);
   else if (plat.own) d.decisions.push(`${plat.n} exclusive`);
   STATE.activeDev = d;
   setupPhase(d);
-  $('inp-title').value = ''; $('sel-seq').value = ''; portSel = []; devStepCur = 0;
+  $('inp-title').value = ''; $('sel-seq').value = ''; portSel = []; priceSel = -1; devStepCur = 0;
   playSound('click');
   news(`Production started: ${title}`, '#66fcf1');
   renderDevMode();
@@ -2657,6 +3818,7 @@ function checkPhase(d) {
 
 function finishContract(d) {
   d = d || STATE.activeDev;
+  if (d.job) return finishJob(d);
   STATE.devs[d.team || 0] = null; projectiles = projectiles.filter(x => x.devId !== d.id);
   earn(d.pay, 'Contracts'); STATE.rp += 1; addRankExp(5);
   playSound('coin');
@@ -2694,6 +3856,7 @@ function completeProject(dd) {
   const tooSoon = orig && orig.t && (STATE.cal.y * 12 + STATE.cal.m - orig.t) < 12;
   const seqAdj = !orig ? 0 : (seqN === 2 ? 0.3 : -0.5 * (seqN - 2)) - (tooSoon ? 0.5 : 0) + (STATE.team.some(m => d.contrib[m.id] && m.perks.includes('lore')) ? 0.2 : 0);
   const pe = prioEval(d.genre, d.prio);
+  const pf = priceFx(d.monet, d.price === undefined ? priceDefault(d.monet) : d.price, d.size, plat.n, d.audience, d.genre), rf = regionFx(d.genre, plat.n, d.loc || []), clash = rivalClash(d.genre), dem = demandOf(d.genre);
   // section grades
   const tgt = targetSkill(d.rank), wsum = w.reduce((a, b) => a + b, 0);
   const crew = STATE.team.filter(m => d.contrib[m.id]);
@@ -2709,7 +3872,7 @@ function completeProject(dd) {
   const dir = findStaff(d.lead);
   const dirAdj = dir ? (dir.role === 'Planner' ? 0.2 : 0.05) + (dir.senior ? 0.15 : 0) + (dir.perks.includes('legend') ? 0.1 : 0) + (dir.perks.includes('auteur') ? 0.3 : 0) : -0.2;
   const base = execScore(q) + COMBO_REVIEW[combo] + (trend ? 0.5 : 0) + (fitLead ? 0.3 : fitPort ? 0.15 : 0) + mo.rev + aud.rev + audAdj + lootKids +
-    hookAdj + seqAdj + d.reviewBonus + pe.adj + secAdj + dirAdj - repeats * 0.8 + sizeOf(d).review + 0.1 * roomLv('playtest') + (MOCAP_G.includes(d.genre) ? 0.1 * roomLv('mocap') : 0);
+    hookAdj + seqAdj + d.reviewBonus + pe.adj + secAdj + dirAdj - repeats * 0.8 + sizeOf(d).review + 0.1 * roomLv('playtest') + (MOCAP_G.includes(d.genre) ? 0.1 * roomLv('mocap') : 0) + pf.review;
   const expect = Math.min(1.2, (STATE.rank - 1) * 0.08);
   const rawQ = base + (legend ? 0.8 : 0) - expect;
   const capped = rawQ <= 7 ? rawQ : 7 + 3 * (1 - Math.exp(-(rawQ - 7) / 2.5));
@@ -2720,17 +3883,17 @@ function completeProject(dd) {
   const total = scores.reduce((a, b) => a + b, 0);
   const hof = total >= 32;
 
-  let hype = d.hype;
+  let hype = d.hype + (d.campHype || 0);
   STATE.team.forEach(m => { if (!d.contrib[m.id]) return; if (m.traits.includes('Rockstar')) hype += 5; if (m.perks.includes('legend')) hype += 10; if (m.perks.includes('infl')) hype += 15; });
   if (orig) hype += (15 + orig.total / 2) / (seqN - 1) * (tooSoon ? 0.5 : 1);
-  const hypeMul = 1 + Math.min(hype, 100) / 150;
+  const hypeMul = hypeMulFor(hype, d);
   const dealName = plats.some(p => p.n === STATE.platDeal) ? STATE.platDeal : '', deal = !!dealName;
   if (deal) STATE.platDeal = null;
   const mkt = shTot;
   const dl = Math.round((400 + 25 * Math.pow(STATE.fans, 0.6)) * Math.pow(total / 20, 1.7) * mkt * COMBO_DL[combo] *
     (trend ? 1.3 : 1) * (fit ? 1.2 : 1) * pb.boost * mo.dl * aud.dl * hypeMul * (orig ? 1 + 0.15 / (seqN - 1) : 1) * (deal ? 1.4 : 1) *
-    (d.discount ? 1.25 : 1) * (legend ? 1.3 : 1) * sizeOf(d).dl * rnd(0.85, 1.15));
-  const gross = Math.round(dl * arpuW * 1.5 * mo.launch * (d.discount ? 0.6 : 1) * sizeOf(d).rev);
+    (d.discount ? 1.25 : 1) * (legend ? 1.3 : 1) * sizeOf(d).dl * pf.dl * rf.dl * dem * (clash ? clash.mul : 1) * rnd(0.85, 1.15));
+  const gross = Math.round(dl * arpuW * 1.5 * mo.launch * (d.discount ? 0.6 : 1) * sizeOf(d).rev * pf.rev * rf.rev);
   const pubTake = Math.round(gross * pb.cut);
   const engTake = Math.round((gross - pubTake) * (d.engRoy || 0));
   const invTake = investorCut(gross - pubTake - engTake);
@@ -2739,6 +3902,7 @@ function completeProject(dd) {
   let rpGain = 1 + sizeOf(d).rp + (newCombo ? 3 : 0) + (newHook ? 2 : 0) + (firstGenre ? 2 : 0) + (newLegend ? 5 : 0) + (hof ? 1 : 0);
   earn(rev, 'Game sales');
   STATE.fans += fansGain; STATE.totalDownloads += dl;
+  demandHit(d.genre, [0.015, 0.02, 0.03, 0.04, 0.05][d.size === undefined ? 1 : d.size] || 0.02); goalCheck(total);
   if (legend) { STATE.legends[legKeyOf(legend)] = STATE.legends[legKeyOf(legend)] || d.title; delete STATE.legendHints[LEGENDS.indexOf(legend)]; }
   addRankExp(Math.round((10 + total + (d.genre === 'Adventure' ? 10 : 0)) * sizeOf(d).rx));
   STATE.levels.g[d.genre] = (STATE.levels.g[d.genre] || 0) + 1;
@@ -2806,7 +3970,7 @@ function completeProject(dd) {
   else prioLine = pe.extra ? `Critics loved how well the design suited ${an(esc(d.genre))}, with extra polish on top.` : `Critics loved how well the design suited ${an(esc(d.genre))}.`;
 
   const entry = { title: d.title, genre: d.genre, theme: d.theme, platform: plat.n, plats: plats.map(p => p.n), size: d.size, weeks: d.weeks, total, dl, y: STATE.cal.y,
-    t: STATE.cal.y * 12 + STATE.cal.m, pub: pb.n, hook: d.hook, audience: aud.n, sequelOf: d.sequelOf, seqN };
+    t: STATE.cal.y * 12 + STATE.cal.m, pub: pb.n, hook: d.hook, audience: aud.n, sequelOf: d.sequelOf, seqN, rev, monet: d.monet, price: d.price, cost: d.cost, dlc: 0, ports: [], fansAt: STATE.fans, loc: d.loc || [] };
   STATE.history.unshift(entry);
   if (STATE.history.length > 40) STATE.history.length = 40;
   if (!STATE.yearBest || total > STATE.yearBest.total) STATE.yearBest = entry;
@@ -2814,9 +3978,9 @@ function completeProject(dd) {
   // live service
   const statSum = d.stats.reduce((a, b) => a + b, 0) || 1;
   const retShare = (d.stats[5] + d.stats[4]) / 2 / (statSum / NS);
-  const ret = clamp(0.84 + 0.05 * (retShare - 1) + 0.1 * (total / 40) + mo.ret, 0.78, 0.975);
+  const ret = clamp(0.84 + 0.05 * (retShare - 1) + 0.1 * (total / 40) + mo.ret + pf.ret, 0.78, 0.975);
   const game = { id: d.id, title: d.title, genre: d.genre, platform: plat.n, plats: plats.map(p => p.n), users: dl, peak: dl, arpu: +arpuW.toFixed(2), ret, score: total, weeks: 0, event: 0,
-    revTotal: rev, updates: 0, cap: Math.round(dl * 2.5), cut: pb.cut, liveMul: mo.live, monet: d.monet, saleWeeks: 0, saleMul: 1 };
+    revTotal: rev, updates: 0, cap: Math.round(dl * 2.5), cut: pb.cut, liveMul: mo.live * pf.live, monet: d.monet, saleWeeks: 0, saleMul: 1 };
   const liveNote = addLive(game);
 
   for (let i = 0; i < (hof ? 90 : 45); i++) particles.push({ conf: true, x: rnd(0, 320), y: rnd(-60, 0), vx: rnd(-0.4, 0.4), vy: rnd(0.3, 1.2), color: pick(['#ffd166', '#ef476f', '#06d6a0', '#4cc9f0', '#9d4edd']), life: 200 });
@@ -2838,6 +4002,11 @@ function completeProject(dd) {
   if (mo.rev < 0 && !lootKids) notes.push(`<span class="bad">Critics marked it down for its ${esc(mo.n.toLowerCase())} model.</span>`);
   if (orig) notes.push((total >= orig.total ? `Critics say it surpasses ${esc(orig.title)}.` : `Critics found it a step down from ${esc(orig.title)}.`) + (seqN >= 3 ? ' <span class="bad">Franchise fatigue is setting in.</span>' : '') + (tooSoon ? ' <span class="bad">It came out too soon after the last one.</span>' : ''));
   if (deal) notes.push(`<span class="good">${esc(dealName)} featured it on their storefront.</span>`);
+  if (bizOn('price') && pf.label) notes.push(`Priced at ${esc(pf.label)}${pf.note ? ': ' + pf.note : ''}.`);
+  if (dem >= 1.12) notes.push(`<span class="good">Demand for ${esc(d.genre)} is strong right now.</span>`); else if (dem <= 0.85) notes.push(`<span class="bad">The ${esc(d.genre)} market is crowded right now.</span>`);
+  if (clash) notes.push(`<span class="bad">It launched against ${esc(clash.who)}'s ${clash.big ? 'big ' : ''}${esc(d.genre)} game.</span>`);
+  if (bizOn('intl') && (d.loc || []).length) notes.push(`Localised for ${d.loc.map(k => esc(REG[k] ? REG[k].n : k)).join(', ')}.`);
+  if (d.campSpent) notes.push(`Marketing campaign: ${money(d.campSpent)} spent.`);
   plats.forEach(pl => {
     if (pl.own && !pl.store) notes.push(`<span class="good">Sales of the ${esc(pl.n)} got a ${solo ? 'big boost from the exclusive' : 'boost'}.</span>`);
     if (pl.store) notes.push(`<span class="good">New players signed up to ${esc(pl.n)} for it.</span>`);
@@ -2889,7 +4058,7 @@ function advanceWeek() {
     if (g.monet === 3 && Math.random() < 0.03) { g.users = Math.round(g.users * 0.85); news(`Players revolt over loot boxes in ${g.title}!`, '#ef476f'); }
     g.peak = Math.max(g.peak, g.users);
     STATE.fans += Math.round(Math.min(g.users * 0.0005, 50 * STATE.rank) * (hasExec('cm') ? 1.5 : 1));
-    g.weeks++; if (g.event > 0) g.event--; if (g.saleWeeks > 0) g.saleWeeks--;
+    g.weeks++; if (g.event > 0) g.event--; if (g.saleWeeks > 0) g.saleWeeks--; if (g.saleCd > 0) g.saleCd--;
   }
   const ended = STATE.live.filter(g => g.users < 50);
   ended.forEach(g => news(`${g.title} ended its service.`, '#9aa5b1'));
@@ -2899,7 +4068,7 @@ function advanceWeek() {
   const eq = Math.min(95, 55 + M.morale);
   STATE.team.forEach(m => {
     if (m.vac > 0) { m.vac--; if (m.vac === 0) { m.stam = m.maxStam; news(`${m.name} is back from vacation, refreshed!`, '#06d6a0'); } }
-    m.morale += (eq - m.morale) * 0.08;
+    m.morale += (eq + payMorale(m) + DEPT_LV[deptLv(m.role)].mor - m.morale) * 0.08;
     const d = STATE.devs[teamOf(m)];
     if (d && d.kind !== 'contract' && m.vac <= 0) {
       m.morale += PACE[d.pace].morale * (m.traits.includes('Hothead') ? 2 : 1);
@@ -2916,7 +4085,8 @@ function advanceWeek() {
     STATE.investor.weeks--;
     if (!STATE.investor.weeks) news(`The investor deal has ended. They took ${money(STATE.investor.paid || 0)} in total.`, '#9aa5b1');
   }
-  STATE.devs.forEach(d => { if (d && d.kind !== 'contract') d.weeks = (d.weeks || 0) + 1; });
+  STATE.devs.forEach(d => { if (d && (d.kind !== 'contract' || d.job)) d.weeks = (d.weeks || 0) + 1; if (d) campaignWeek(d); });
+  deptWeek();
   hardwareWeek();
   storeWeek();
   engineWeek();
@@ -2951,9 +4121,9 @@ function randomEvent() {
 }
 function evPoach() {
   if ((hasExec('hrm') || STATE.policy.benefits === 2) && Math.random() < 0.5) return;
-  const cands = STATE.team.filter(m => !m.traits.includes('Loyal') && m.lv >= 2 && m.vac <= 0);
+  const cands = STATE.team.filter(m => !m.traits.includes('Loyal') && m.lv >= 2 && m.vac <= 0 && !(bizOn('contracts') && m.ctr > 12));
   if (!cands.length || STATE.team.length < 2) return;
-  const m = pick(cands), rival = pick(STATE.rivals).n;
+  const m = bizOn('pay') && Math.random() < 0.6 ? cands.slice().sort((a, b) => payRatio(a) - payRatio(b))[0] : pick(cands), rival = pick(STATE.rivals).n;
   const raise = Math.max(100, Math.round(m.salary * 0.25 / 50) * 50), bonus = Math.round(m.salary * 3 / 100) * 100;
   showModal(`<h3>Poaching Attempt</h3><div class="note">${esc(rival)} offered ${esc(m.name)} (${staffTitle(m)}, Lv${m.lv}) a job paying ${money(raise)} more a month. ${esc(m.name)} would rather stay, if you make it worth their while.</div>`, [
     { label: `Match it (+${money(raise)}/mo)`, cls: 'btn-accent', action: () => { m.salary += raise; m.morale = Math.min(100, m.morale + 20); news(`${m.name} is staying! Morale up.`, '#06d6a0'); renderStaff(); } },
@@ -3122,10 +4292,11 @@ function monthEnd() {
   STATE.loans = STATE.loans.filter(l => l.left > 0);
   STATE.merch.forEach(mc => { earn(Math.round(mc.amt), 'Merch'); mc.amt *= 0.9; mc.months--; });
   STATE.merch = STATE.merch.filter(mc => mc.months > 0 && mc.amt >= 50);
+  catalogueMonth(); labelMonth(); cfoAutoLoans();
   const prof = opProfit({ cats: STATE.book });
   if (STATE.policy.bonus === 2 && prof > 0) charge(Math.round(prof * 0.05), 'Bonuses');
   const pm = STATE.cal.m === 1 ? 12 : STATE.cal.m - 1, py = STATE.cal.m === 1 ? STATE.cal.y - 1 : STATE.cal.y;
-  STATE.plHist.push({ y: py, m: pm, inc: STATE.ledger.inc, exp: STATE.ledger.exp, cats: STATE.book });
+  STATE.plHist.push({ y: py, m: pm, inc: STATE.ledger.inc, exp: STATE.ledger.exp, cats: STATE.book, cash: STATE.gold, fans: STATE.fans });
   if (STATE.plHist.length > 36) STATE.plHist.shift();
   STATE.ledger.lastInc = STATE.ledger.inc; STATE.ledger.lastExp = STATE.ledger.exp;
   STATE.ledger.inc = 0; STATE.ledger.exp = 0; STATE.book = {};
@@ -3139,9 +4310,12 @@ function monthEnd() {
     if (STATE.cal.m === 1 && p.end === STATE.cal.y) news(`${p.n} has been discontinued.`, '#9aa5b1');
   });
   rivalsTick();
+  demandMonth(); rivalPipeMonth(); contractsMonth(); boardMonth();
   engineMonth();
   subsidiaryMonth();
   checkLegacy();
+  const nOff = Object.keys(STATE.offices || {}).length;
+  if (nOff && STATE.cal.m % 3 === 1) { STATE.rp += nOff; news(`Regional offices sent +${nOff} RP of ideas`, '#7cc8ff'); }
   if (roomLv('rnd') && STATE.cal.m % 3 === 1) { STATE.rp += roomLv('rnd'); news(`R&D Lab delivered +${roomLv('rnd')} RP this quarter`, '#7cc8ff'); }
   checkMilestones();
   const nextM = STATE.cal.m % 12 + 1;
@@ -3156,6 +4330,7 @@ function monthEnd() {
 }
 function yearEnd() {
   STATE.rpBought = 0;
+  wagesYear();
   const ty = STATE.cal.y - 1;
   const tprof = STATE.plHist.filter(e => e.y === ty).reduce((a, e) => a + opProfit(e), 0);
   const tax = tprof > 0 ? Math.round(tprof * taxRate()) : 0;
@@ -3756,40 +4931,6 @@ STUDIO_EVENTS.push(
   { w: 1, c: () => STATE.ownPlats.some(x => !x.disc), f: evRivalPriceCut },
   { w: 1, c: () => STATE.ownPlats.some(x => !x.disc), f: evUnboxing }
 );
-function renderBiz() {
-  const hist = STATE.plHist.slice(-12), profits = hist.map(opProfit), maxAbs = Math.max(1, ...profits.map(Math.abs));
-  const last = STATE.plHist[STATE.plHist.length - 1];
-  const yr = STATE.cal.y, ytd = STATE.plHist.filter(e => e.y === yr).reduce((a, e) => a + opProfit(e), 0);
-  let html = `<div class="sec">Company</div><div class="note">Cash <b class="gold">${money(STATE.gold)}</b> · Company value <b class="hl">${money(companyValue())}</b><br>
-    Operating profit this year: <b class="${ytd >= 0 ? 'good' : 'bad'}">${money(ytd)}</b> · tax ${Math.round(taxRate() * 100)}% (est. ${money(Math.max(0, Math.round(ytd * taxRate())))})<br>
-    Next payday: <b class="bad">${money(monthlyCost())}</b>${STATE.investor && STATE.investor.weeks > 0 ? `<br>Investor takes 15% of game income for ${STATE.investor.weeks} more weeks` : ''}${STATE.taxPaid ? `<br>Tax paid to date: ${money(STATE.taxPaid)}` : ''}</div>`;
-  html += `<div class="sec">Monthly operating profit</div>` + (hist.length ? `<div class="pl-chart">${hist.map((e, i) => {
-    const v = profits[i], h = Math.max(1, Math.round(Math.abs(v) / maxAbs * 40));
-    return `<div class="pl-col"><div class="pl-up">${v >= 0 ? `<i style="height:${h}px;background:var(--good)"></i>` : ''}</div><div class="pl-dn">${v < 0 ? `<i style="height:${h}px;background:var(--danger)"></i>` : ''}</div><span>${e.m}</span></div>`;
-  }).join('')}</div>` : '<div class="muted mini">No completed months yet.</div>');
-  const catRows = cats => Object.entries(cats).filter(([k, v]) => Math.round(v)).sort((a, b) => b[1] - a[1])
-    .map(([k, v]) => `<div class="row mini"><span>${esc(k)}${FIN_CATS.has(k) ? ' <span class="muted">(financing)</span>' : ''}</span><span class="${v >= 0 ? 'good' : 'bad'}">${v >= 0 ? '+' : ''}${money(v)}</span></div>`).join('');
-  if (last) html += `<div class="sec">Last month (Y${last.y} M${last.m}) · ${money(opProfit(last))}</div>` + catRows(last.cats);
-  html += `<div class="sec">This month so far</div>` + (catRows(STATE.book) || '<div class="muted mini">Nothing yet.</div>');
-  html += '<!--sub:people-->' + `<div class="sec">Executive Team</div><div class="note mini">Executives don't use desks. They draw a monthly salary (signing fee: 2 months' pay) and boost the whole company.</div>` +
-    Object.entries(EXECS).map(([k, e]) => {
-      const hired = hasExec(k);
-      const btn = STATE.rank < e.rank ? `<span class="muted">🔒 Rank ${e.rank}</span>` : hired ? `<button class="btn-sm btn-danger" onclick="fireExec('${k}')">Let go</button>`
-        : `<button class="btn-sm btn-accent" ${STATE.gold < execHireSal(k) * 2 ? 'disabled' : ''} onclick="hireExec('${k}')">Hire ${money(execHireSal(k) * 2)}</button>`;
-      return `<div class="row card" style="flex-direction:row;"><span><b>${e.n}</b>${hired ? ` · <span class="good">${money(STATE.execs[k])}/mo</span>` : ` · ${money(execHireSal(k))}/mo`}<br><span class="muted">${e.d}</span></span>${btn}</div>`;
-    }).join('');
-  html += `<div class="sec">Company Policies</div>` + Object.entries(POLICIES).map(([k, arr]) => `<div class="mini muted">${POLICY_LABEL[k]}</div>
-    <div class="grid3">${arr.map((po, i) => `<button class="btn-sm ${STATE.policy[k] === i ? 'btn-accent' : ''}" onclick="setPolicy('${k}',${i})">${po.n}</button>`).join('')}</div>
-    <div class="mini muted">${arr[STATE.policy[k]].d}</div>`).join('');
-  html += '<!--sub:deals-->' + `<div class="sec">Bank Loans</div><div class="note mini">Credit limit ${money(creditLimit())} · owed ${money(loanOwed())} · ${Math.round(loanRate() * 100)}% interest, repaid monthly over a year.</div>` +
-    STATE.loans.map((l, i) => `<div class="row card" style="flex-direction:row;"><span>Loan of ${money(l.amt)}<br><span class="muted">${money(l.pay)}/mo · ${money(l.left)} left</span></span><button class="btn-sm" onclick="repayLoan(${i})">Repay ${money(Math.round(l.left * 0.95))}</button></div>`).join('') +
-    `<div class="grid3">${LOAN_SIZES.map((L, i) => { const a = loanAmt(i); return `<button class="btn-sm" ${loanOwed() + a * (1 + loanRate()) > creditLimit() ? 'disabled' : ''} data-why="That loan would take you over your ${money(creditLimit())} credit limit." onclick="takeLoan(${i})">${L.n}<br>${money(a)}</button>`; }).join('')}</div>`;
-  const elig = STATE.history.filter(h => h.total >= 28 && !h.merch);
-  html += `<div class="sec">Merchandise</div><div class="note mini">Games scoring 28+ can be licensed for toys, shirts and plushies. Pay once, then earn monthly royalties for two years (fading over time).</div>` +
-    STATE.merch.map(mc => `<div class="row mini"><span>${esc(mc.title)}</span><span class="good">+${money(mc.amt)}/mo · ${mc.months} mo left</span></div>`).join('') +
-    (elig.map(h => `<div class="row card" style="flex-direction:row;"><span><b>${esc(h.title)}</b><br><span class="muted">${h.total}/40 · ${fmt(h.dl)} downloads</span></span><button class="btn-sm btn-accent" ${STATE.gold < merchCost() ? 'disabled' : ''} onclick="licenseMerch(this.dataset.t)" data-t="${esc(h.title)}">License ${money(merchCost())}</button></div>`).join('') || '<div class="muted mini">No eligible games right now.</div>');
-  $('tab-biz').innerHTML = subPane('biz', '<!--sub:finance-->' + html);
-}
 
 
 /* ---------- Research ---------- */
@@ -3894,7 +5035,7 @@ function checkLegacy() {
   });
 }
 function legacyScore() {
-  return Math.round(runLP() * 100 + Math.log10(Math.max(10, companyValue())) * 40 + (STATE.awards.goty || 0) * 60 + (STATE.hofCount || 0) * 15 + Object.keys(STATE.legends || {}).length * 10 + STATE.rank * 10);
+  return Math.round(runLP() * 100 + Math.log10(Math.max(10, companyValue())) * 40 + (STATE.awards.goty || 0) * 60 + (STATE.hofCount || 0) * 15 + Object.keys(STATE.legends || {}).length * 10 + STATE.rank * 10 + (STATE.wealth > 0 ? Math.log10(STATE.wealth) * 12 : 0));
 }
 function legacyGrade(sc) { return sc >= 2600 ? 'S' : sc >= 1900 ? 'A' : sc >= 1300 ? 'B' : sc >= 800 ? 'C' : 'D'; }
 function legacyReview(decade) {
@@ -3967,6 +5108,21 @@ function evMerger() {
   a.fans += Math.round(b.fans * 0.6); a.skill += 1; b.fans = Math.round(b.fans * 0.5);
   news(`Industry shake-up: ${a.n} absorbed part of ${b.n}. ${a.n} is now stronger than ever.`, '#ef476f');
 }
+
+/* ---------- Business sim: goals ---------- */
+LEGACY_GOALS.push(
+  { id: 'ipo', n: 'Ring the Bell', d: 'List your studio on the stock market', lp: 2, t: s => !!(s.eq && s.eq.pub) },
+  { id: 'world4', n: 'Worldwide', d: 'Run four regional offices', lp: 2, t: s => Object.keys(s.offices || {}).length >= 4 },
+  { id: 'label10', n: 'Label Boss', d: 'Publish 10 games on your label', lp: 2, t: s => !!(s.label && s.label.done >= 10) },
+  { id: 'fortune', n: 'Founder Fortune', d: 'Build a personal fortune of $100,000,000', lp: 3, t: s => (s.wealth || 0) >= 1e8 }
+);
+MILESTONES.push(
+  { id: 'funded', n: 'Funded', d: 'Close a funding round', test: s => !!(s.eq && Object.keys(s.eq.rounds || {}).length), r: { rp: 5 } },
+  { id: 'abroad', n: 'Going Global', d: 'Open a regional office', test: s => Object.keys(s.offices || {}).length >= 1, r: { fans: 2000 } },
+  { id: 'labelhit', n: 'Talent Spotter', d: 'Publish a label game scoring 32+', test: s => !!(s.label && s.label.hits >= 1), r: { gold: 100000 } },
+  { id: 'listed', n: 'Public Company', d: 'List on the stock market', test: s => !!(s.eq && s.eq.pub), r: { rp: 20 } }
+);
+
 /* ---------- Digital storefront ---------- */
 const STORE_RANK = 6, STORE_BASE = 90000;
 const STORE_FEATS = {
@@ -4471,7 +5627,7 @@ function openCandidates() {
       <div>${c.traits.map(t => `<span class="chip ${TRAITS[t].bad ? 'chip-bad' : ''}">${t}</span>`).join('')}<span class="chip chip-gold">♥ ${esc(c.favG)}</span></div>
       <div class="mini muted">${c.traits.map(t => `${t}: ${TRAITS[t].d}`).join(' · ')}</div>
       <div class="row"><span class="gold">Signing fee ${money(signFee(c))}</span>
-      <button class="btn-sm btn-accent" onclick="hireCandidate(${i})">${full ? 'Replace…' : 'Hire'}</button></div></div>`).join('');
+      <span class="btns">${c.neg ? '' : `<button class="btn-sm" onclick="negotiateHire(${i})">Offer −10% · ${Math.round(hireOdds() * 100)}%</button>`}<button class="btn-sm btn-accent" onclick="hireCandidate(${i})">${full ? 'Replace…' : 'Hire'}</button></span></div></div>`).join('');
   showModal(`<h3>Applicants</h3>${full ? '<div class="note gold">All desks are full. Hiring someone means letting a current staff member go.</div>' : ''}${rows || '<div class="note">No applicants left.</div>'}`, [{ label: 'Close' }]);
 }
 function hireCandidate(i, replaceId) {
@@ -4484,6 +5640,7 @@ function hireCandidate(i, replaceId) {
   spend(fee, 'Staff');
   c.id = STATE.nextId++;
   normStaff(c);
+  if (bizOn('contracts')) c.ctr = 24;
   c.team = teamStaff(STATE.focus || 0).length < TEAM_MAX ? (STATE.focus || 0) : STATE.teams.findIndex((x, t) => teamStaff(t).length < TEAM_MAX);
   if (c.team < 0) c.team = 0;
   STATE.team.push(c);
@@ -4606,9 +5763,10 @@ function renderSegs() {
   };
   const cs = curSize();
   $('seg-size').innerHTML = SIZES.map((z, i) => `<button class="${i === cs ? 'on' : ''}" ${STATE.rank < z.rank ? 'disabled' : ''} data-why="${z.n} games unlock at studio Rank ${z.rank}." onclick="setSeg('sel-size',${i})">${z.n}</button>`).join('');
-  mk('seg-budget', 'sel-budget', BUDGETS); mk('seg-aud', 'sel-aud', AUDIENCES); mk('seg-monet', 'sel-monet', isSoftMode() ? SOFT_MODELS : MONET);
+  mk('seg-budget', 'sel-budget', BUDGETS); mk('seg-aud', 'sel-aud', AUDIENCES); if (!renderMonetSeg()) mk('seg-monet', 'sel-monet', SOFT_MODELS);
+  renderPriceSeg(); renderLoc();
 }
-function setSeg(sel, i) { $(sel).value = String(i); playSound('click'); updatePreview(); }
+function setSeg(sel, i) { $(sel).value = String(i); if (sel === 'sel-monet') priceSel = -1; playSound('click'); updatePreview(); }
 function refreshDevOptions() {
   const keep = { g: $('sel-genre').value, t: $('sel-theme').value, p: $('sel-platform').value, pub: $('sel-pub').value };
   const soft = isSoftMode(), gList = soft ? SOFT_TYPES.filter(x => STATE.rank >= x.rank).map(x => x.n) : STATE.unlocked.g, tList = soft ? SOFT_MARKETS.filter(x => STATE.rank >= x.rank).map(x => x.n) : STATE.unlocked.t;
@@ -4665,7 +5823,8 @@ function updatePreview() {
   const ports = portSel.map(n => P[n]).filter(Boolean), allP = [plat, ...ports];
   const si = curSize(), z = SIZES[si], ek = engineKeyOk($('sel-engine').value), efx = engineFx(ek, si);
   const cost = projectCost(g, bi, plat, ports, hk ? hk.n : '', si, ek), adv = pubAdvance(pb, g);
-  const hkHp = hk ? hk.hp : 1, wk = Math.max(1, Math.round(projectWork(si, allP, bi, STATE.rank) * hkHp * efx.hp * (hasExec('producer') ? 0.9 : 1) * 0.92 / teamWeekly()));
+  const locN = bizOn('intl') ? locSel.length : 0, locC = bizOn('intl') ? locTotal(locSel, si) : 0;
+  const hkHp = hk ? hk.hp : 1, wk = Math.max(1, Math.round(projectWork(si, allP, bi, STATE.rank) * hkHp * efx.hp * (hasExec('producer') ? 0.9 : 1) * (1 + 0.04 * locN) * 0.92 / teamWeekly()));
   const avail = teamStaff(STATE.focus || 0).filter(m => m.vac <= 0).length;
   const ins = STATE.insights[g] || {}, nIns = Object.keys(ins).length, pe = prioEval(g, STATE.prio);
   const warn = AREAS.map((a, i) => ins[i] && STATE.prio[i] < REQ[ins[i]] ? `<span class="bad">${a} needs ${REQ[ins[i]]}</span>` : ins[i] === 'L' && STATE.prio[i] > 1 ? `<span class="bad">${a} points wasted</span>` : '').filter(Boolean);
@@ -4689,8 +5848,8 @@ function updatePreview() {
     `${aud.n} audience: ${aud.desc}${aud.good.includes(g) ? ' · <span class="good">loves ' + esc(g) + '</span>' : aud.bad.includes(g) ? ' · <span class="bad">dislikes ' + esc(g) + '</span>' : ''}${ai === 0 && mi === 3 ? ' · <span class="bad">loot boxes for kids will be slammed</span>' : ''}<br>` +
     (seq ? (() => { const h = STATE.history.find(x => x.title === seq), n = h ? (h.seqN || 1) + 1 : 2, soon = h && h.t && (STATE.cal.y * 12 + STATE.cal.m - h.t) < 12;
       return `<span class="gold">Sequel #${n} to ${esc(seq)}: extra hype and downloads, no rerun penalty.</span>${n >= 3 ? ' <span class="bad">Franchise fatigue: critics expect something new.</span>' : ''}${soon ? ' <span class="bad">Too soon: wait 12 months after the original.</span>' : ''}<br>`; })() : '') +
-    `${trend}${STATE.hypeBank ? ` · Banked hype <b class="gold">${STATE.hypeBank}</b>` : ''}`;
-  $('plan-sum').innerHTML = `<b class="gold">${money(cost)}</b><br><span class="muted">about ${wk} weeks</span>`;
+    `${trend}${STATE.hypeBank ? ` · Banked hype <b class="gold">${STATE.hypeBank}</b>` : ''}` + bizPreviewLines(g, plat, si, mi, ai, wk, locC);
+  $('plan-sum').innerHTML = `<b class="gold">${money(cost + locC)}</b><br><span class="muted">about ${wk} weeks</span>`;
   renderSteps();
 }
 function renderDevMode() {
@@ -4698,7 +5857,7 @@ function renderDevMode() {
   renderTeamBar();
   $('dev-setup').style.display = d ? 'none' : 'flex';
   $('dev-progress').style.display = d ? 'flex' : 'none';
-  $('dev-status').textContent = (teamCount() > 1 ? teamName(STATE.focus || 0) + ': ' : '') + (d ? (d.kind === 'contract' ? 'Contract: ' : 'Making: ') + d.title : 'idle');
+  $('dev-status').textContent = (teamCount() > 1 ? teamName(STATE.focus || 0) + ': ' : '') + (d ? (d.kind === 'contract' && !d.job ? 'Contract: ' : 'Making: ') + d.title : 'idle');
   $('dev-head').style.display = d ? 'flex' : 'none';
   $('btn-boost').disabled = !(d && d.kind !== 'contract' && d.phase === 3 && !d.boostUsed);
   if (!d) updatePreview();
@@ -4711,8 +5870,7 @@ function renderDevControls() {
   el.innerHTML = `<div class="mini muted">Work pace</div>
     <div class="grid3">${PACE.map((p, i) => `<button class="btn-sm ${d.pace === i ? 'btn-accent' : ''}" onclick="setPace(${i})">${p.n}</button>`).join('')}</div>
     <div class="mini muted">${PACE[d.pace].d}</div>
-    <div class="mini muted">Marketing (each once per project)</div>
-    <div class="grid3">${MARKETING.map((mk, i) => `<button class="btn-sm" ${d.mkt[i] || STATE.gold < mktCost(mk) ? 'disabled' : ''} onclick="buyMarketing(${i})">${mk.n}<br>${d.mkt[i] ? 'done' : money(mktCost(mk))}</button>`).join('')}</div>`;
+    ${campaignHtml(d)}`;
 }
 function updateDevPanel() {
   const d = STATE.activeDev; if (!d) return;
@@ -4721,7 +5879,7 @@ function updateDevPanel() {
   $('bar-phase').style.width = pct + '%';
   $('val-phase').textContent = Math.round(pct) + '%';
   if (d.kind === 'contract') {
-    $('dev-info').innerHTML = `Outsourced job · Pays <b class="gold">${money(d.pay)}</b> on completion`;
+    $('dev-info').innerHTML = d.job ? `${JOBS[d.job.type].icon} ${JOBS[d.job.type].n} for <b>${esc(d.job.title)}</b>${d.job.plat ? ' on ' + esc(d.job.plat) : ''} · about ${Math.max(1, Math.ceil(Math.max(0, d.balloon.hp) / teamWeekly(d.team || 0)))} weeks to go` : `Outsourced job · Pays <b class="gold">${money(d.pay)}</b> on completion`;
     $('dev-stats').innerHTML = '';
     return;
   }
@@ -4731,7 +5889,8 @@ function updateDevPanel() {
   let html = statNames(d).map((s, i) => {
     return `<div class="statrow"><span style="color:${STAT_COLORS[i]}">${s}</span><div class="bar"><div style="background:${STAT_COLORS[i]};width:${d.stats[i] / max * 100}%"></div></div><span>${Math.round(d.stats[i])}</span></div>` +
       '';
-  }).join('') + `<div class="statrow"><span style="color:#ff4d6d">Hype</span><div class="bar"><div style="background:#ff4d6d;width:${Math.min(100, (d.hype || 0))}%"></div></div><span>${Math.round(d.hype || 0)}</span></div>`;
+  }).join('') + `<div class="statrow"><span style="color:#ff4d6d">Hype</span><div class="bar"><div style="background:#ff4d6d;width:${Math.min(100, hypeTotal(d) / hypeNeed(d) * 100)}%"></div></div><span>${Math.round(hypeTotal(d))}</span></div>`;
+  if ($('camp-sum')) $('camp-sum').innerHTML = campSumText(d);
   if (d.assign) {
     const totalC = Object.values(d.contrib).reduce((a, x) => a + x, 0) || 1;
     html += '<div class="mini muted" style="margin-top:4px;">Team contribution</div>' + STATE.team.filter(m => m.vac <= 0).map(m => {
@@ -4758,11 +5917,12 @@ function renderLive() {
         <button class="btn-sm" ${g.event > 0 ? 'disabled' : ''} data-why="An event is already running in this game." onclick="liveEvent(${g.id})">${g.event > 0 ? 'Event running' : 'Event ' + money(evCost)}</button>
         <button class="btn-sm" ${g.ret >= 0.985 ? 'disabled' : ''} data-why="Retention is already at its maximum. Try an event or ads instead." onclick="liveUpdate(${g.id})">${g.ret >= 0.985 ? 'Update (maxed)' : 'Update ' + money(upCost)}${g.updates ? ' · #' + (g.updates + 1) : ''}</button>
         <button class="btn-sm" onclick="liveAds(${g.id})">Ads ${money(adCost)}</button>
+        ${bizOn('price') ? `<button class="btn-sm" ${g.saleWeeks > 0 || (g.saleCd || 0) > 0 ? 'disabled' : ''} data-why="${g.saleWeeks > 0 ? 'A sale is already running.' : `Players expect a break between sales. Next in ${g.saleCd || 0} weeks.`}" onclick="liveDiscount(${g.id})">${g.saleWeeks > 0 ? 'On sale' : g.monet === 0 ? 'Discount' : 'Shop sale'}</button>` : ''}
         <button class="btn-sm btn-danger" onclick="retireLive(${g.id})">End</button>
       </div></div>`;
   });
   for (let i = nG; i < slots; i++) html += `<div class="card muted" style="opacity:0.6;">Game slot ${i + 1}: empty, release a game to fill it</div>`;
-  $('tab-live').innerHTML = html;
+  $('tab-live').innerHTML = subPane('live', '<!--sub:live-->' + html + '<!--sub:cat-->' + catalogueHtml());
 }
 
 function renderStaff() {
@@ -4797,7 +5957,7 @@ function renderStaff() {
       ${pend ? `<button class="btn-sm btn-gold" onclick="perkQueued.delete(${m.id});perkModal(findStaff(${m.id}))">⭐ Choose a perk</button>` : ''}
       ${open ? `<div class="sdetail">
       ${teamCount() > 1 ? `<div class="row mini"><span style="color:${teamColor(teamOf(m))}">● Team</span><select class="teamsel" onchange="setStaffTeam(${m.id}, this.value)">${STATE.teams.map((x, t) => `<option value="${t}" ${t === teamOf(m) ? 'selected' : ''}>${esc(teamName(t))} (${teamStaff(t).length})</option>`).join('')}</select></div>` : ''}
-      <div class="mini">Shipped ${m.shipped} · MVP ${m.mvps}${m.hits ? ' · 🏆' + m.hits : ''} · speed ${m.spd} · ${money(m.salary)}/mo</div>
+      <div class="mini">Shipped ${m.shipped} · MVP ${m.mvps}${m.hits ? ' · 🏆' + m.hits : ''} · speed ${m.spd} · ${money(m.salary)}/mo${bizOn('pay') ? ` · <span class="${payRatio(m) < 0.92 ? 'bad' : ''}">${Math.round(payRatio(m) * 100)}% of market</span>` : ''}${bizOn('contracts') && m.ctr !== undefined ? ` · contract ${Math.max(0, Math.ceil(m.ctr))} mo` : ''}</div>
       <div class="mini muted">♥ Loves ${esc(m.favG)}${gxText(m)}${m.bestT ? ' · Best: ' + esc(m.bestT) + ' (' + m.bestS + ')' : ''}</div>
       <div>${m.traits.map(t => `<span class="chip ${TRAITS[t].bad ? 'chip-bad' : ''}">${t}</span>`).join('')}${m.perks.map(pid => `<span class="chip chip-gold">${PERK_INFO[pid].n}</span>`).join('')}</div>
       <div class="mini muted">${m.traits.map(t => TRAITS[t].d).concat(m.perks.map(pid => PERK_INFO[pid].d)).join(' · ')}</div>
@@ -4817,6 +5977,7 @@ function renderStaff() {
     <button onclick="postAd(2)">Headhunter<br>$12,000</button></div>
     ${STATE.candidates.length ? '<button onclick="openCandidates()">View current applicants</button>' : ''}
     <div class="note mini">Staff earn perks at Lv5, 10, 15 and 20, and can be promoted to a senior role from Lv10. Morale affects work speed: keep it up with raises, vacations, decor and hits. Unhappy staff may quit or be poached.</div>`;
+  html += '<!--sub:pay-->' + payrollHtml();
   $('tab-staff').innerHTML = subPane('staff', '<!--sub:staff-->' + html);
 }
 function renderMarket() {
@@ -4827,7 +5988,7 @@ function renderMarket() {
     return `<div class="row mini" style="${x.me ? 'color:var(--gold);font-weight:bold;' : ''}"><span>#${i + 1} ${esc(x.n)}${r && r.owned ? ' <span class="good">· yours</span>' : ''}</span><span>${fmt(x.fans)} fans · best ${x.best || '-'}${can ? ` <button class="btn-sm" ${STATE.fans < r.fans * 1.5 || STATE.gold < acqPrice(r) ? 'disabled' : ''} data-why="${STATE.fans < r.fans * 1.5 ? 'Their board will only sell once you have 1.5× their fans.' : ''}" onclick="acquireRival('${esc(r.n)}')">Buy ${money(acqPrice(r))}</button>` : ''}</span></div>`;
   }).join('') + (STATE.rank >= ACQ_RANK ? '<div class="note mini">Acquired studios become subsidiaries: they pay you every month, send fans your way and stop competing for awards.</div>' : '') +
     `<div class="sec">Industry Calendar</div><div class="note">Month 4: Indie Showcase · Month 8: GameCon · Month 12: Holiday Sale · Year end: Awards${STATE.hypeBank ? `<br>Banked hype for your next project: <b class="gold">${STATE.hypeBank}</b>` : ''}${STATE.pubBonus ? `<br>🤝 Bonus advance waiting with ${esc(STATE.pubBonus)}` : ''}</div>`;
-  html += '<!--sub:hardware-->' + hardwareHtml() + '<!--sub:store-->' + storeHtml();
+  html += '<!--sub:ventures-->' + storeHtml() + hardwareHtml() + '<!--sub:demand-->' + demandHtml() + '<!--sub:world-->' + worldHtml();
   html += '<!--sub:platforms--><div class="sec">Platforms</div>';
   PLATFORMS.forEach(p => {
     if (p.own) return;
@@ -4936,6 +6097,8 @@ function renderStudio() {
     <button onclick="toggleSound()">Sound: ${STATE.settings.sound ? 'On' : 'Off'}</button>
     <button class="btn-danger" onclick="resetGame()">Reset Save</button></div>
     <div class="grid2"><button onclick="toggleBigText()">Text size: ${UIP.big ? 'Large' : 'Normal'}</button><button onclick="openGuide()">How to play</button></div>
+    <div class="sec">Save backup</div><div class="note mini">Your studio is saved on this device. Back it up now and then: Safari can clear website data you haven't opened for a while. Last backup: <b>${backupAge()}</b>.</div>
+    <div class="grid2"><button class="btn-accent" onclick="backupModal()">Back up save</button><button onclick="restoreModal()">Restore a save</button></div>
     <div class="muted" style="font-size:0.68rem;">Progress autosaves every month and when you leave the app.</div>`;
   $('tab-studio').innerHTML = subPane('studio', '<!--sub:office-->' + html);
 }

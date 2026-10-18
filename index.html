@@ -283,36 +283,108 @@
   .big { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 2.4rem; font-weight: 800; text-align: center; color: var(--sky); line-height: 1.1; }
   .opt { text-align: left; width: 100%; line-height: 1.45; font-family: var(--ui); font-weight: 400; font-size: 0.84rem; }
   .opt b { font-family: var(--px); color: var(--sun); font-weight: 600; font-size: 0.95rem; }
+
+  /* ---------- Usability pass ---------- */
+  .btn-sm { min-height: 32px; }
+  .seg button { min-height: 36px; }
+  .nav-btn { min-height: 50px; position: relative; font-size: 0.7rem; }
+  .nbadge { position: absolute; top: 3px; right: 5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--coral); color: #fff;
+    font: 700 0.62rem/16px var(--num); font-style: normal; display: none; box-shadow: 0 0 0 2px var(--ink); }
+  .nbadge.on { display: block; }
+  .nav-btn.active .nbadge { box-shadow: 0 0 0 2px var(--sun); }
+  .hud-chip.tap { cursor: pointer; }
+  .hud-chip.tap:active { filter: brightness(1.3); }
+  #btn-help { grid-row: 1; padding: 2px 9px; min-height: 26px; font-size: 0.8rem; border-radius: 999px; margin-left: auto; }
+  .hud-top { align-items: center; }
+  /* studio view: full or a slim strip */
+  #game-viewport .vbtn { position: absolute; top: 6px; right: 6px; z-index: 2; padding: 2px 8px; min-height: 26px; font-size: 0.75rem; border-radius: 999px;
+    background: rgba(12, 9, 25, 0.72); border-color: rgba(255,255,255,0.18); color: var(--text); }
+  #mini-strip { display: none; width: 100%; max-width: 480px; flex-shrink: 0; text-align: left; padding: 7px 10px; border-radius: 12px; gap: 3px; flex-direction: column; }
+  body.compact #game-viewport { display: none; }
+  body.compact #mini-strip { display: flex; }
+  .strip-top { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8rem; }
+  .strip-top b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .strip-bar { height: 5px; background: var(--lo); border-radius: 3px; overflow: hidden; }
+  .strip-bar i { display: block; height: 100%; width: 0; background: var(--sun); }
+  .strip-news { font-size: 0.74rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.1em; }
+  /* sub-tabs inside long screens */
+  .subnav { position: sticky; top: -12px; z-index: 3; display: flex; gap: 5px; margin: -12px -12px 2px; padding: 8px 12px 8px; background: var(--win);
+    border-bottom: 2px solid var(--lo); overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
+  .subnav::-webkit-scrollbar { display: none; }
+  .subnav button { flex: 1 1 auto; padding: 6px 5px; min-height: 34px; font-size: 0.74rem; white-space: nowrap; min-width: 0; }
+  .subnav button.on { background: var(--sun); color: var(--sun-ink); border-color: var(--sun-hi) var(--sun-lo) var(--sun-lo) var(--sun-hi); }
+  .scard { gap: 5px; }
+  .shead { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; background: none; border: 0; padding: 2px 0; text-align: left; min-height: 34px; }
+  .shead:active:not(:disabled) { transform: none; }
+  .sname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+  .sname b { font-weight: 700; }
+  .slv { flex-shrink: 0; font-family: var(--num); }
+  .minibars { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 6px; align-items: center; font-size: 0.72rem; color: var(--dim); }
+  .minibars i { height: 6px; background: var(--lo); border-radius: 3px; overflow: hidden; }
+  .minibars i b { display: block; height: 100%; }
+  .sdetail { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--edge); padding-top: 7px; }
+  .empty { text-align: center; padding: 18px 10px; color: var(--dim); font-size: 0.84rem; }
+  /* new-project steps */
+  .stepnav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .stepnav button { padding: 5px 2px 6px; min-height: 44px; line-height: 1.2; font-size: 0.74rem; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .stepnav button small { font-size: 0.64rem; font-weight: 500; color: var(--dim); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stepnav button.on { background: var(--sun); color: var(--sun-ink); border-color: var(--sun-hi) var(--sun-lo) var(--sun-lo) var(--sun-hi); }
+  .stepnav button.on small { color: var(--sun-ink); opacity: 0.75; }
+  .stepnav button.done:not(.on) { border-color: var(--mint) var(--lo) var(--lo) var(--mint); }
+  #dev-setup [data-step] { display: none; }
+  #dev-setup[data-cur="0"] [data-step="0"], #dev-setup[data-cur="1"] [data-step="1"], #dev-setup[data-cur="2"] [data-step="2"], #dev-setup[data-cur="3"] [data-step="3"] { display: flex; }
+  #dev-setup[data-cur="3"] #dev-preview[data-step="3"] { display: block; }
+  .devfoot { position: sticky; bottom: -12px; margin: 0 -12px -12px; padding: 8px 12px calc(10px); background: var(--win); border-top: 2px solid var(--lo);
+    display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; z-index: 3; }
+  .devfoot button { min-height: 42px; padding: 8px 12px; }
+  #plan-sum { text-align: center; font-size: 0.78rem; line-height: 1.3; font-family: var(--num); }
+  #plan-sum b { font-size: 0.92rem; }
+  .sum-grid { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 0.8rem; }
+  .sum-grid span:nth-child(odd) { color: var(--dim); }
+  .toast { pointer-events: auto; cursor: pointer; }
+  .guide h4 { font-family: var(--px); color: var(--sun); font-size: 1rem; margin-top: 4px; }
+  .guide p { font-size: 0.84rem; color: #ddd7f3; }
+  body.bigtext .tab-pane, body.bigtext .modal-card { font-size: 0.95rem; }
+  body.bigtext .note, body.bigtext .card { font-size: 0.9rem; }
+  body.bigtext .mini { font-size: 0.82rem; }
+  body.bigtext .statrow { font-size: 0.86rem; }
 </style>
 </head>
 <body>
 
 <div id="header">
-  <div class="hud-top"><span id="cal-text" class="hud-date">Y1 M1 W1</span><span id="tier-text" class="hud-tier"></span></div>
+  <div class="hud-top"><span id="cal-text" class="hud-date">Y1 M1 W1</span><span id="tier-text" class="hud-tier"></span><button id="btn-help" onclick="openGuide()" aria-label="How to play">?</button></div>
   <button id="btn-speed" onclick="cycleSpeed()" aria-label="Game speed">▶ 1x</button>
   <div class="hud-chips">
-    <span class="hud-chip money">$<b id="gold-text">0</b></span>
-    <span class="hud-chip">★ <b id="fans-text">0</b></span>
-    <span class="hud-chip rp"><b id="rp-text">0</b> RP</span>
-    <span class="hud-chip">Rank <b id="rank-text">1</b></span>
+    <span class="hud-chip money tap" onclick="switchTab('biz')" title="Money: open Biz">$<b id="gold-text">0</b></span>
+    <span class="hud-chip tap" onclick="switchTab('market')" title="Fans: open Market">★ <b id="fans-text">0</b></span>
+    <span class="hud-chip rp tap" onclick="switchTab('lab')" title="Research points: open Lab"><b id="rp-text">0</b> RP</span>
+    <span class="hud-chip tap" onclick="switchTab('studio')" title="Studio rank: open Studio">Rank <b id="rank-text">1</b></span>
   </div>
   <div class="hud-xp" title="Progress to the next rank"><i id="rank-bar"></i></div>
 </div>
 
 <div id="game-viewport">
   <canvas id="screen" width="640" height="480"></canvas>
+  <button class="vbtn" onclick="setView(false)" aria-label="Shrink the studio view">▴ Hide</button>
 </div>
+<button id="mini-strip" onclick="setView(true)" aria-label="Show the studio view">
+  <span class="strip-top"><b id="strip-txt">Studio idle</b><span class="muted">▾ Show</span></span>
+  <span class="strip-bar"><i id="strip-bar"></i></span>
+  <span id="strip-news" class="strip-news muted"></span>
+</button>
 
 <div id="ui-container">
   <!-- DEV -->
   <div id="tab-dev" class="tab-pane active">
     <div id="team-bar" class="chips teambar" style="display:none"></div>
-    <div class="row">
+    <div class="row" id="dev-head">
       <span id="dev-status" class="pane-title">Studio idle</span>
       <button id="btn-boost" class="btn-sm btn-gold" disabled data-why="The assistant boost can be used once per game, during Phase 3 (Beta)." onclick="useBoost()">⚡ Assistant boost</button>
     </div>
-    <div id="dev-setup" class="stack">
-      <div class="win">
+    <div id="dev-setup" class="stack" data-cur="0">
+      <div id="step-nav" class="stepnav"></div>
+      <div class="win" data-step="0">
         <div id="seg-kind" class="seg seg2" style="margin-bottom:6px;"></div>
         <div class="win-t">Concept</div>
         <div class="title-row"><input id="inp-title" maxlength="24" placeholder="" autocomplete="off" aria-label="Game title"><button onclick="rollTitle()" aria-label="Suggest a title">🎲</button></div>
@@ -323,8 +395,9 @@
         <div class="fld" id="fld-hook"><label for="sel-hook">Hook</label><select id="sel-hook" onchange="updatePreview()"></select></div>
         <div id="hook-info" class="mini muted"></div>
         <div class="fld" id="fld-seq"><label for="sel-seq">Sequel to</label><select id="sel-seq" onchange="onSequelPick()"></select></div>
+        <button onclick="openContracts()">Take a contract instead<br><span class="mini muted">Paid outsourcing work, a few weeks, no risk</span></button>
       </div>
-      <div class="win">
+      <div class="win" data-step="1">
         <div class="win-t">Release plan</div>
         <div class="fld"><label for="sel-platform">Lead platform</label><select id="sel-platform" onchange="updatePreview()"></select></div>
         <div class="fld"><label>Also release on</label><div id="port-chips" class="chips"></div></div>
@@ -336,12 +409,11 @@
         <div class="fld"><label>Business model</label><div id="seg-monet" class="seg seg2"></div></div>
         <div style="display:none"><select id="sel-size"></select><select id="sel-budget"></select><select id="sel-aud"></select><select id="sel-monet"></select></div>
       </div>
-      <div id="prio-box" class="win"></div>
-      <div id="dev-preview" class="note"></div>
-      <div class="grid2 cta">
-        <button id="btn-start" class="btn-accent" onclick="startDevelopment()">Start production</button>
-        <button onclick="openContracts()">Take a contract</button>
-      </div>
+      <div id="prio-box" class="win" data-step="2"></div>
+      <div class="win" data-step="3"><div class="win-t">Summary</div><div id="plan-detail" class="sum-grid"></div></div>
+      <div id="dev-preview" class="note" data-step="3"></div>
+      <div class="devfoot"><button id="btn-back" onclick="devStep(-1)" aria-label="Previous step">‹ Back</button><div id="plan-sum"></div>
+        <button id="btn-start" class="btn-accent" onclick="devNext()">Next ›</button></div>
     </div>
     <div id="dev-progress" style="display:none; flex-direction:column; gap:6px;">
       <div class="note" id="dev-info"></div>
@@ -367,13 +439,13 @@
 </div>
 
 <nav>
-  <button class="nav-btn active" data-tab="dev" onclick="switchTab('dev')"><span class="ic">🛠</span>Dev</button>
-  <button class="nav-btn" data-tab="live" onclick="switchTab('live')"><span class="ic">📡</span>Live</button>
-  <button class="nav-btn" data-tab="staff" onclick="switchTab('staff')"><span class="ic">👥</span>Staff</button>
-  <button class="nav-btn" data-tab="market" onclick="switchTab('market')"><span class="ic">🕹</span>Market</button>
-  <button class="nav-btn" data-tab="biz" onclick="switchTab('biz')"><span class="ic">💼</span>Biz</button>
-  <button class="nav-btn" data-tab="lab" onclick="switchTab('lab')"><span class="ic">🔬</span>Lab</button>
-  <button class="nav-btn" data-tab="studio" onclick="switchTab('studio')"><span class="ic">🏢</span>Studio</button>
+  <button class="nav-btn active" data-tab="dev" onclick="switchTab('dev')"><span class="ic">🛠</span>Dev<i class="nbadge" id="nb-dev"></i></button>
+  <button class="nav-btn" data-tab="live" onclick="switchTab('live')"><span class="ic">📡</span>Live<i class="nbadge" id="nb-live"></i></button>
+  <button class="nav-btn" data-tab="staff" onclick="switchTab('staff')"><span class="ic">👥</span>Staff<i class="nbadge" id="nb-staff"></i></button>
+  <button class="nav-btn" data-tab="market" onclick="switchTab('market')"><span class="ic">🕹</span>Market<i class="nbadge" id="nb-market"></i></button>
+  <button class="nav-btn" data-tab="biz" onclick="switchTab('biz')"><span class="ic">💼</span>Biz<i class="nbadge" id="nb-biz"></i></button>
+  <button class="nav-btn" data-tab="lab" onclick="switchTab('lab')"><span class="ic">🔬</span>Lab<i class="nbadge" id="nb-lab"></i></button>
+  <button class="nav-btn" data-tab="studio" onclick="switchTab('studio')"><span class="ic">🏢</span>Studio<i class="nbadge" id="nb-studio"></i></button>
 </nav>
 
 <div id="modal"><div class="modal-card"><div id="modal-body"></div><div id="modal-btns"></div></div></div>
@@ -392,6 +464,7 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const fmt = n => Math.round(n).toLocaleString();
 const money = n => (n < 0 ? '-$' : '$') + fmt(Math.abs(n));
 const an = w => (/^[AEIOU]/i.test(w) ? 'an ' : 'a ') + w;
+const fmtShort = n => { const a = Math.abs(n), sg = n < 0 ? '-' : ''; return a >= 1e9 ? sg + (a / 1e9).toFixed(a >= 1e10 ? 1 : 2) + 'B' : a >= 1e6 ? sg + (a / 1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M' : a >= 1e5 ? sg + Math.round(a / 1e3) + 'k' : fmt(n); };
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = id => document.getElementById(id);
 function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -1365,6 +1438,98 @@ let acc = 0, lastT = performance.now(), frameT = 0, lastHitSound = 0, simTick = 
 let currentTab = 'dev';
 
 
+
+/* ---------- Usability helpers ---------- */
+const UI_KEY = 'pocketDevStudio_ui';
+let UIP = (() => { try { return JSON.parse(localStorage.getItem(UI_KEY) || '{}') || {}; } catch (e) { return {}; } })();
+if (!UIP.view) UIP.view = {};
+if (!UIP.sub) UIP.sub = {};
+function saveUi() { try { localStorage.setItem(UI_KEY, JSON.stringify(UIP)); } catch (e) {} }
+function viewOpen(tab) { const v = UIP.view[tab]; return v === undefined ? tab === 'dev' : v; }
+function applyView() { document.body.classList.toggle('compact', !viewOpen(currentTab)); updateStrip(); }
+function setView(open) { UIP.view[currentTab] = !!open; saveUi(); playSound('click'); applyView(); }
+function updateStrip() {
+  if (!document.body.classList.contains('compact')) return;
+  const d = STATE.activeDev, tn = teamCount() > 1 ? teamName(STATE.focus || 0) + ': ' : '';
+  const pct = d ? clamp(100 - d.balloon.hp / d.balloon.maxHp * 100, 0, 100) : 0;
+  $('strip-txt').textContent = tn + (d ? `${d.title} · ${d.kind === 'contract' ? 'Contract' : d.awaiting ? 'Ready to ship' : (d.phaseName || '').replace(/^Phase \d: /, '')} ${Math.round(pct)}%` : 'Idle: start a project in Dev');
+  $('strip-bar').style.width = pct + '%';
+  const t = ticker[0]; const el = $('strip-news');
+  el.textContent = t ? t.msg : `${STATE.team.filter(m => m.vac <= 0).length} staff at work · ${STATE.live.length} live product${STATE.live.length === 1 ? '' : 's'}`;
+  el.style.color = t ? t.color : '';
+}
+const SUBTABS = {
+  studio: [['office', 'Office'], ['rooms', 'Rooms'], ['decor', 'Decor'], ['goals', 'Goals'], ['more', 'Records']],
+  lab: [['research', 'Research'], ['unlock', 'Unlocks'], ['engine', 'Engine'], ['notes', 'Notebook']],
+  market: [['industry', 'Industry'], ['platforms', 'Platforms'], ['pubs', 'Publishers'], ['hardware', 'Console'], ['store', 'Store']],
+  biz: [['finance', 'Finances'], ['people', 'Management'], ['deals', 'Loans & merch']],
+  staff: [['staff', 'Staff'], ['teams', 'Teams'], ['recruit', 'Recruit']]
+};
+function subPane(tab, html) {
+  const defs = SUBTABS[tab], chunks = {};
+  const parts = html.split(/<!--sub:(\w+)-->/);
+  for (let i = 1; i < parts.length; i += 2) chunks[parts[i]] = (chunks[parts[i]] || '') + parts[i + 1];
+  if (parts[0].trim()) chunks[defs[0][0]] = parts[0] + (chunks[defs[0][0]] || '');
+  let cur = UIP.sub[tab]; if (!defs.some(([k]) => k === cur)) cur = defs[0][0];
+  const nav = `<div class="subnav" role="tablist">${defs.map(([k, l]) => `<button role="tab" class="${k === cur ? 'on' : ''}" onclick="setSub('${tab}','${k}')">${l}${subBadge(tab, k)}</button>`).join('')}</div>`;
+  const body = (chunks[cur] || '').trim();
+  return nav + (body || `<div class="empty">${SUB_EMPTY[tab + ':' + cur] || 'Nothing here yet.'}</div>`);
+}
+const SUB_EMPTY = { 'market:hardware': `Building your own console unlocks at studio Rank ${HW_RANK}.`, 'market:store': 'Opening your own game store unlocks at studio Rank 6.', 'biz:deals': 'Nothing here yet.' };
+function subBadge(tab, k) {
+  if (tab === 'staff' && k === 'staff') { const n = STATE.team.filter(m => perkPending(m) >= 0).length + (STATE.walkIn ? 1 : 0); return n ? ` <span class="gold">●${n}</span>` : ''; }
+  if (tab === 'lab' && k === 'unlock' && labAffordable()) return ' <span class="gold">●</span>';
+  return '';
+}
+const staffOpen = new Set();
+function toggleStaff(id) { if (staffOpen.has(id)) staffOpen.delete(id); else staffOpen.add(id); playSound('click'); renderStaff(); }
+function setSub(tab, k) { UIP.sub[tab] = k; saveUi(); playSound('click'); renderActiveTab(); const el = $('tab-' + tab); if (el) el.scrollTop = 0; }
+function labAffordable() {
+  return GENRES.some(g => !STATE.unlocked.g.includes(g.n) && STATE.rank >= g.rank && STATE.rp >= g.rp) ||
+    THEMES.some(t => !STATE.unlocked.t.includes(t.n) && STATE.rank >= t.rank && STATE.rp >= t.rp) ||
+    TECH.some(t => !STATE.tech[t.id] && STATE.rank >= t.rank && (!t.req || STATE.tech[t.req]) && STATE.rp >= t.rp);
+}
+function updateBadges() {
+  const set = (id, v) => { const el = $('nb-' + id); if (!el) return; el.textContent = v === true ? '!' : v || ''; el.classList.toggle('on', !!v); };
+  const idle = STATE.teams.filter((t, i) => !STATE.devs[i] && teamStaff(i).length).length;
+  const ready = STATE.devs.some(d => d && d.awaiting);
+  set('dev', ready ? true : (teamCount() > 1 ? idle : (idle && currentTab !== 'dev' ? true : 0)));
+  set('staff', STATE.team.filter(m => perkPending(m) >= 0).length + (STATE.walkIn ? 1 : 0));
+  set('lab', labAffordable() ? true : 0);
+  set('biz', STATE.gold < 0 ? true : 0);
+}
+let devStepCur = 0;
+const STEP_NAMES = ['Concept', 'Release', 'Design', 'Review'];
+function devStep(dl) { devStepCur = clamp(devStepCur + dl, 0, 3); playSound('click'); renderSteps(); }
+function goStep(i) { devStepCur = i; playSound('click'); renderSteps(); }
+function devNext() { if (devStepCur < 3) devStep(1); else startDevelopment(); }
+function renderSteps() {
+  const box = $('dev-setup'); if (!box) return;
+  box.dataset.cur = String(devStepCur);
+  const soft = isSoftMode(), g = $('sel-genre').value, t = $('sel-theme').value, p = $('sel-platform').value;
+  const left = prioCap() - prioUsed(), ports = portSel.length;
+  const hints = [g && t ? `${g} × ${t}` : 'pick one', `${SIZES[curSize()].n}${ports ? ' · ' + (ports + 1) + ' platforms' : ''}`, left ? `${left} pts left` : 'all points set', 'check & start'];
+  $('step-nav').innerHTML = STEP_NAMES.map((n, i) => `<button class="${i === devStepCur ? 'on' : ''} ${i < devStepCur ? 'done' : ''}" onclick="goStep(${i})"><span>${i + 1}. ${n}</span><small>${esc(hints[i])}</small></button>`).join('');
+  $('btn-back').style.visibility = devStepCur ? 'visible' : 'hidden';
+  $('btn-start').textContent = devStepCur < 3 ? 'Next ›' : (soft ? 'Start development' : 'Start production');
+  if (devStepCur === 3) {
+    const rows = soft
+      ? [['Product', $('inp-title').value || $('inp-title').placeholder], ['Type', g], ['Market', t], ['Platforms', [p, ...portSel].join(', ')], ['Size', SIZES[curSize()].n], ['Budget', BUDGETS[curBudget()].n], ['Model', (SOFT_MODELS[+$('sel-monet').value] || SOFT_MODELS[1]).n]]
+      : [['Title', $('inp-title').value || $('inp-title').placeholder], ['Genre', g], ['Theme', t], ['Hook', $('sel-hook').value || 'none'], ['Platforms', [p, ...portSel].join(', ')], ['Publisher', $('sel-pub').value],
+         ['Size', SIZES[curSize()].n], ['Engine', ($('sel-engine').selectedOptions[0] || {}).textContent || ''], ['Budget', BUDGETS[curBudget()].n], ['Audience', AUDIENCES[isNaN(+$('sel-aud').value) ? 2 : +$('sel-aud').value].n], ['Model', (MONET[+$('sel-monet').value] || MONET[1]).n]];
+    $('plan-detail').innerHTML = rows.map(([a, b]) => `<span>${a}</span><span>${esc(b || '-')}</span>`).join('');
+  }
+}
+function openGuide() {
+  showModal(`<h3>How to play</h3><div class="guide">
+    <h4>Make games</h4><p>On the Dev tab, work through the four steps: choose a genre, theme and hook, pick platforms and a size, spend design points on what the genre needs, then start. Staff then work on it in phases while you make decisions as they come up.</p>
+    <h4>Get good reviews</h4><p>Some genre and theme pairs fit far better than others, and each genre needs different stats. Reviews teach you both: check the Lab's Notebook. Assign your best people to each post when a project starts.</p>
+    <h4>Earn and grow</h4><p>Released games keep earning in Live. Spend on staff training, rooms in the Studio and research in the Lab. Contracts pay the bills between projects.</p>
+    <h4>Bigger plans</h4><p>Later you can run several teams at once, make software, build your own engine, console and store, buy rivals and chase legacy goals.</p>
+    <h4>Handy tips</h4><p>Tap the money, fans, RP or rank at the top to jump to the right tab. Red dots on the tabs mean something needs you. Hide the studio view on any tab to get more room, and tap the bar to bring it back. Greyed-out buttons explain themselves when tapped.</p></div>`,
+    [{ label: 'Got it', cls: 'btn-accent' }]);
+}
+function toggleBigText() { UIP.big = !UIP.big; saveUi(); document.body.classList.toggle('bigtext', !!UIP.big); playSound('click'); renderStudio(); }
 /* ---------- Teams ---------- */
 const TEAM_NAMES = ['Team A', 'Team B', 'Team C', 'Team D', 'Team E', 'Team F'];
 const TEAM_COLORS = ['#ffd166', '#4cc9f0', '#f72585', '#06d6a0', '#c77dff', '#ff9f1c'];
@@ -1658,7 +1823,7 @@ let lastTap = 0;
 function toast(msg, color) {
   const box = $('toasts'); if (!box) return;
   const el = document.createElement('div');
-  el.className = 'toast'; el.style.borderColor = color || 'var(--sky)'; el.textContent = msg;
+  el.className = 'toast'; el.style.borderColor = color || 'var(--sky)'; el.textContent = msg; el.onclick = () => el.remove();
   box.appendChild(el);
   while (box.children.length > 3) box.firstChild.remove();
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, 2600);
@@ -1964,6 +2129,7 @@ function softFit(type, market) { const t = SOFT[type]; if (!t) return 1; return 
 function softTitle(type) { const t = SOFT[type]; for (let i = 0; i < 12; i++) { const n = `${pick(SOFT_BRAND)} ${pick((t && t.wordsList) || ['App'])}`; if (!(STATE.softHistory || []).some(h => h.title === n)) return n; } return pick(SOFT_BRAND) + ' ' + type; }
 function setDevKind(k) {
   if (k === devKind) return;
+  devStepCur = 0;
   devKind = k; playSound('click'); portSel = [];
   $('sel-genre').value = ''; $('sel-theme').value = '';
   refreshDevOptions(); updatePreview();
@@ -1974,7 +2140,7 @@ function applyKindUI() {
   $('lbl-genre').textContent = soft ? 'Software type' : 'Genre'; $('lbl-theme').textContent = soft ? 'Market' : 'Theme';
   $('lbl-size').textContent = soft ? 'Project size' : 'Game size';
   $('seg-kind').innerHTML = `<button class="${soft ? '' : 'on'}" onclick="setDevKind('game')">🎮 Game</button><button class="${soft ? 'on' : ''}" onclick="setDevKind('soft')">💾 Software</button>`;
-  $('btn-start').textContent = soft ? 'Start development' : 'Start production';
+
 }
 function softPreviewHtml() {
   const g = $('sel-genre').value, t = $('sel-theme').value, p = $('sel-platform').value, ST = SOFT[g], MK = SMK[t];
@@ -1984,6 +2150,7 @@ function softPreviewHtml() {
   const key = g + '|' + t, known = key in (STATE.softFits || {}), pfit = allP.some(x => ST.plats.includes(x.n));
   const cost = projectCost(g, bi, plat, ports, '', si, ''), avail = teamStaff(STATE.focus || 0).filter(m => m.vac <= 0).length;
   const wk = Math.max(1, Math.round(projectWork(si, allP, bi, STATE.rank) * (hasExec('producer') ? 0.9 : 1) * 0.92 / teamWeekly()));
+  $('plan-sum').innerHTML = `<b class="gold">${money(cost)}</b><br><span class="muted">about ${wk} weeks</span>`;
   const ins = STATE.insights[g] || {}, nIns = Object.keys(ins).length;
   return `Market fit: ${known ? `<b>${SOFT_FIT_LBL[STATE.softFits[key]]}</b>` : '<span class="muted">??? (untested)</span>'}<br>` +
     `<b>${z.n}</b> project. With your ${avail} available staff: <b class="gold">about ${wk} weeks</b> (${(wk / 4.33).toFixed(1)} months)${avail < z.team ? ` · <span class="bad">a team of ${z.team} would be faster</span>` : ''}<br>` +
@@ -2018,7 +2185,7 @@ function startSoftware() {
   d.decisions.push(`${z.n} project`, `${BUDGETS[budget].n} budget`, SOFT_MODELS[monet].n, `For ${market}`);
   if (ports.length) d.decisions.push(`Multi-platform: ${d.plats.join(', ')}`);
   STATE.activeDev = d; setupPhase(d);
-  $('inp-title').value = ''; portSel = [];
+  $('inp-title').value = ''; portSel = []; devStepCur = 0;
   playSound('click'); news(`Development started: ${title}`, '#66fcf1');
   renderDevMode(); assignModal(d);
 }
@@ -2158,7 +2325,7 @@ function startDevelopment() {
   else if (plat.own) d.decisions.push(`${plat.n} exclusive`);
   STATE.activeDev = d;
   setupPhase(d);
-  $('inp-title').value = ''; $('sel-seq').value = ''; portSel = [];
+  $('inp-title').value = ''; $('sel-seq').value = ''; portSel = []; devStepCur = 0;
   playSound('click');
   news(`Production started: ${title}`, '#66fcf1');
   renderDevMode();
@@ -3604,7 +3771,7 @@ function renderBiz() {
     .map(([k, v]) => `<div class="row mini"><span>${esc(k)}${FIN_CATS.has(k) ? ' <span class="muted">(financing)</span>' : ''}</span><span class="${v >= 0 ? 'good' : 'bad'}">${v >= 0 ? '+' : ''}${money(v)}</span></div>`).join('');
   if (last) html += `<div class="sec">Last month (Y${last.y} M${last.m}) · ${money(opProfit(last))}</div>` + catRows(last.cats);
   html += `<div class="sec">This month so far</div>` + (catRows(STATE.book) || '<div class="muted mini">Nothing yet.</div>');
-  html += `<div class="sec">Executive Team</div><div class="note mini">Executives don't use desks. They draw a monthly salary (signing fee: 2 months' pay) and boost the whole company.</div>` +
+  html += '<!--sub:people-->' + `<div class="sec">Executive Team</div><div class="note mini">Executives don't use desks. They draw a monthly salary (signing fee: 2 months' pay) and boost the whole company.</div>` +
     Object.entries(EXECS).map(([k, e]) => {
       const hired = hasExec(k);
       const btn = STATE.rank < e.rank ? `<span class="muted">🔒 Rank ${e.rank}</span>` : hired ? `<button class="btn-sm btn-danger" onclick="fireExec('${k}')">Let go</button>`
@@ -3614,14 +3781,14 @@ function renderBiz() {
   html += `<div class="sec">Company Policies</div>` + Object.entries(POLICIES).map(([k, arr]) => `<div class="mini muted">${POLICY_LABEL[k]}</div>
     <div class="grid3">${arr.map((po, i) => `<button class="btn-sm ${STATE.policy[k] === i ? 'btn-accent' : ''}" onclick="setPolicy('${k}',${i})">${po.n}</button>`).join('')}</div>
     <div class="mini muted">${arr[STATE.policy[k]].d}</div>`).join('');
-  html += `<div class="sec">Bank Loans</div><div class="note mini">Credit limit ${money(creditLimit())} · owed ${money(loanOwed())} · ${Math.round(loanRate() * 100)}% interest, repaid monthly over a year.</div>` +
+  html += '<!--sub:deals-->' + `<div class="sec">Bank Loans</div><div class="note mini">Credit limit ${money(creditLimit())} · owed ${money(loanOwed())} · ${Math.round(loanRate() * 100)}% interest, repaid monthly over a year.</div>` +
     STATE.loans.map((l, i) => `<div class="row card" style="flex-direction:row;"><span>Loan of ${money(l.amt)}<br><span class="muted">${money(l.pay)}/mo · ${money(l.left)} left</span></span><button class="btn-sm" onclick="repayLoan(${i})">Repay ${money(Math.round(l.left * 0.95))}</button></div>`).join('') +
     `<div class="grid3">${LOAN_SIZES.map((L, i) => { const a = loanAmt(i); return `<button class="btn-sm" ${loanOwed() + a * (1 + loanRate()) > creditLimit() ? 'disabled' : ''} data-why="That loan would take you over your ${money(creditLimit())} credit limit." onclick="takeLoan(${i})">${L.n}<br>${money(a)}</button>`; }).join('')}</div>`;
   const elig = STATE.history.filter(h => h.total >= 28 && !h.merch);
   html += `<div class="sec">Merchandise</div><div class="note mini">Games scoring 28+ can be licensed for toys, shirts and plushies. Pay once, then earn monthly royalties for two years (fading over time).</div>` +
     STATE.merch.map(mc => `<div class="row mini"><span>${esc(mc.title)}</span><span class="good">+${money(mc.amt)}/mo · ${mc.months} mo left</span></div>`).join('') +
     (elig.map(h => `<div class="row card" style="flex-direction:row;"><span><b>${esc(h.title)}</b><br><span class="muted">${h.total}/40 · ${fmt(h.dl)} downloads</span></span><button class="btn-sm btn-accent" ${STATE.gold < merchCost() ? 'disabled' : ''} onclick="licenseMerch(this.dataset.t)" data-t="${esc(h.title)}">License ${money(merchCost())}</button></div>`).join('') || '<div class="muted mini">No eligible games right now.</div>');
-  $('tab-biz').innerHTML = html;
+  $('tab-biz').innerHTML = subPane('biz', '<!--sub:finance-->' + html);
 }
 
 
@@ -4409,7 +4576,7 @@ function switchTab(name) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   $('tab-' + name).classList.add('active');
-  renderActiveTab();
+  renderActiveTab(); applyView(); updateBadges();
 }
 function renderActiveTab() {
   if (currentTab === 'live') renderLive();
@@ -4426,10 +4593,11 @@ function updateHeader() {
   $('rank-text').textContent = STATE.rank;
   $('tier-text').textContent = studioTier();
   $('rank-bar').style.width = Math.min(100, STATE.rankExp / rankNeed() * 100).toFixed(1) + '%';
-  const gt = $('gold-text'); gt.textContent = fmt(STATE.gold); gt.parentElement.classList.toggle('neg', STATE.gold < 0);
-  $('fans-text').textContent = fmt(STATE.fans);
+  const gt = $('gold-text'); gt.textContent = fmtShort(STATE.gold); gt.parentElement.classList.toggle('neg', STATE.gold < 0);
+  $('fans-text').textContent = fmtShort(STATE.fans);
   $('rp-text').textContent = STATE.rp;
   $('btn-speed').textContent = STATE.speed === 0 ? '⏸ Paused' : '▶ ' + (STATE.speed === 0.5 ? '½' : STATE.speed) + 'x';
+  updateBadges(); updateStrip();
 }
 function renderSegs() {
   const mk = (id, sel, arr) => {
@@ -4474,7 +4642,7 @@ function updatePreview() {
   renderSegs();
   if (g + '|' + t !== lastGT) { lastGT = g + '|' + t; refreshTitleHint(); refreshHookOptions(); }
   renderPrio(); renderPorts();
-  if (isSoftMode()) { $('dev-preview').innerHTML = softPreviewHtml(); return; }
+  if (isSoftMode()) { $('dev-preview').innerHTML = softPreviewHtml(); renderSteps(); return; }
   const hk = HOOK[$('sel-hook') ? $('sel-hook').value : ''];
   if ($('hook-info')) {
     const hkey = hk ? hk.n + '|' + g : '', hknown = hk && hkey in STATE.hookNotes;
@@ -4483,7 +4651,7 @@ function updatePreview() {
       (hk.hp > 1 ? `<span class="bad">Scope +${Math.round((hk.hp - 1) * 100)}%, cost +${Math.round((hk.cost - 1) * 100)}%.</span>` : '<span class="good">No extra scope.</span>')
       : 'A hook defines the game. The right one for the genre lifts reviews, and some hits need a specific hook.';
   }
-  if (!g || !t || !P[p]) { $('dev-preview').innerHTML = 'Pick a platform you hold a licence for (see the Market tab).'; return; }
+  if (!g || !t || !P[p]) { $('dev-preview').innerHTML = 'Pick a platform you hold a licence for (see the Market tab).'; $('plan-sum').innerHTML = '<span class="muted">Finish the concept</span>'; renderSteps(); return; }
   const bi = isNaN(+$('sel-budget').value) ? 1 : +$('sel-budget').value;
   const mi = isNaN(+$('sel-monet').value) ? 1 : +$('sel-monet').value;
   const pb = PUB[$('sel-pub').value] || PUBLISHERS[0];
@@ -4522,6 +4690,8 @@ function updatePreview() {
     (seq ? (() => { const h = STATE.history.find(x => x.title === seq), n = h ? (h.seqN || 1) + 1 : 2, soon = h && h.t && (STATE.cal.y * 12 + STATE.cal.m - h.t) < 12;
       return `<span class="gold">Sequel #${n} to ${esc(seq)}: extra hype and downloads, no rerun penalty.</span>${n >= 3 ? ' <span class="bad">Franchise fatigue: critics expect something new.</span>' : ''}${soon ? ' <span class="bad">Too soon: wait 12 months after the original.</span>' : ''}<br>`; })() : '') +
     `${trend}${STATE.hypeBank ? ` · Banked hype <b class="gold">${STATE.hypeBank}</b>` : ''}`;
+  $('plan-sum').innerHTML = `<b class="gold">${money(cost)}</b><br><span class="muted">about ${wk} weeks</span>`;
+  renderSteps();
 }
 function renderDevMode() {
   const d = STATE.activeDev;
@@ -4529,6 +4699,7 @@ function renderDevMode() {
   $('dev-setup').style.display = d ? 'none' : 'flex';
   $('dev-progress').style.display = d ? 'flex' : 'none';
   $('dev-status').textContent = (teamCount() > 1 ? teamName(STATE.focus || 0) + ': ' : '') + (d ? (d.kind === 'contract' ? 'Contract: ' : 'Making: ') + d.title : 'idle');
+  $('dev-head').style.display = d ? 'flex' : 'none';
   $('btn-boost').disabled = !(d && d.kind !== 'contract' && d.phase === 3 && !d.boostUsed);
   if (!d) updatePreview();
   updateDevPanel();
@@ -4605,43 +4776,48 @@ function renderStaff() {
       <div class="mini muted">${w.c.role}, ${STAT_AB.map((x, i) => x + ' ' + w.c.s[i]).join(' ')}, ${w.c.traits.join(', ')}, fee ${money(w.fee)}</div>
       <div class="btns"><button class="btn-sm btn-accent" onclick="walkInModal()">Review the offer</button></div></div>`;
   }
-  html += `<div class="sec">Teams (${teamCount()}/${teamSlots()})</div><div class="note mini">Each team works on its own project at the same time: a game, software or a contract. Up to ${TEAM_MAX} staff per team. Extra teams cost ${money(teamUpkeep())}/month each.</div>` +
+  html += '<!--sub:teams-->' + `<div class="sec">Teams (${teamCount()}/${teamSlots()})</div><div class="note mini">Each team works on its own project at the same time: a game, software or a contract. Up to ${TEAM_MAX} staff per team. Extra teams cost ${money(teamUpkeep())}/month each.</div>` +
     STATE.teams.map((tm, t) => { const d = devOfTeam(t); return `<div class="row card" style="flex-direction:row;border-color:${teamColor(t)}"><span><b style="color:${teamColor(t)}">${esc(teamName(t))}</b> · ${teamStaff(t).length} staff<br><span class="mini muted">${d ? esc(d.title) : 'Idle'}</span></span>
       <span class="btns"><button class="btn-sm" onclick="switchTab('dev');focusTeam(${t})">Open</button>${t ? `<button class="btn-sm btn-danger" onclick="disbandTeam(${t})">Disband</button>` : ''}</span></div>`; }).join('') +
     (teamCount() < teamSlots() ? `<button class="btn-accent" ${STATE.gold < teamCost() ? 'disabled' : ''} onclick="foundTeam()">Found ${TEAM_NAMES[teamCount()] || 'a new team'}: ${money(teamCost())}</button>` :
       `<div class="mini muted">${FLOORS[STATE.floor] ? 'A bigger office has room for more teams.' : 'Your office is at its team limit.'}</div>`);
+  html += '<!--sub:staff-->';
   STATE.team.forEach(m => {
     const stamPct = m.stam / m.maxStam * 100, mor = Math.round(m.morale), expPct = Math.min(100, m.exp / expNeed(m.lv) * 100);
     const pend = perkPending(m) >= 0;
     const morCol = mor < 30 ? 'var(--danger)' : mor < 60 ? 'var(--gold)' : 'var(--good)';
-    html += `<div class="card">
-      <div class="row"><b><span style="color:${ROLES[m.role].color}">■</span> ${esc(m.name)}${m.senior ? ' ★' : ''}</b><span>Lv${m.lv}</span></div>
+    const open = staffOpen.has(m.id);
+    html += `<div class="card scard${open ? ' open' : ''}">
+      <button class="shead" onclick="toggleStaff(${m.id})" aria-expanded="${open}">
+        <span class="sname"><span style="color:${ROLES[m.role].color}">■</span> <b>${esc(m.name)}${m.senior ? ' ★' : ''}</b> <span class="muted">${staffTitle(m)}</span></span>
+        <span class="slv">Lv${m.lv} <span class="muted">${open ? '▴' : '▾'}</span></span></button>
+      <div class="mini">${STAT_AB.map((x, i) => `<span style="color:${STAT_COLORS[i]}">${x}</span> ${m.s[i]}`).join(' · ')}</div>
+      <div class="minibars"><span>${m.rest > 0 ? '<span class="bad">Resting</span>' : m.vac > 0 ? `<span class="gold">Away ${m.vac}w</span>` : 'Stamina'}</span><i><b style="width:${stamPct}%;background:${stamPct < 30 ? 'var(--danger)' : 'var(--good)'}"></b></i>
+        <span>Morale</span><i><b style="width:${mor}%;background:${morCol}"></b></i></div>
+      ${pend ? `<button class="btn-sm btn-gold" onclick="perkQueued.delete(${m.id});perkModal(findStaff(${m.id}))">⭐ Choose a perk</button>` : ''}
+      ${open ? `<div class="sdetail">
       ${teamCount() > 1 ? `<div class="row mini"><span style="color:${teamColor(teamOf(m))}">● Team</span><select class="teamsel" onchange="setStaffTeam(${m.id}, this.value)">${STATE.teams.map((x, t) => `<option value="${t}" ${t === teamOf(m) ? 'selected' : ''}>${esc(teamName(t))} (${teamStaff(t).length})</option>`).join('')}</select></div>` : ''}
-      <div class="mini">${staffTitle(m)}${m.vac > 0 ? ` · <span class="gold">On vacation (${m.vac}w)</span>` : ''} · Shipped ${m.shipped} · MVP ${m.mvps}${m.hits ? ' · 🏆' + m.hits : ''}</div>
+      <div class="mini">Shipped ${m.shipped} · MVP ${m.mvps}${m.hits ? ' · 🏆' + m.hits : ''} · speed ${m.spd} · ${money(m.salary)}/mo</div>
       <div class="mini muted">♥ Loves ${esc(m.favG)}${gxText(m)}${m.bestT ? ' · Best: ' + esc(m.bestT) + ' (' + m.bestS + ')' : ''}</div>
       <div>${m.traits.map(t => `<span class="chip ${TRAITS[t].bad ? 'chip-bad' : ''}">${t}</span>`).join('')}${m.perks.map(pid => `<span class="chip chip-gold">${PERK_INFO[pid].n}</span>`).join('')}</div>
       <div class="mini muted">${m.traits.map(t => TRAITS[t].d).concat(m.perks.map(pid => PERK_INFO[pid].d)).join(' · ')}</div>
-      <div class="muted">${STAT_AB.map((s, i) => `<span style="color:${STAT_COLORS[i]}">${s}</span> ${m.s[i]}`).join(' · ')} · SPD ${m.spd} · ${money(m.salary)}/mo</div>
       <div class="mini muted">Potential <span class="gold">${talentStars(m.tal)}</span> · ${ROLES[m.role].d}${perkPending(m) < 0 && m.perks.length < PERK_LEVELS.length ? ` · next perk at Lv${PERK_LEVELS[m.perks.length]}` : ''}</div>
-      <div class="statrow"><span>${m.rest > 0 ? '<span class="bad">Resting</span>' : 'Stamina'}</span><div class="bar"><div style="background:${stamPct < 30 ? 'var(--danger)' : 'var(--good)'};width:${stamPct}%"></div></div><span>${Math.round(m.stam)}</span></div>
-      <div class="statrow"><span>Morale</span><div class="bar"><div style="background:${morCol};width:${mor}%"></div></div><span>${mor}</span></div>
       <div class="statrow"><span>EXP</span><div class="bar"><div style="background:var(--accent);width:${expPct}%"></div></div><span>${Math.round(expPct)}%</span></div>
       <div class="btns">
-        ${pend ? `<button class="btn-sm btn-gold" onclick="perkQueued.delete(${m.id});perkModal(findStaff(${m.id}))">⭐ Choose perk</button>` : ''}
-        <button class="btn-sm btn-accent" ${m.vac > 0 ? 'disabled' : ''} onclick="openTraining(${m.id})">Train</button>
-        <button class="btn-sm" ${m.raiseCd > 0 ? 'disabled' : ''} onclick="raiseStaff(${m.id})">Raise${m.raiseCd > 0 ? ' (' + m.raiseCd + 'w)' : ''}</button>
-        <button class="btn-sm" ${m.vac > 0 ? 'disabled' : ''} onclick="vacationStaff(${m.id})">Vacation</button>
+        <button class="btn-sm btn-accent" ${m.vac > 0 ? 'disabled' : ''} data-why="${esc(m.name)} is on vacation." onclick="openTraining(${m.id})">Train</button>
+        <button class="btn-sm" ${m.raiseCd > 0 ? 'disabled' : ''} data-why="${esc(m.name)} had a raise recently." onclick="raiseStaff(${m.id})">Raise${m.raiseCd > 0 ? ' (' + m.raiseCd + 'w)' : ''}</button>
+        <button class="btn-sm" ${m.vac > 0 ? 'disabled' : ''} data-why="${esc(m.name)} is already on vacation." onclick="vacationStaff(${m.id})">Vacation</button>
         ${m.lv >= 10 && !m.senior ? `<button class="btn-sm btn-gold" onclick="promoteStaff(${m.id})">Promote</button>` : ''}
         <button class="btn-sm" ${m.lv < 5 ? 'disabled' : ''} data-why="Role changes unlock at Lv5 (${esc(m.name)} is Lv${m.lv})." onclick="openRoleChange(${m.id})">Role${m.lv < 5 ? ' (Lv5)' : ''}</button>
-        <button class="btn-sm btn-danger" onclick="fireStaff(${m.id})">Dismiss</button></div></div>`;
+        <button class="btn-sm btn-danger" onclick="fireStaff(${m.id})">Dismiss</button></div></div>` : ''}</div>`;
   });
-  html += `<div class="sec">Recruit</div><div class="grid3">
+  html += '<!--sub:recruit-->' + `<div class="sec">Recruit</div><div class="grid3">
     <button onclick="postAd(0)">Word of Mouth<br>Free</button>
     <button onclick="postAd(1)">Job Board<br>$3,000</button>
     <button onclick="postAd(2)">Headhunter<br>$12,000</button></div>
     ${STATE.candidates.length ? '<button onclick="openCandidates()">View current applicants</button>' : ''}
     <div class="note mini">Staff earn perks at Lv5, 10, 15 and 20, and can be promoted to a senior role from Lv10. Morale affects work speed: keep it up with raises, vacations, decor and hits. Unhappy staff may quit or be poached.</div>`;
-  $('tab-staff').innerHTML = html;
+  $('tab-staff').innerHTML = subPane('staff', '<!--sub:staff-->' + html);
 }
 function renderMarket() {
   const t = yearFrac();
@@ -4651,8 +4827,8 @@ function renderMarket() {
     return `<div class="row mini" style="${x.me ? 'color:var(--gold);font-weight:bold;' : ''}"><span>#${i + 1} ${esc(x.n)}${r && r.owned ? ' <span class="good">· yours</span>' : ''}</span><span>${fmt(x.fans)} fans · best ${x.best || '-'}${can ? ` <button class="btn-sm" ${STATE.fans < r.fans * 1.5 || STATE.gold < acqPrice(r) ? 'disabled' : ''} data-why="${STATE.fans < r.fans * 1.5 ? 'Their board will only sell once you have 1.5× their fans.' : ''}" onclick="acquireRival('${esc(r.n)}')">Buy ${money(acqPrice(r))}</button>` : ''}</span></div>`;
   }).join('') + (STATE.rank >= ACQ_RANK ? '<div class="note mini">Acquired studios become subsidiaries: they pay you every month, send fans your way and stop competing for awards.</div>' : '') +
     `<div class="sec">Industry Calendar</div><div class="note">Month 4: Indie Showcase · Month 8: GameCon · Month 12: Holiday Sale · Year end: Awards${STATE.hypeBank ? `<br>Banked hype for your next project: <b class="gold">${STATE.hypeBank}</b>` : ''}${STATE.pubBonus ? `<br>🤝 Bonus advance waiting with ${esc(STATE.pubBonus)}` : ''}</div>`;
-  html += hardwareHtml() + storeHtml();
-  html += '<div class="sec">Platforms</div>';
+  html += '<!--sub:hardware-->' + hardwareHtml() + '<!--sub:store-->' + storeHtml();
+  html += '<!--sub:platforms--><div class="sec">Platforms</div>';
   PLATFORMS.forEach(p => {
     if (p.own) return;
     const live = platLive(p), up = t < p.year, gone = p.end && t >= p.end;
@@ -4670,7 +4846,7 @@ function renderMarket() {
       <div class="statrow"><span>Market</span><div class="bar"><div style="background:var(--accent);width:${Math.min(100, mk / 3.5 * 100)}%"></div></div><span>${mk.toFixed(1)}</span></div>
       <div class="muted mini">Favours: ${p.fav.join(', ')}</div></div>`;
   });
-  html += `<div class="sec">Publishers</div><div class="note mini">Publishers pay an advance up front and boost downloads, then take a cut of launch and live revenue. Miss their target score badly and they claw back part of the advance. Hit it and they offer more next time.</div>`;
+  html += '<!--sub:pubs-->' + `<div class="sec">Publishers</div><div class="note mini">Publishers pay an advance up front and boost downloads, then take a cut of launch and live revenue. Miss their target score badly and they claw back part of the advance. Hit it and they offer more next time.</div>`;
   PUBLISHERS.filter(pb => pb.adv).forEach(pb => {
     const rep = pubRep(pb);
     const status = STATE.rank < pb.rank ? `<span class="muted">🔒 Rank ${pb.rank}</span>` : rep < 25 ? '<span class="bad">Not signing you</span>' : '<span class="good">Open</span>';
@@ -4679,7 +4855,7 @@ function renderMarket() {
       <div class="statrow"><span>Relationship</span><div class="bar"><div style="background:${rep < 25 ? 'var(--danger)' : 'var(--gold)'};width:${rep}%"></div></div><span>${rep}</span></div>
       <div class="muted mini">Pays 20% more for: ${pb.fav.join(', ')}</div></div>`;
   });
-  $('tab-market').innerHTML = html;
+  $('tab-market').innerHTML = subPane('market', '<!--sub:industry-->' + html);
 }
 
 function renderLab() {
@@ -4690,21 +4866,22 @@ function renderLab() {
     return `<div class="row card" style="flex-direction:row;"><span>${esc(it.n)}${kind === 't' && it.tags ? ` <span class="mini muted">${it.tags.join(' · ')}</span>` : ''}<br><span class="muted">${rankOk ? it.rp + ' RP' : '🔒 Rank ' + it.rank}</span></span>
       <button class="btn-sm btn-accent" ${!rankOk || STATE.rp < it.rp ? 'disabled' : ''} data-why="${!rankOk ? 'Unlocks at studio Rank ' + it.rank + '.' : 'Needs ' + it.rp + ' RP (you have ' + STATE.rp + ').'}" onclick="unlockItem('${kind}','${it.n}')">Unlock</button></div>`;
   };
-  const techRows = TECH.map(t => {
+  const doneTech = TECH.filter(t => STATE.tech[t.id]);
+  const techRows = (doneTech.length ? `<div class="note mini"><b class="good">Researched:</b> ${doneTech.map(t => `${t.n} <span class="muted">(${t.d})</span>`).join(' · ')}</div>` : '') + TECH.filter(t => !STATE.tech[t.id]).map(t => {
     const own = STATE.tech[t.id], reqOk = !t.req || STATE.tech[t.req], rankOk = STATE.rank >= t.rank;
     const status = own ? '<span class="good">Done</span>' : !reqOk ? `<span class="muted">Needs ${TECH.find(x => x.id === t.req).n}</span>` : !rankOk ? `<span class="muted">🔒 Rank ${t.rank}</span>` :
       `<button class="btn-sm btn-accent" ${STATE.rp < t.rp ? 'disabled' : ''} onclick="unlockTech('${t.id}')">${t.rp} RP</button>`;
     return `<div class="row card" style="flex-direction:row;${own ? 'opacity:0.7;' : ''}"><span><b>${t.n}</b><br><span class="muted">${t.d}</span></span>${status}</div>`;
-  }).join('');
+  }).join('') + (doneTech.length === TECH.length ? '<div class="muted mini">All studio tech researched.</div>' : '');
   const combos = Object.entries(STATE.combos).sort((a, b) => b[1] - a[1]);
   const hooks = Object.entries(STATE.hookNotes).sort((a, b) => b[1] - a[1]);
-  let html = engineHtml() + `<div class="row"><span class="sec">Research Lab</span><span class="hl">${STATE.rp} RP</span></div>
+  let html = '<!--sub:engine-->' + engineHtml() + '<!--sub:research-->' + `<div class="row"><span class="sec">Research Lab</span><span class="hl">${STATE.rp} RP</span></div>
     <div class="note">Research points come from trying something new (combos, hooks, genres and genre insights), planners' ideas, game jams and research grants. Repeating a winning formula teaches you very little.</div>
     <div class="row card" style="flex-direction:row;"><span><b>Fund a research grant</b><br><span class="muted">+2 RP · price rises with each grant this year</span></span><button class="btn-sm btn-accent" ${STATE.gold < researchCost() ? 'disabled' : ''} onclick="fundResearch()">${money(researchCost())}</button></div>
     <div class="sec">Studio Tech</div>${techRows}
-    <div class="sec">Genres</div>${lockedG.map(g => row('g', g)).join('') || '<div class="muted">All genres unlocked!</div>'}
+    <!--sub:unlock--><div class="sec">Genres</div>${lockedG.map(g => row('g', g)).join('') || '<div class="muted">All genres unlocked!</div>'}
     <div class="sec">Themes</div>${lockedT.map(t => row('t', t)).join('') || '<div class="muted">All themes unlocked!</div>'}
-    <div class="sec">Combo Notebook (${combos.length})</div>`;
+    <!--sub:notes--><div class="sec">Combo Notebook (${combos.length})</div>`;
   html += combos.length
     ? combos.map(([k, v]) => `<div class="row" style="font-size:0.74rem;"><span>${esc(k.replace('|', ' × '))}</span><b style="color:${COMBO_COLOR[v]}">${COMBO_LABEL[v]}</b></div>`).join('')
     : '<div class="muted">Release games to discover combos.</div>';
@@ -4714,7 +4891,7 @@ function renderLab() {
     : '<div class="muted">Release games with a hook to learn which hooks suit which genres.</div>';
   html += legendsHtml();
   html += insightsHtml();
-  $('tab-lab').innerHTML = html;
+  $('tab-lab').innerHTML = subPane('lab', html);
 }
 function renderStudio() {
   const f = FLOORS[STATE.floor - 1], next = FLOORS[STATE.floor];
@@ -4730,7 +4907,7 @@ function renderStudio() {
   html += next
     ? `<button ${STATE.rank < next.rank || STATE.gold < next.cost ? 'disabled' : ''} data-why="${STATE.rank < next.rank ? 'The ' + next.n + ' needs studio Rank ' + next.rank + '.' : ''}" onclick="upgradeFloor()">Move to the ${next.n}: ${money(next.cost)} (Rank ${next.rank})<br><span class="muted">${esc(next.d)} ${next.desks} desks · ${next.teams} teams · ${next.live} live slots · ${next.rooms} room slots · rent ${money(next.rent)}</span></button>`
     : '<div class="muted">You have the finest office in the industry.</div>';
-  html += `<div class="sec">Rooms (${used}/${rslots} slots)</div><div class="note mini">Rooms are where the studio's real strength comes from. Each takes a slot, costs upkeep every month, and can be upgraded to Lv3.</div>`;
+  html += '<!--sub:rooms-->' + `<div class="sec">Rooms (${used}/${rslots} slots)</div><div class="note mini">Rooms are where the studio's real strength comes from. Each takes a slot, costs upkeep every month, and can be upgraded to Lv3.</div>`;
   const ids = Object.keys(ROOMS).sort((a, b) => (roomLv(b) > 0) - (roomLv(a) > 0));
   ids.forEach(id => {
     const R = ROOMS[id], lv = roomLv(id), nextLv = lv + 1, rk = nextLv <= 3 ? roomRank(id, nextLv) : 0;
@@ -4741,25 +4918,26 @@ function renderStudio() {
       ${lv && lv < 3 ? `<div class="mini muted">Lv${nextLv}: ${R.d(nextLv)}</div>` : ''}
       ${lv ? `<div style="text-align:right;"><button class="btn-sm" onclick="closeRoom('${id}')">Close room</button></div>` : ''}</div>`;
   });
-  html += `<div class="sec">Decor (${STATE.decor.length}/${slots} spots)</div>`;
+  html += '<!--sub:decor-->' + `<div class="sec">Decor (${STATE.decor.length}/${slots} spots)</div>`;
   for (const k in DECOR) {
     const dc = DECOR[k], own = STATE.decor.includes(k);
     html += `<div class="row card" style="flex-direction:row;"><span><b>${dc.n}</b><br><span class="muted">${dc.d}</span></span>
       ${own ? '<span class="good">Placed</span>' : `<button class="btn-sm btn-accent" ${STATE.decor.length >= slots || STATE.gold < dc.cost ? 'disabled' : ''} data-why="${STATE.decor.length >= slots ? 'Every decor spot in this office is used. Move to a bigger office for more.' : ''}" onclick="buyDecor('${k}')">${money(dc.cost)}</button>`}</div>`;
   }
-  html += legacyHtml();
+  html += '<!--sub:goals-->' + legacyHtml();
   html += `<div class="sec">Milestones (${msDone}/${MILESTONES.length})</div>` + MILESTONES.map(m => {
     const r = m.r, rw = [r.gold ? money(r.gold) : '', r.rp ? r.rp + ' RP' : '', r.fans ? fmt(r.fans) + ' fans' : ''].filter(Boolean).join(' + ');
     return `<div class="row mini ${STATE.milestones[m.id] ? 'ms-done' : 'muted'}"><span>${STATE.milestones[m.id] ? '✅' : '⬜'} ${m.n}: ${m.d}</span><span>${rw}</span></div>`;
   }).join('');
-  html += `<div class="sec">Records</div>
+  html += '<!--sub:more-->' + `<div class="sec">Records</div>
     <div class="note">Games released: ${STATE.releasedCount} · Best score: ${STATE.bestScore || '-'}/40<br>Lifetime downloads: ${fmt(STATE.totalDownloads)} / 1,000,000,000<br>Lifetime revenue: ${money(STATE.totalRevenue)}</div>`;
   html += STATE.history.slice(0, 10).map(h => `<div class="row" style="font-size:0.72rem;"><span>Y${h.y} ${esc(h.title)}</span><span>${h.total >= 32 ? '🏆' : ''}${h.total}/40 · ${fmt(h.dl)}</span></div>`).join('');
   html += `<div class="sec">Settings</div><div class="grid2">
     <button onclick="toggleSound()">Sound: ${STATE.settings.sound ? 'On' : 'Off'}</button>
     <button class="btn-danger" onclick="resetGame()">Reset Save</button></div>
+    <div class="grid2"><button onclick="toggleBigText()">Text size: ${UIP.big ? 'Large' : 'Normal'}</button><button onclick="openGuide()">How to play</button></div>
     <div class="muted" style="font-size:0.68rem;">Progress autosaves every month and when you leave the app.</div>`;
-  $('tab-studio').innerHTML = html;
+  $('tab-studio').innerHTML = subPane('studio', '<!--sub:office-->' + html);
 }
 /* =========================================================
    CANVAS RENDERING
@@ -5060,7 +5238,7 @@ function frame(now) {
     let guard = 0;
     while (acc >= step && guard++ < 40) { update(); acc -= step; if (modalOpen) { acc = 0; break; } }
   } else acc = 0;
-  render();
+  if (!document.body.classList.contains('compact')) render();
   requestAnimationFrame(frame);
 }
 
@@ -5111,6 +5289,8 @@ function frame(now) {
   }, true);
 })();
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+document.body.classList.toggle('bigtext', !!UIP.big);
+try { applyView(); renderSteps(); updateBadges(); } catch (e) {}
 window.addEventListener('pagehide', save);
 $('sel-size').innerHTML = SIZES.map((z, i) => `<option value="${i}">${z.n}</option>`).join('');
 $('sel-size').value = '1';
@@ -5131,10 +5311,7 @@ renderAll();
 if (!STATE.trend) STATE.trend = { type: 'genre', n: pick(STATE.unlocked.g) };
 updatePreview();
 if (!STATE.history.length && !STATE.activeDev && STATE.cal.y === 1 && STATE.cal.m === 1 && STATE.cal.w === 1 && STATE.tick === 0) {
-  showModal(`<h3>Welcome, President!</h3><div class="note">Plan each game (genre, theme, platform, publisher, budget, audience and business model), then guide your team through Concept, Alpha, Beta and Debug. You'll staff each area of the game, set development priorities, pick a hook, run design meetings, react to playtests, set the work pace, market the game and decide when to ship.<br><br>Every staff member has traits, morale and perks to unlock. Decorate the office, research studio tech, manage the business (executives, loans, policies) and eventually build your own console.<br><br>
-    Matching genres and themes make great combos, and each platform has favourite genres. Buy new platform licences and check publishers in the Market tab. GameCon arrives every August.<br><br>
-    Released games keep earning in Live Ops. Contract work pays the bills between releases.<br><br>
-    Payday is at the end of every month. Three months in the red and it's game over. Good luck!</div>`, [{ label: "Let's go!", cls: 'btn-accent' }]);
+  showModal(`<h3>Welcome, President!</h3><div class="note">Your studio starts in a garage with five staff and $30,000. On the Dev tab, plan a game in four steps (concept, release, design points, review), then guide your team while they build it.<br><br>Good reviews come from matching genres with fitting themes and hooks, and giving each genre the design points it needs. Released games keep earning in the Live tab, and contracts pay the bills between projects.<br><br>Payday is at the end of every month. Three months in the red and it's game over.<br><br>Tap <b>?</b> at the top any time for a quick guide.</div>`, [{ label: "Let's go!", cls: 'btn-accent' }]);
 }
 STATE.devs.forEach(d => { if (d && d.kind !== 'contract' && d.balloon.hp <= 0) { d.awaiting = false; checkPhase(d); } });
 STATE.team.forEach(m => { if (perkPending(m) >= 0) perkModal(m); });
